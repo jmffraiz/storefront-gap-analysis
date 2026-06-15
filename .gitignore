@@ -1,0 +1,9 @@
+# macOS
+.DS_Store
+
+
+# Claude Code local settings (machine-specific permissions)
+.claude/settings.local.json
+
+# Temp sips crops/downsamples of Figma exports
+figmas/sips/
