@@ -13,8 +13,8 @@ Completed gap-analysis documents live in [`backlog/`](backlog/):
 | File | Page / Feature |
 |---|---|
 | [`backlog/plp.md`](backlog/plp.md) | Product Listing Page |
-| [`backlog/minibasket-gap-analysis.md`](backlog/minibasket-gap-analysis.md) | Mini Basket overlay |
-| [`backlog/vuse-pdp-gap-analysis.md`](backlog/vuse-pdp-gap-analysis.md) | Vuse PDP — Device + Consumable |
+| [`backlog/minibasket.md`](backlog/minibasket.md) | Mini Basket overlay |
+| [`backlog/pdp.md`](backlog/pdp.md) | Vuse PDP — Device + Consumable |
 
 ## Workflow (adding a new page)
 
