@@ -25,7 +25,7 @@ All Commerce knowledge (drop-in reference files, container/slot/event names, ser
    - **§3 Assumptions and open questions** — list decisions blocking the estimate; follow the *Recommendation / Impact A / Impact B* format.
    - **§4 Out of scope** — list explicitly what is excluded to protect the estimate.
 4. **Never invent slot or event names** — verify them against the reference files or `llms-full.txt`.
-5. **Output the completed document as a fenced markdown code block** so the user can copy it directly.
+5. **Write the completed document to `backlog/<page-or-feature-slug>.md`** (derive the slug from `$ARGUMENTS`, lowercase, hyphenated). Confirm the file path to the user after writing.
 
 ## Rules of thumb for accurate gaps
 

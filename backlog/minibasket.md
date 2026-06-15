@@ -1,6 +1,6 @@
 # Mini Basket — Gap Analysis
 
-> **Mockup source:** [mini-basket.png](figmas/mini-basket.png) (Mobile / Tablet / Desktop — "Mini Basket - Vuse"); [Headers-Footers.png](figmas/Headers-Footers.png) for basket-icon trigger context.
+> **Mockup source:** [mini-basket.png](../figmas/mini-basket.png) (Mobile / Tablet / Desktop — "Mini Basket - Vuse"); [Headers-Footers.png](../figmas/Headers-Footers.png) for basket-icon trigger context.
 > **Variants/states included:** Default (1 item, populated). Empty / OOS / multi-item / max-items not shown in mockup.
 > **Scope:** **IN:** the mini-basket overlay that triggers on add-to-cart and on header basket-icon click — its shell, line items, totals, free-shipping progress, CTAs, and the "Add some flavour" recommendations strip. **OUT:** full cart page, checkout, PDP add-to-cart wiring, header/footer chrome (covered in the header gap analysis).
 > **Author:** Jose Maria Franco · **Date:** 2026-06-15
@@ -11,11 +11,11 @@ The storefront sits on **Adobe Commerce as a Cloud Service (ACCS) + Edge Deliver
 
 **Mini Basket overlay** (Mobile / Tablet / Desktop) — primary source for this analysis:
 
-![Mini Basket — Mobile, Tablet, Desktop](figmas/mini-basket.png)
+![Mini Basket — Mobile, Tablet, Desktop](../figmas/mini-basket.png)
 
 **Header + Footer** — context for the basket-icon trigger (F1); full analysis in the header gap doc:
 
-![Header and Footer states](figmas/Headers-Footers.png)
+![Header and Footer states](../figmas/Headers-Footers.png)
 
 **Complexity buckets** (used in §2):
 - **Low** — theming / config / authored content / single slot fill.

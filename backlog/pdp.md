@@ -1,6 +1,6 @@
 # Vuse PDP — Gap Analysis
 
-> **Mockup source:** [vuse-pdp-device.png](figmas/vuse-pdp-device.png), [vuse-pdp-consumable.png](figmas/vuse-pdp-consumable.png) (Figma frames: `Mobile|Tablet|Desktop - PDP DEVICE`, `Mobile|Tablet|Desktop - PDP Consumable`).
+> **Mockup source:** [vuse-pdp-device.png](../figmas/vuse-pdp-device.png), [vuse-pdp-consumable.png](../figmas/vuse-pdp-consumable.png) (Figma frames: `Mobile|Tablet|Desktop - PDP DEVICE`, `Mobile|Tablet|Desktop - PDP Consumable`).
 > **Variants/states included:** **Device** variant (VUSE PRO DEVICE KIT) with colour swatches + one-time purchase only; **Consumable** variant (LEMON BERRY PODS) with one-time / subscribe purchase-mode radios and a 1–5 intensity meter. Each variant shown at three breakpoints (mobile, tablet, desktop). Out-of-stock / unconfigured / error / sold-out states are **not** in the mockup.
 > **Scope:** **IN:** the PDP main column itself — gallery, product header (rating, title, subtitle, description, "read more", footnote), colour swatches (Device), purchase-mode + subscription block (Consumable), intensity meter (Consumable), quantity stepper, price, "Add to Basket" CTA, free-shipping banner, "Try XX for free" link, and the in-page authored promotion card (`Title / Subtitle / Body content / ACTION`) directly below the main column. **OUT:** header chrome (logo, mega-nav, search, account, basket icon), trust strip ("Tested by Scientists / Standard Delivery / 28 Money Back Guarantee"), mini-basket overlay, recommendations carousel (none shown in the mockup), footer chrome, age-gate, cookie banner, cart/checkout/account pages.
 > **Author:** Jose Maria Franco · **Date:** 2026-06-15
@@ -11,11 +11,11 @@ The storefront sits on **Adobe Commerce as a Cloud Service (ACCS) + Edge Deliver
 
 **Device PDP** — colour swatches, no subscription/intensity:
 
-![Vuse Device PDP — Mobile / Tablet / Desktop](figmas/vuse-pdp-device.png)
+![Vuse Device PDP — Mobile / Tablet / Desktop](../figmas/vuse-pdp-device.png)
 
 **Consumable PDP** — purchase-mode radios (one-time / subscribe), intensity meter:
 
-![Vuse Consumable PDP — Mobile / Tablet / Desktop](figmas/vuse-pdp-consumable.png)
+![Vuse Consumable PDP — Mobile / Tablet / Desktop](../figmas/vuse-pdp-consumable.png)
 
 **Complexity buckets** (used in §2):
 - **Low** — theming / config / authored content / single slot fill.

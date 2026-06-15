@@ -1,6 +1,6 @@
 # PLP — Gap Analysis
 
-> **Mockup source:** [PLP.png](figmas/PLP.png) (Figma frames: `Mobile|Tablet|Desktop - PLP`, `Desktop - PLP (No Page Background Colour)`, `Mobile|Tablet|Desktop - PLP - Tabbed Content`, `Mobile|Tablet|Desktop - PLP (Out of Stock)`, `Mobile|Tablet|Desktop - PLP (Filter)`, `Mobile|Tablet|Desktop - PLP (Brochureware)`).
+> **Mockup source:** [PLP.png](../figmas/PLP.png) (Figma frames: `Mobile|Tablet|Desktop - PLP`, `Desktop - PLP (No Page Background Colour)`, `Mobile|Tablet|Desktop - PLP - Tabbed Content`, `Mobile|Tablet|Desktop - PLP (Out of Stock)`, `Mobile|Tablet|Desktop - PLP (Filter)`, `Mobile|Tablet|Desktop - PLP (Brochureware)`).
 > **Variants/states included:** Default, Tabbed Content (sub-category tabs + sectioned grid), Out of Stock (card-level "Email me when in stock"), Filter (refine drawer/panel), Brochureware (non-transactional "Learn more" cards). Each variant is shown at three breakpoints (mobile, tablet, desktop).
 > **Scope:** **IN:** the PLP listing itself — page title, sub-category tabs, sort, quick-filter pills, refine panel/drawer, product grid + cards (incl. subscription pricing, intensity meter, OOS notify-me, badges), in-grid promotions, pagination/"view more", brochureware card variant, FAQ accordion (brochureware variant), background-colour variant. **OUT:** header chrome (logo, mega-nav, search, basket icon, account), hero banner, trust strip, subscribe-to-save band, pre-toolbar promo strip, newsletter band, footer chrome, mini-basket overlay, PDP, cart, checkout, account, age-gate, cookie banner — all covered elsewhere or treated as authored chrome around the PLP.
 > **Author:** Jose Maria Franco · **Date:** 2026-06-15
@@ -9,7 +9,7 @@ The storefront sits on **Adobe Commerce as a Cloud Service (ACCS) + Edge Deliver
 
 ### Mockup
 
-![PLP — all variants and breakpoints](figmas/PLP.png)
+![PLP — all variants and breakpoints](../figmas/PLP.png)
 
 **Complexity buckets** (used in §2):
 - **Low** — theming / config / authored content / single slot fill.
