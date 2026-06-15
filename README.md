@@ -20,7 +20,7 @@ Completed gap-analysis documents live in [`backlog/`](backlog/):
 
 1. Add the Figma export PNG to `figmas/`.
 2. Run the `/storefront-gapanalysis` slash command in Claude Code — provide the design and any notes.
-3. Save the completed document into `backlog/` (e.g. `backlog/pdp.md`).
+3. The command writes the completed document directly to `backlog/<page-slug>.md`.
 
 ## Claude Code artifact setup
 
@@ -43,7 +43,7 @@ All Claude Code configuration is project-local under `.claude/`. Three layers co
 
 | Artifact | Type | Purpose |
 |---|---|---|
-| `/storefront-gapanalysis` | Slash command | Entry point. Runs the per-page workflow: read template → gather Commerce context → fill §1 features, §2 gaps, §3 assumptions, §4 out-of-scope → output as a fenced code block. |
+| `/storefront-gapanalysis` | Slash command | Entry point. Runs the per-page workflow: read template → gather Commerce context → fill §1 features, §2 gaps, §3 assumptions, §4 out-of-scope → write to `backlog/<page-slug>.md`. |
 | `page-gap-analysis.template.md` | Template | Section structure, column definitions, coverage legend, complexity buckets, Experience League URL reference table. Load-bearing — do not restructure. |
 | `accs-storefront-architect` | Skill | Authoritative source for drop-in / container / slot / event / service identifiers. Consulted via the `storefront-architect` subagent. |
 | `eds-knowledge` | Skill | Authoritative source for EDS facts (blocks, sections, authoring, metadata, Lighthouse, Core Web Vitals). |
@@ -54,7 +54,7 @@ All Claude Code configuration is project-local under `.claude/`. Three layers co
 1. User runs `/storefront-gapanalysis <feature-description>` and attaches the design.
 2. The command reads `.claude/templates/page-gap-analysis.template.md` to lock in the structure.
 3. The command spawns the `storefront-architect` subagent to gather drop-in / container / slot / service facts for the page type. The subagent reads the curated reference files in `accs-storefront-architect` (and greps `llms-full.txt` only as fallback).
-4. The command fills the template, hyperlinks every drop-in / container / service to Experience League, and emits the completed document as a fenced markdown block.
+4. The command fills the template, hyperlinks every drop-in / container / service to Experience League, and writes the completed document to `backlog/<page-slug>.md`.
 
 ### Editing the configuration
 
