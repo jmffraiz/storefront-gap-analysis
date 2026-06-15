@@ -8,11 +8,7 @@ Each gap-analysis document maps a Figma design to the closest existing drop-in /
 
 ## Documents
 
-### Active
-
-_None in progress._
-
-### Archived ([`backlog/`](backlog/))
+Completed gap-analysis documents live in [`backlog/`](backlog/):
 
 | File | Page / Feature |
 |---|---|
@@ -24,7 +20,7 @@ _None in progress._
 
 1. Add the Figma export PNG to `figmas/`.
 2. Run the `/storefront-gapanalysis` slash command in Claude Code — provide the design and any notes.
-3. Save the output as a new top-level `.md` (e.g. `pdp.md`); once retired or superseded, move it into `backlog/`.
+3. Save the completed document into `backlog/` (e.g. `backlog/pdp.md`).
 
 ## Claude Code artifact setup
 

@@ -17,7 +17,7 @@ The intended loop for each new page/feature:
 3. Run the **`/storefront-gapanalysis`** slash command — it owns the per-page template and process, providing the design and user input.
 4. Source Commerce facts from the **`accs-storefront-architect`** skill (drop-in names, container props, slot names, events, services). Source generic EDS facts from **`eds-knowledge`**.
 
-Always emit the gap analysis as a new top-level `.md`; archived/superseded docs live in `backlog/`.
+Always emit the completed gap analysis into `backlog/` — that is the deliverable store, not an archive.
 
 ## Skills and agent (project-local)
 
