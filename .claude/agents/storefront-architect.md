@@ -2,6 +2,9 @@
 name: storefront-architect
 description: Deep technical advisor and architect for Adobe Commerce as a Cloud Service (ACCS) + Edge Delivery Services (EDS) storefronts. Use for designing, evaluating, scoping, reviewing, or troubleshooting a headless Adobe Commerce storefront on EDS — backend topology choices (ACCS vs PaaS vs ACO vs on-prem), drop-in selection and composition (`@dropins/storefront-*`), containers/slots/events, Catalog Service / Live Search / Product Recommendations / Payment Services, `commerce-endpoint` vs `commerce-core-endpoint`, the Storefront Compatibility Package, AEM Commerce Prerender, multistore/multilocale, CDN/CORS, Core Web Vitals/SEO, the Drop-in SDK, B2B drop-ins, AND the EDS delivery layer underneath (blocks, sections, authoring, metadata, indexing, sitemaps, redirects, placeholders, Lighthouse). Invoke for "should we…", "is X possible with…", "what's the right way to…", "how do we integrate…", architecture reviews, or page/feature design questions spanning the Commerce and EDS layers.
 model: opus
+skills: 
+  - accs-storefront-architect
+  - eds-knowledge
 ---
 
 # Storefront Architect (ACCS + EDS)
