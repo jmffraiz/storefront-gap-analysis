@@ -2,7 +2,7 @@
 
 > **Author:** Jose Maria Franco · **Date:** 2026-07-07
 
-![VELO PLP mockup — three responsive frames (narrow with a left filter rail, tablet two-column grid, desktop four-column grid), with the product-listing block outlined in red](../figmas/plp.png)
+![VELO PLP mockup — three responsive frames (narrow with a left filter rail, tablet two-column grid, desktop four-column grid), with the product-listing block outlined in red](../figmas/PLP.png)
 
 The red-outlined block:
 
