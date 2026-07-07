@@ -1,0 +1,3460 @@
+<SYSTEM>This is the Drop-ins overview bundle for Adobe Commerce Storefront on Edge Delivery Services</SYSTEM>
+
+# Drop-ins overview
+
+> Cross-drop-in concepts, shared APIs, and indexes for B2C and B2B drop-ins
+> Generated: 2026-06-26T22:40:20.158Z
+> Source: https://experienceleague.adobe.com/developer/commerce/storefront
+
+
+---
+
+# B2B drop-ins overview
+
+B2B drop-ins are pre-built, customizable UI components that provide complete B2B commerce functionality for your storefront. Each drop-in handles a specific aspect of the business-to-business shopping experience, from company management to purchase order workflows.
+
+## Available B2B drop-ins
+
+| Drop-in | Description |
+| ------- | ----------- |
+| [Company Management](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-management/) | Enables company profile management and role-based permissions for Adobe Commerce storefronts. |
+| [Company Switcher](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-switcher/) | Provides a UI component for users to switch between multiple companies they are associated with. |
+| [Purchase Order](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/purchase-order/) | Manages purchase order workflows, approval rules, and purchase order history for B2B transactions. |
+| [Quote Management](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/quote-management/) | Enables negotiable quotes for B2B customers with quote request, negotiation, and approval workflows. |
+| [Quick Order](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/quick-order/) | Bulk ordering by SKU, search, and CSV upload; Quick Order page and Grid Ordering for configurable products on PDP. |
+| [Requisition List](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/requisition-list/) | Provides tools for creating and managing requisition lists for repeat purchases and bulk ordering. |
+
+---
+
+# Event Bus
+
+
+
+---
+
+# Branding Drop-In Components
+
+Branding with design tokens (CSS custom properties that define reusable design values such as color, type scale, spacing, shape, and layout.) is the quickest way to customize your storefront.
+
+## Big picture
+
+The following diagram shows a small branding change. When we override the default value of a single shape token, we override the default border-radius of the `Button` in the storefront's library components (Foundational UI pieces such as buttons and inputs that are composed into larger drop-in experiences.), which changes the look and feel of drop-in components that use it.
+
+![Flowchart showing how CSS variables and design tokens from your project map into Button styling and other library components used by drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/images/brand/howtobrand.svg)
+
+*How to override the drop-in design tokens.*
+
+<CodeImport code={base} title="All default design tokens" lang="css" frame="none" />
+
+These token values come from the Adobe Commerce design system (The set of design tokens, base components, and conventions used to style Commerce storefront drop-ins.) and are picked up automatically by drop-in UI components.
+
+## Examples
+
+This example shows six design tokens with new values for three color and three shape tokens from the boilerplate's `styles/styles.css` file.
+
+<CodeExample code={styles} lang="css" title="styles/styles.css" />
+
+## Step-by-step
+
+The following steps show how to override default token values to match your brand (Your storefront’s visual identity, including colors, typography, spacing, and shape choices.) colors, typography, spacing, shapes, and layouts (grids).
+
+:::tip
+**Tip:** Work on one category at a time.
+
+For example, start with **typography**, then move on to **spacing**, **shapes**, **grids**, and finally **colors** (because they are typically the hardest to map to design tokens). Using this process ensures each brand category is completed and reviewed before moving on to the next.
+:::
+
+### 1. Open the `styles/styles.css` file.
+
+From the root of your project, open the `styles/styles.css` file.
+
+- scripts/
+- **styles/** _CSS files for drop-in component design tokens, fonts, deferred styles_
+  - fonts.css _-- Default font styles_
+  - lazy-styles.css _-- Global styles loaded after LCP_
+  - **styles.css** _-- Global design tokens and CSS classes for site_
+- tools/
+
+### 2. Override typography tokens.
+
+We suggest starting with typography overrides. Mapping a brand's typography to the available design tokens is typically straightforward. For example, https://www.nasa.gov/nasa-brand-center/brand-guidelines/#Typography specifies three font families:
+
+- **Inter** for large display and heading text
+- **Public Sans** for interfaces and body text
+- **DM Mono** for numbers and small labels
+
+:::tip
+**Tip:** Download the fonts. For better performance, we recommend downloading your brand fonts and adding them to the `fonts/` directory. Then, update the `styles/fonts.css` file to import them for use in the design tokens. Use the default Roboto font as an example for adding your brand's fonts.
+:::
+
+After installing the fonts, you can map them to the storefront design tokens. The following example shows how you might override the default typography design tokens to match NASA's brand guidelines.
+
+```css
+:root,
+.dropin-design {
+  --type-body-font-family: 'Public Sans', sans-serif;
+  --type-display-font-family: 'Inter', sans-serif;
+  --type-details-font-family: 'DM Mono', monospace;
+
+  --type-display-1-font: normal normal 300 60px/72px var(--type-display-font-family); /* Hero title */
+  --type-display-1-letter-spacing: 0.04em;
+  --type-display-2-font: normal normal 300 48px/56px var(--type-display-font-family); /* Banner title */
+  --type-display-2-letter-spacing: 0.04em;
+  --type-display-3-font: normal normal 300 34px/40px var(--type-display-font-family); /* Desktop & tablet section title */
+  --type-display-3-letter-spacing: 0.04em;
+
+  --type-headline-1-font: normal normal 400 24px/32px var(--type-display-font-family); /* Desktop & tablet page title */
+  --type-headline-1-letter-spacing: 0.04em;
+  --type-headline-2-default-font: normal normal 300 20px/24px var(--type-display-font-family); /* Rail title */
+  --type-headline-2-default-letter-spacing: 0.04em;
+  --type-headline-2-strong-font: normal normal 400 20px/24px var(--type-display-font-family); /* Mobile page and section title */
+  --type-headline-2-strong-letter-spacing: 0.04em;
+
+  --type-body-1-default-font: normal normal 300 16px/24px var(--type-body-font-family); /* Normal text paragraph */
+  --type-body-1-default-letter-spacing: 0.04em;
+  --type-body-1-strong-font: normal normal 400 16px/24px var(--type-body-font-family);
+  --type-body-1-strong-letter-spacing: 0.04em;
+  --type-body-1-emphasized-font: normal normal 700 16px/24px var(--type-body-font-family);
+  --type-body-1-emphasized-letter-spacing: 0.04em;
+  --type-body-2-default-font: normal normal 300 14px/20px var(--type-body-font-family);
+  --type-body-2-default-letter-spacing: 0.04em;
+  --type-body-2-strong-font: normal normal 400 14px/20px var(--type-body-font-family);
+  --type-body-2-strong-letter-spacing: 0.04em;
+  --type-body-2-emphasized-font: normal normal 700 14px/20px var(--type-body-font-family);
+  --type-body-2-emphasized-letter-spacing: 0.04em;
+
+  --type-button-1-font: normal normal 400 20px/26px var(--type-body-font-family); /* Primary button text */
+  --type-button-1-letter-spacing: 0.08em;
+  --type-button-2-font: normal normal 400 16px/24px var(--type-body-font-family); /* Small buttons */
+  --type-button-2-letter-spacing: 0.08em;
+
+  --type-details-caption-1-font: normal normal 400 12px/16px var(--type-details-font-family);
+  --type-details-caption-1-letter-spacing: 0.08em;
+  --type-details-caption-2-font: normal normal 300 12px/16px var(--type-details-font-family);
+  --type-details-caption-2-letter-spacing: 0.08em;
+  --type-details-overline-font: normal normal 700 12px/20px var(--type-details-font-family);
+  --type-details-overline-letter-spacing: 0.16em;
+}
+```
+
+### 3. Continue with spacing, shapes, layouts, and colors.
+
+Use the same process for overriding the spacing, shapes, grids, and color token values. Apply deeper styling (Visual customization of drop-ins through CSS overrides, token changes, and layout adjustments.) changes only after you have mapped the core tokens. With a company's brand guidelines, you can start discovering how to map brand categories to the design-token values you need to override. But it's not always straightforward. Mapping brand colors to the color token options can be challenging. This is when you will need to work closely with the design team to make decisions about which design tokens to override and how to map your brand colors to the available options.
+
+## Summary
+
+The process of branding drop-in components is typically fast and easy. Focus on one brand category at a time and work with your designers to solve the less obvious brand-to-token overrides.
+
+---
+
+# Commerce blocks and drop-ins
+
+## Related documentation
+
+- [Commerce Blocks Configuration](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/) - Learn how to configure Commerce blocks using Document Authoring
+- [Drop-in components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/introduction/) - Overview of all available drop-in components
+
+The Adobe Commerce boilerplate includes 30 Commerce blocks that wrap drop-in components to provide ready-to-use e-commerce functionality. These blocks integrate drop-ins with Edge Delivery Services, making it easy to add commerce features to your storefront without writing custom code.
+
+## Drop-ins used in Commerce blocks
+
+The following table shows which drop-in components are used by each Commerce block:
+
+| Drop-in | Commerce blocks |
+|---------|---------------------------|
+| **storefront-account** | Account Sidebar, Addresses, Customer Information, Orders List |
+| **storefront-auth** | Confirm Account, Create Account, Create Password, Forgot Password, Login, Search Order, Wishlist |
+| **storefront-cart** | Cart, Gift Options, Mini Cart, Order Product List |
+| **storefront-checkout** | Checkout |
+| **storefront-order** | Create Return, Customer Details, Order Comments, Order Cost Summary, Order Product List, Order Returns, Order Status, Returns List, Search Order, Shipping Status |
+| **storefront-payment-services** | Checkout |
+| **storefront-pdp** | Product Details |
+| **storefront-product-discovery** | Product List Page |
+| **storefront-recommendations** | Product Recommendations |
+| **storefront-wishlist** | Cart, Wishlist, Product Details, Product List Page, Product Recommendations |
+
+> The `@dropins/tools` package is a utility library required by all drop-in components, providing shared functionality like `fetch-graphql`, `event-bus`, and `initializer` utilities. It is not a drop-in component itself, but rather a dependency used by Commerce blocks that integrate drop-ins.
+
+---
+
+# Common events reference
+
+Drop-ins use common events for cross-component communication, authentication management, localization, and error handling. These events provide a standard way for your storefront to communicate with drop-ins and coordinate behavior across the application.
+
+> For conceptual information about the event system, see the [Events guide](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/events/). For drop-in-specific events, refer to each drop-in's individual Events page.
+
+## Events overview
+
+| Event | Category | Used By | Description |
+|-------|----------|---------|-------------|
+| [authenticated](#authenticated) | Authentication | Most B2C & B2B drop-ins | Authentication state changes |
+| [error](#error) | Error Handling | Most drop-ins | Error notifications |
+| [locale](#locale) | Localization | All drop-ins | Language/locale changes |
+
+---
+
+## authenticated
+
+Category: Authentication  
+Direction: Emitted by external source, Listened to by drop-ins  
+Used By: Cart, Checkout, Order, User Account, User Auth, Wishlist, and most B2B drop-ins
+
+Fires when the user's authentication state changes (login, logout, token refresh, session expiration). Drop-ins listen to this event to update their internal state and UI based on the current authentication status.
+
+### When to emit
+
+Emit this event from your storefront when:
+- An authentication token is refreshed
+- The authentication state is restored (e.g., page refresh with active session)
+- A session expires
+- A user logs out
+- A user successfully logs in
+
+### Data payload
+
+```typescript
+boolean
+```
+
+The payload is a simple boolean value:
+- `true` = User is authenticated
+- `false` = User is not authenticated or has logged out
+
+### Usage examples
+
+**Emit when authentication changes:**
+
+```javascript
+
+// User logged in
+events.emit('authenticated', true);
+
+// User logged out
+events.emit('authenticated', false);
+```
+
+**Listen for authentication changes:**
+
+```javascript
+
+const authListener = events.on('authenticated', (isAuthenticated) => {
+  if (isAuthenticated) {
+    console.log('User authenticated');
+    // Update UI, load user-specific data, etc.
+  } else {
+    console.log('User logged out');
+    // Clear user data, redirect to login, etc.
+  }
+});
+
+// Later, when you want to stop listening
+authListener.off();
+```
+
+---
+
+## error
+
+Category: Error Handling  
+Direction: Emitted by drop-ins, Listened to by external code  
+Used By: Most drop-ins for error reporting
+
+Fires when a drop-in encounters an error (API failure, validation error, network timeout). Your storefront should listen to this event to display error messages, log errors, or trigger error recovery logic.
+
+### When emitted
+
+Drop-ins emit this event when:
+- API requests fail
+- Critical operations fail
+- Network errors occur
+- Unexpected errors occur
+- Validation fails
+
+### Data payload
+
+```typescript
+{
+  message: string;
+  code?: string;
+  details?: any;
+  source?: string;
+}
+```
+
+### Usage examples
+
+**Listen for errors from drop-ins:**
+
+```javascript
+
+const errorListener = events.on('error', (error) => {
+  console.error('Drop-in error:', error.message);
+  
+  // Display error to user
+  showErrorNotification(error.message);
+  
+  // Log to error tracking service
+  if (window.Sentry) {
+    Sentry.captureException(error);
+  }
+  
+  // Handle specific error codes
+  if (error.code === 'AUTH_EXPIRED') {
+    redirectToLogin();
+  }
+});
+
+// Later, when you want to stop listening
+errorListener.off();
+```
+
+**Emit errors from custom code:**
+
+```javascript
+
+try {
+  // Your custom logic
+  await customOperation();
+} catch (err) {
+  events.emit('error', {
+    message: 'Custom operation failed',
+    code: 'CUSTOM_ERROR',
+    details: err,
+    source: 'MyCustomComponent'
+  });
+}
+```
+
+---
+
+## locale
+
+Category: Localization  
+Direction: Emitted by external source, Listened to by drop-ins  
+Used By: All drop-ins with internationalization support
+
+Fires when the application's language or locale changes. Drop-ins listen to this event to update their text content, date formatting, currency display, and other locale-specific elements.
+
+### When to emit
+
+Emit this event from your storefront when:
+- A user selects a different language
+- The application detects and applies a locale based on user preferences
+- The locale is programmatically changed
+
+### Data payload
+
+```typescript
+string
+```
+
+The locale string should follow standard locale format (e.g., `en-US`, `fr-FR`, `de-DE`).
+
+### Usage examples
+
+**Emit when locale changes:**
+
+```javascript
+
+// User selects a new language
+events.emit('locale', 'fr-FR');
+
+// Or based on browser detection
+const userLocale = navigator.language || 'en-US';
+events.emit('locale', userLocale);
+```
+
+**Listen for locale changes:**
+
+```javascript
+
+const localeListener = events.on('locale', (newLocale) => {
+  console.log('Locale changed to:', newLocale);
+  // Update UI text, reload translations, etc.
+  updateTranslations(newLocale);
+});
+
+// Later, when you want to stop listening
+localeListener.off();
+```
+
+---
+
+# Creating Drop-In Components
+
+This topic describes how to use the `drop-template` repository to create drop-in components for Adobe Commerce Storefronts.
+
+## What are drop-in component templates?
+Drop-in templates are GitHub Templates that allow you to quickly create drop-in components with the same structure, branches, files, and best practices built in. The `dropin-template` repository provides the starting point for creating new drop-ins quickly and consistently.
+
+For more information on GitHub Templates, you can refer to the following resource: https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template.
+
+## How to use the Adobe Commerce drop-in template
+:::note
+Supported Node versions are: Maintenance (v20) and Active (v22).
+:::
+
+To create a new drop-in component using the Adobe Commerce drop-in template, follow these steps:
+
+1. **Navigate to the Template Repository**: Go to https://github.com/adobe-commerce/dropin-template.
+1. **Create a New Repository**: Click on the **Use this template** button to create a new repository based on the template. This will generate a new repository with the same directory structure and files as the template.
+1. **Clone Your New Repository**: You can now clone the newly created repository to your local machine using `git clone`.
+1. **Getting Started**: Follow the instructions below to install the dependencies, generate a configuration file, update your Mesh endpoint, generate your source files, and launch your development environment.
+
+**Troubleshooting:**  
+- If you don't see the **Use this template** button, make sure you are logged into GitHub.
+- If you get a "Permission denied" error, check your SSH keys or use HTTPS.
+
+## Getting started
+
+### 1. Install dependencies
+Before you begin, make sure you have all the necessary dependencies installed. Run the following command to install all required packages:
+```bash
+npm install
+```
+**Troubleshooting:**  
+If you see errors about missing Node.js, install it from [nodejs.org](https://nodejs.org/).
+
+### 2. Generate new config
+Before you can start developing, you need to generate the `.elsie.js` config file. The Elsie CLI uses this file to generate new components, containers, and API functions in specified directories within your project.
+To create a new configuration file, run the following command. Replace `<DropInName>` with the name of your new drop-in.
+
+```bash
+npx elsie generate config --name <DropInName>
+```
+
+After generating the `.elsie.js` config, open it and take a look. Below is an annotated version describing the main properties:
+
+```javascript
+module.exports = {
+  name: 'Login', // The name of your frontend. This name can be changed at any time.
+  api: {
+    root: './src/api', // Directory where the CLI will add all your generated API functions.
+    importAliasRoot: '@/login/api',
+  },
+  components: [
+    {
+      id: 'Components',
+      root: './src/components', // Directory where the CLI will add all your generated components.
+      importAliasRoot: '@/login/components',
+      cssPrefix: 'elsie',
+      default: true,
+    },
+  ],
+  containers: {
+    root: './src/containers', // Directory where the CLI will add all your generated containers.
+    importAliasRoot: '@/login/containers',
+  },
+};
+```
+
+**Troubleshooting:**  
+If `npx` is not found, ensure Node.js and npm are installed.
+
+:::tip[More Info]
+For more details on _Elsie CLI_ commands and their usage, visit this documentation page: https://experienceleague.adobe.com/developer/commerce/storefront/sdk/get-started/cli/.
+:::
+
+### 3. Explore the project structure
+Understand where to find and place your code.
+
+  - .storybook/ *-- Best-practice Storybook configurations right out of the box*
+  - examples/
+    - html-host/ *-- Preconfigured HTML UI for testing your drop-in components*
+      - example.css
+      - favicon.ico
+      - index.html
+      - styles.css
+  - src/
+    - api/ *-- By default, the Elsie CLI adds your API functions here*
+    - data/ *-- Contains data models and type definitions*
+    - docs/ *-- Provides an MDX template to document your frontend*
+    - i18n/ *-- Internationalization setup with starter en_US.json file*
+    - render/ *-- Contains rendering utilities and provider functions*
+    - types/ *-- TypeScript type definitions and interfaces*
+  - tests/ *-- Unit tests and testing utilities*
+  - elsie.js *-- Configuration file for creating components, containers and functions*
+  - .env.sample *-- Preconfigured settings for a development-only mesh endpoint*
+  - .eslintrc.js *-- Preconfigured linting*
+  - .gitignore
+  - .jest.config.js *-- Preconfigured unit testing*
+  - LICENSE *-- Adobe Drop-in Template License*
+  - package.json *-- Preconfigured dependencies*
+  - prettier.config.js *-- Preconfigured formatting*
+  - README.md *-- Quick instructional overview of frontend development tasks*
+  - storybook-stories.js *-- Additional storybook settings*
+  - tsconfig.js *-- Preconfigured for TypeScript*
+
+### 4. Update mesh/backend endpoint (for development only)
+For development purposes, you will need to rename your `.env.sample` file to `.env` and update the new `.env` file with the correct mesh/backend endpoint. This file is used to store environment-specific configurations.
+```sh
+ENDPOINT="your-endpoint"
+```
+**Troubleshooting:**  
+If you see network errors when running the dev server, check your endpoint URL.
+
+### 5. Start the development server
+```bash
+npm run dev
+```
+Congratulations! You just launched your frontend development environment. It's a preconfigured HTML page (`examples > html-host > index.html`) that loads your frontend components for testing during development:
+
+![Frontend Development Environment](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/src/content/docs/sdk/images/frontend.png)
+
+*Frontend development environment*
+
+Now you're ready to start building a composable frontend. Stop the server with `Ctrl + C` and let's get started.
+
+### 6. Generate a new UI component
+UI components in this codebase are primarily responsible for rendering the UI, handling presentation, and managing styling. To generate a new UI component, use the following command. Replace `<MyUIComponent>` with the name of your component.
+
+```bash
+npx elsie generate component --pathname <MyUIComponent>
+```
+**Make sure to use Pascal casing for the component name.**
+
+For a login form, you might choose:
+
+```bash
+npx elsie generate component --pathname LoginForm
+```
+
+Let's take a quick look at the files that are generated for you:
+
+```console
+~/composable-login [main] » npx elsie generate component --pathname LoginForm
+🆕 src/components/LoginForm/LoginForm.css created
+🆕 src/components/LoginForm/LoginForm.stories.tsx created
+🆕 src/components/LoginForm/LoginForm.test.tsx created
+🆕 src/components/LoginForm/LoginForm.tsx created
+🆕 src/components/LoginForm/index.ts created
+🆕 src/components/index.ts created
+~/composable-login [main] »
+```
+
+These files were not only generated with the appropriate names, but they are completely preconfigured to work together as a unit. For example, the `LoginForm` component was automatically imported into `src/components/index.ts` to let you start referencing the component throughout your project.
+
+And if you run `npm run dev` again, you'll see your new component in the Storybook UI, configured with an example and best practices to help you get started with Storybook.
+
+### 7. Generate a new frontend container
+Containers handle business logic, state management, API calls, and data fetching using the components. They do not contain CSS or styling logic.
+To create a new frontend container, use this command. Replace `<MyContainer>` with the desired name of your frontend container. 
+
+**Make sure to use Pascal casing for the container name.**
+
+```bash
+npx elsie generate container --pathname <MyContainer>
+```
+For a login form, you might choose:
+
+```bash
+npx elsie generate container --pathname LoginContainer
+```
+
+### 8. Generate a new API function
+The API layer provides core functionalities like fetching, handling events, and GraphQL operations. This API is primarily consumed by a container.
+
+If you need to add a new API function, run the following command. Replace `<myApiFunction>` with the desired name for your API function. 
+
+**Make sure to use camel casing for the API name.**
+
+```bash
+npx elsie generate api --pathname <myApiFunction>
+```
+
+For a login form, you might want to add `login` and `logout` functions as follows:
+
+```bash
+npx elsie generate api --pathname login
+```
+
+```bash
+npx elsie generate api --pathname logout
+```
+
+**Location:** 
+
+Generated files will be placed in `src/components/`, `src/containers/`, and `src/api/` respectively
+
+## Adding a shared component to your project
+After creating your drop-in component, let's add a shared component from the Storefront SDK. These components are designed to be reusable and customizable, making it easier to build consistent and high-quality user interfaces. Follow the steps below to add a shared component to your drop-in component project.
+
+### 1. Install the `@adobe-commerce/elsie` package
+Run the following command to install the Storefront SDK package:
+
+```bash
+npm install @adobe-commerce/elsie
+```
+
+### 2. Use a shared component from the SDK
+In your generated UI component, import a shared component from the Storefront SDK package and render it. For example, you can add the `Button` component as follows:
+
+   ```javascript
+   import { Button } from '@adobe-commerce/elsie';
+   
+   function MyUiComponent() {
+     return (
+       
+         <Button label="Click Me" />
+       
+     );
+   }
+   ```
+
+## Development and testing
+These development tools help you preview components during your development process and ensure that your code is properly tested.
+
+### I. Run unit tests
+The commands to generate a component, container or an API, also create a `.test.tsx` file in their respective directories. These files are useful for unit testing.
+
+To ensure your code is working as expected, you should run these unit tests to catch any issues early in the development process:
+
+```bash
+npm run test
+```
+
+This project is set up to use the Jest testing framework. Here are some useful resources:
+
+- https://jestjs.io/docs/getting-started
+- https://testing-library.com/docs/preact-testing-library/intro
+
+### II. Build production bundles
+Once you're ready to prepare your app for production, run the following command to build the production bundles:
+
+```bash
+npm run build
+```
+A dist/ directory with production-ready assets will be created.
+
+### III. Storybook
+Storybook is a tool used for developing and testing UI components in isolation. Once a container/component is created using one of the commands above, a `.stories.tsx` file is also created in the same directory as the component/container to preview the component/container.
+
+Use `npm run storybook` to spin up the Storybook environment at `http://localhost:6006/`.
+
+https://storybook.js.org/docs is the official Storybook documentation.
+
+### IV. Sandbox environment
+The Sandbox is an HTML file with minimal application setup to deploy your drop-in. It is useful for testing and integration between different pieces of your project.
+
+To render your container in the sandbox, update the `examples/html-host/index.html` file.
+Use `npm run serve` to spin up the Sandbox environment at `http://127.0.0.1:3000`.
+
+## Understanding the drop-in sandbox environment
+The following steps help you preview your drop-in in the Sandbox environment (`examples/html-host/index.html`).
+
+### 1. Import map configuration
+```html
+<script type="importmap">
+  {
+    "imports": {
+      "@dropins/tools/": "https://cdn.jsdelivr.net/npm/@dropins/tools/",
+      "my-pkg/": "http://localhost:3002/"
+    }
+  }
+</script>
+```
+
+This tells the browser:
+
+- **Adobe Commerce tools**: `@dropins/tools/` (served from `https://cdn.jsdelivr.net/npm/@dropins/tools/`)
+- **Your drop-in code**: `my-pkg/` (served from `http://localhost:3002/`)
+
+> **Tip:** Replace `my-pkg/` with your drop-in's npm name, for example, `@dropins/cart/`.  
+> Add and edit other imports for your drop-in as needed.
+
+### 2. Core imports
+```javascript
+// Import API functions to use with action buttons
+// Replace `my-pkg` with `@dropins/YourDropin`
+// or more specifically:
+```
+```javascript
+// The event bus is a core communication tool for all drop-ins. 
+// They subscribe and publish to events to talk to each other without direct coupling.
+```
+*For Mesh-based Drop-ins (for example, Cart):*
+```javascript
+
+// GraphQL Client - For data fetching
+
+// Initialize GraphQL Client (Mesh)
+// Replace with your actual endpoint
+mesh.setEndpoint('your-endpoint');
+```
+
+*For Direct API-based drop-ins (for example, Recommendations):*
+
+```javascript
+// Configure API
+// Replace with your actual endpoint
+pkg.setEndpoint('your-endpoint');
+```
+
+*Initializers*
+
+The initializer is a lifecycle management system that handles the setup, configuration, and coordination of components in the application.
+
+```javascript
+```
+
+### 3. Drop-in container setup
+Uncomment and modify these lines to set up your container.
+
+```javascript
+// import { render as provider } from 'my-pkg/render.js';
+// import <Container> from 'my-pkg/containers/<Container>.js';
+```
+For example:
+
+```javascript
+```
+
+### Sandbox structure
+The sandbox environment is divided into three main sections:
+
+#### 1. Action Controls (Top)
+Controls for triggering functionality:
+
+```html
+<fieldset class="actions">
+  <legend>API Functions</legend>
+  <button id="action-1" disabled>Action</button>
+</fieldset>
+```
+
+Example usage:
+
+```javascript
+const $action_1 = document.getElementById('action-1');
+$action_1.addEventListener('click', () => {
+  console.log("action-1 has been clicked");
+  myFunction(); // or pkg.myFunction();
+});
+```
+
+#### 2. Data/debug display (Middle)
+Real-time data and response visualization:
+
+```html
+<code data-label="fetchGraphQl">
+  <pre id="data">⏳ Loading...</pre>
+</code>
+```
+
+Example usage:
+
+```javascript
+// Display event data
+const $data = document.getElementById('data');
+events.on('<eventName>', (data) => {
+  $data.innerText = JSON.stringify(data, null, 2);
+});
+
+// Update loading state
+$data.innerText = '⏳ Loading...';
+```
+
+#### 3. Container display (Bottom)
+Where your drop-in components are rendered:
+
+```html
+
+  <h2 class="heading">Frontend Containers</h2>
+  
+
+```
+
+Example usage:
+
+```javascript
+const $my_container = document.getElementById('my-container');
+provider.render(Container, {
+  // Your container props
+})($my_container);
+```
+
+:::tip[More Info]
+For more details on the usage of _event bus_, _initializers_, and _render_, visit this documentation page: https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/.
+:::
+
+### Styling the sandbox
+The Sandbox environment is styled using two stylesheets:
+
+- `style.css` which is the base styling file that handles root-level styles and variables as well as global element styles.  
+- `example.css` which is specifically for styling sandbox UI components.
+
+## Best practices and accessibility
+- Use meaningful names for components and API functions.
+- Write tests for every component and function.
+- Keep components small and focused.
+- Document your code and update the MDX docs in `src/docs/`.
+- Use Storybook to visually test components.
+- Commit early and often; use branches for new features.
+- Use clear, simple language in UI and documentation.
+- Ensure all components are keyboard accessible.
+- Add ARIA labels where appropriate.
+- Test with screen readers.
+
+**Common pitfalls:**
+
+- Forgetting to create and update `.env` with the correct endpoint.
+- Not running `npm install` after cloning.
+- Skipping tests before building for production.
+
+## Summary and next steps
+You've learned how to:
+
+- Set up a drop-in component project
+- Generate and configure components, API functions, and containers
+- Run and test your frontend locally
+- Build for production
+
+**Next Steps:**
+
+- Explore advanced component patterns
+- Integrate with real backend APIs
+- Contribute to the [drop-in template repo](https://github.com/adobe-commerce/dropin-template)
+
+---
+
+# Dictionary Customization Guide
+
+Every drop-in includes a **dictionary** with all user-facing text. Customize it to localize for different languages, match your brand voice, or override default text. The drop-in **deep-merges** your custom values with defaults—you only specify what you want to change.
+
+> **Which guide do I need?** - **Using the boilerplate?** → See [Labels](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/labeling/) for the placeholder system  
+- **Want conceptual understanding?** → You're in the right place (deep-merge behavior, multi-language patterns, advanced use cases)
+- **Need specific drop-in keys?** → See individual dictionary pages: [Cart](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/dictionary/), [Checkout](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/dictionary/), [Product Details](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/dictionary/), etc.
+
+## Quick start
+
+1. **Find the dictionary keys:** Check your drop-in's dictionary page ([Cart](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/dictionary/), [Checkout](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/dictionary/), and so on).
+
+2. **Create your overrides:**
+
+   ```javascript title="src/config/custom-dictionary.js"
+   export const customDictionary = {
+     Cart: {
+       MiniCart: {
+         heading: "Shopping Basket ({count})",  // Only override what you want
+         cartLink: "View Basket"
+       }
+     }
+   };
+   ```
+
+3. **Pass it to `initialize()`:**
+
+   ```javascript title="scripts/initializers/cart.js"
+   import { initializers } from '@dropins/tools/initializer.js';
+   import { initialize } from '@dropins/storefront-cart/api.js';
+   import { customDictionary } from '../config/custom-dictionary.js';
+
+   const langDefinitions = {
+     default: {
+       ...customDictionary,
+     },
+   };
+
+   await initializers.mountImmediately(initialize, { langDefinitions });
+   ```
+
+> **Partial overrides only:** You don't need the entire dictionary. The drop-in deep-merges your values with the defaults, so specify only what you're changing.
+
+## How deep merge works
+
+Understanding the merge behavior is critical:
+
+**✅ Override specific keys, keep all the defaults:**
+```javascript
+// Your dictionary:
+{ Cart: { MiniCart: { heading: "My Cart" } } }
+
+// Result (merged with defaults):
+{ 
+  Cart: { 
+    MiniCart: { 
+      heading: "My Cart",        // ← Your value
+      cartLink: "View Cart",     // ← Default kept
+      checkoutLink: "Checkout"   // ← Default kept
+    }
+  }
+}
+```
+
+**✅ Nested objects merge recursively:**
+```javascript
+{
+  Cart: {
+    PriceSummary: {
+      promoCode: {
+        errors: {
+          invalid: "That code didn't work"  // Only this changes
+          // All other errors stay default
+        }
+      }
+    }
+  }
+}
+```
+
+## Multi-language support
+
+Create dictionaries for each locale and load them dynamically:
+
+### Setup
+
+```javascript title="scripts/config/dictionaries/cart-en.js"
+export const cartEN = {
+  Cart: { MiniCart: { heading: "Cart ({count})" } }
+};
+```
+
+```javascript title="scripts/config/dictionaries/cart-fr.js"
+export const cartFR = {
+  Cart: { MiniCart: { heading: "Panier ({count})" } }
+};
+```
+
+### Load by locale
+
+```javascript title="scripts/initializers/cart.js"
+
+const userLocale = navigator.language.replace('-', '_');
+const translations = { en_US: cartEN, fr_FR: cartFR };
+const selectedLang = translations[userLocale] || cartEN;
+
+const langDefinitions = {
+  default: {
+    ...selectedLang,
+  },
+};
+
+await initializers.mountImmediately(initialize, { langDefinitions });
+```
+
+:::note
+**Dynamic language switching**: To switch languages after initialization, you'll need to re-initialize the drop-in with the new `langDefinitions`. Store your translations and re-run the initialization code with the selected language.
+:::
+
+> Test the text length in all languages—longer translations may affect the UI layout.
+
+## Advanced patterns
+
+### Organize by drop-in
+
+```
+src/config/dictionaries/
+  cart.js
+  checkout.js
+  user-auth.js
+```
+
+```javascript title="scripts/initializers/cart.js"
+
+const langDefinitions = {
+  default: {
+    ...cartDictionary,
+  },
+};
+
+await initializers.mountImmediately(initialize, { langDefinitions });
+```
+
+### Use JSON
+
+```json title="scripts/config/dictionaries/en_US.json"
+{
+  "Cart": {
+    "MiniCart": {
+      "heading": "Cart ({count})"
+    }
+  }
+}
+```
+
+```javascript title="scripts/initializers/cart.js"
+
+const langDefinitions = {
+  default: {
+    ...enUS,
+  },
+};
+
+await initializers.mountImmediately(initialize, { langDefinitions });
+```
+
+### Load from CMS
+
+```javascript title="scripts/initializers/cart.js"
+
+const translations = await fetch('/api/translations/cart/en_US')
+  .then(res => res.json());
+
+const langDefinitions = {
+  default: {
+    ...translations,
+  },
+};
+
+await initializers.mountImmediately(initialize, { langDefinitions });
+```
+
+---
+
+## Best practices
+
+1. **Keep placeholders** - Values with `{count}`, `{price}`, and so on, must keep these placeholders for dynamic data injection
+2. **Use version control** - Track all custom dictionaries in Git
+3. **Start small** - Override a few keys, test them, then iterate  
+4. **Document the changes** - Add comments explaining why certain values were customized
+5. **Test the text length** - Longer translations can break the UI layouts
+6. **Check for updates** - New drop-in versions may add dictionary keys
+
+## Troubleshooting
+
+**Custom values not appearing:**
+- Verify that `langDefinitions` is passed to `initialize()`
+- Check that the locale key matches exactly (`en_US` not `en-US`)
+- Ensure that the dictionary structure matches the defaults
+- Check the console for initialization errors
+
+**Missing dynamic values (counts, prices):**
+```javascript
+// ❌ Bad
+heading: "Shopping Cart"
+
+// ✅ Good - keep {count} placeholder
+heading: "Shopping Cart ({count})"
+```
+
+**Language not switching:**
+Some components need to re-render after `setLang()`. Try refreshing the page or re-initializing the drop-in.
+
+---
+
+**Related:** [Initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/initialization/) • [Labels](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/labeling/) • [Branding](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/branding/)
+
+---
+
+# Events
+
+Drop-in components implement an event-driven architecture that uses the `@dropins/tools/event-bus.js` module to facilitate communication between components. This event system enables drop-ins to respond to application state changes, maintain loose coupling between components, and keep their state synchronized across your storefront.
+
+> **Looking for the API reference?** For detailed API documentation including methods like `events.on()`, `events.emit()`, and advanced features like scoping, see the [Event Bus API Reference](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/events/).
+
+## Event system architecture
+
+The system uses a publish-subscribe pattern where components can:
+
+1. **Subscribe** to specific events using `events.on()`
+2. **Emit** events using `events.emit()`
+3. **Unsubscribe** using `subscription.off()`
+
+This pattern allows drop-ins to communicate without having direct dependencies on each other, making your storefront more modular and maintainable.
+
+### Multiple storefront routes
+
+> The bus coordinates drop-ins on the same loaded document. It does not send events from one full page navigation to the next. When the shopper moves from a cart route to a checkout route, the checkout document loads a new bus instance; cart continuity comes from Commerce (server-side cart) and from your storefront wiring that rehydrates the cart on the new page. The Commerce boilerplate persists the cart id when `cart/data` fires (`persistCartDataInSession` in the https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/initializers/index.js) and imports the https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/initializers/cart.js on startup. The checkout block listens on that new page's bus; see https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-checkout/commerce-checkout.js for `cart/initialized` and related handlers. For a shorter introduction, read [How drop-ins coordinate on a page](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/drop-ins-on-a-page/). For synchronous reads from code, see [Using drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/quick-start/) (`getCartDataFromCache`).
+
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'edgeLabelBackground':'#ffffff'}}}%%
+graph LR
+    Cart(Cart Drop-in)
+    Checkout(Checkout Drop-in)
+    Auth(User Auth Drop-in)
+    EventBus(Event Bus)
+    Custom(Custom Code)
+    
+    Cart -->|emits cart/updated| EventBus
+    EventBus -->|cart/updated| Checkout
+    Auth -->|emits authenticated| EventBus
+    EventBus -->|authenticated| Cart
+    EventBus -->|authenticated| Checkout
+    Custom -->|emits locale| EventBus
+    EventBus -->|locale| Cart
+    
+    style EventBus fill:#fef3c7,stroke:#f59e0b,stroke-width:3px
+    style Cart fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+    style Checkout fill:#e0e7ff,stroke:#6366f1,stroke-width:2px
+    style Auth fill:#f3e8ff,stroke:#a855f7,stroke-width:2px
+    style Custom fill:#fce7f3,stroke:#ec4899,stroke-width:2px
+```
+
+Emits Only)
+    DropinB(Drop-in B
+Listens Only)
+    DropinC(Drop-in C
+Emits and Listens)
+    EventBus(Event Bus)
+    External1(Other
+Components)
+    External2(Other
+Components)
+    
+    DropinA -->|emits| EventBus
+    EventBus -.->|listens| External1
+    External2 -->|emits| EventBus
+    EventBus -.->|listens| DropinB
+    DropinC -->|
+emits| EventBus
+    EventBus -.->|listens| DropinC
+    
+    linkStyle 0 stroke-width:2px
+    linkStyle 1 stroke-width:1.5px
+    linkStyle 2 stroke-width:2px
+    linkStyle 3 stroke-width:1.5px
+    linkStyle 4 stroke-width:2px
+    linkStyle 5 stroke-width:1.5px
+    
+    style DropinA fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+    style DropinB fill:#e0e7ff,stroke:#6366f1,stroke-width:2px
+    style DropinC fill:#f3e8ff,stroke:#a855f7,stroke-width:2px
+    style EventBus fill:#fef3c7,stroke:#f59e0b,stroke-width:3px
+    style External1 fill:#f1f5f9,stroke:#64748b,stroke-width:1.5px
+    style External2 fill:#f1f5f9,stroke:#64748b,stroke-width:1.5px
+`} caption="Three types of event flow: emits only (blue), listens only (indigo), and bidirectional (purple).">
+</Diagram>
+
+> Each drop-in's event documentation clearly indicates which events it emits and which it listens to. This helps you understand the data flow in your storefront.
+
+## Event subscription
+
+Components subscribe to events to listen for and respond to the changes elsewhere in the application.
+
+### Subscription syntax
+
+To subscribe to an event, provide:
+
+1. The **event name** (as a string)
+2. An **event handler** callback function that receives the payload
+3. Optional **configuration** parameters
+
+```javascript
+const subscription = events.on('event-name', handler, options);
+```
+
+### Subscription options
+
+Event subscriptions support an optional configuration parameter:
+
+- **`eager: true`**: The handler executes immediately if the event has been emitted previously
+- **`eager: false`** (default): The handler only responds to future emissions of the event
+
+See [Best Practices](#best-practices) for detailed guidance on using eager mode effectively.
+
+### Example: Subscribing to an event
+
+Listen to an initialization event:
+
+```javascript
+
+// Subscribe to the event
+const subscription = events.on('cart/initialized', (data) => {
+  console.log('Cart initialized with data:', data);
+  // Handle the cart data
+  updateUI(data);
+});
+
+// Later, unsubscribe when no longer needed
+subscription.off();
+```
+
+## Event emission
+
+Components emit events to share information with other components, drop-ins, or external systems.
+
+### Emission syntax
+
+To emit an event, provide:
+
+1. The **event name** (as a string)
+2. The **payload** containing the data to share
+
+```javascript
+events.emit('event-name', payload);
+```
+
+### Example: Emitting an event
+
+Emit an event when state changes:
+
+```javascript
+
+function updateCartQuantity(itemId, quantity) {
+  // Update the cart
+  const updatedCart = performCartUpdate(itemId, quantity);
+  
+  // Notify other components about the change
+  events.emit('cart/updated', updatedCart);
+}
+```
+
+---
+
+## Common events reference
+
+These three events are shared across multiple drop-ins. Your storefront code emits `authenticated` and `locale`; drop-ins emit `error` for your code to handle.
+
+| Event | Category | Used By | Description |
+|-------|----------|---------|-------------|
+| [authenticated](#authenticated) | Authentication | Most B2C & B2B drop-ins | Authentication state changes |
+| [error](#error) | Error Handling | Most drop-ins | Error notifications |
+| [locale](#locale) | Localization | All drop-ins | Language/locale changes |
+
+### authenticated
+
+Category: Authentication
+Direction: Emitted by an external source, listened to by drop-ins
+Used By: Cart, Checkout, Order, User Account, User Auth, Wishlist, and most B2B drop-ins
+
+Fires when the user's authentication state changes (login, logout, token refresh, session expiration). Drop-ins listen to this event to update their internal state and UI.
+
+#### When to emit
+
+Emit this event from your storefront when:
+
+- An authentication token is refreshed
+- The authentication state is restored (for example, page refresh with active session)
+- A session expires
+- A user logs out
+- A user successfully logs in
+
+#### Data payload
+
+```typescript
+boolean
+```
+
+`true` = user is authenticated. `false` = user is not authenticated or has logged out.
+
+#### Usage examples
+
+```javascript
+
+// User logged in
+events.emit('authenticated', true);
+
+// User logged out
+events.emit('authenticated', false);
+```
+
+```javascript
+
+const authListener = events.on('authenticated', (isAuthenticated) => {
+  if (isAuthenticated) {
+    // Update UI, load user-specific data, etc.
+  } else {
+    // Clear user data, redirect to login, etc.
+  }
+});
+
+// Stop listening when no longer needed
+authListener.off();
+```
+
+---
+
+### error
+
+Category: Error Handling
+Direction: Emitted by drop-ins, external code listens
+Used By: Most drop-ins for error reporting
+
+Fires when a drop-in encounters an error (API failure, validation error, network timeout). Listen to this event to display error messages, log errors, or trigger error recovery logic.
+
+#### When emitted
+
+Drop-ins emit this event when:
+
+- API requests fail
+- Critical operations fail
+- Network errors occur
+- Validation fails
+
+#### Data payload
+
+```typescript
+{
+  message: string;
+  code?: string;
+  details?: any;
+  source?: string;
+}
+```
+
+#### Usage examples
+
+```javascript
+
+const errorListener = events.on('error', (error) => {
+  console.error('Drop-in error:', error.message);
+  showErrorNotification(error.message);
+
+  if (error.code === 'AUTH_EXPIRED') {
+    redirectToLogin();
+  }
+});
+
+errorListener.off();
+```
+
+---
+
+### locale
+
+Category: Localization
+Direction: Emitted by external source, listened to by drop-ins
+Used By: All drop-ins with internationalization support
+
+Fires when the application's language or locale changes. Drop-ins listen to update their text content, date formatting, currency display, and other locale-specific elements.
+
+#### When to emit
+
+Emit this event from your storefront when:
+
+- A user selects a different language
+- The application detects and applies a locale based on user preferences
+- The locale is programmatically changed
+
+#### Data payload
+
+```typescript
+string
+```
+
+The locale string should follow standard format (for example, `en-US`, `fr-FR`, `de-DE`).
+
+#### Usage examples
+
+```javascript
+
+// User selects a new language
+events.emit('locale', 'fr-FR');
+
+// Or based on browser detection
+const userLocale = navigator.language || 'en-US';
+events.emit('locale', userLocale);
+```
+
+```javascript
+
+const localeListener = events.on('locale', (newLocale) => {
+  updateTranslations(newLocale);
+});
+
+localeListener.off();
+```
+
+---
+
+## Best practices
+
+### Use type-safe event names
+
+Import event types when available to ensure you're using the correct event names:
+
+```typescript
+
+// TypeScript will validate the event name
+events.on('cart/initialized', (data) => {
+  // ...
+});
+```
+
+### Use eager mode wisely
+
+Set `eager: true` when you need the current state immediately:
+
+```javascript
+// Good: Getting initial state on component mount
+events.on('cart/data', (data) => {
+  initializeComponent(data);
+}, { eager: true });
+
+// Good: Only responding to future changes
+events.on('cart/updated', (data) => {
+  updateComponent(data);
+}, { eager: false });
+```
+
+### Keep handlers focused
+
+Event handlers should be small and focused on a single responsibility:
+
+```javascript
+// Good: Focused handler
+events.on('cart/updated', (cart) => {
+  updateCartBadge(cart.itemCount);
+});
+
+// Avoid: Handler doing too much
+events.on('cart/updated', (cart) => {
+  updateCartBadge(cart.itemCount);
+  updateMiniCart(cart);
+  recalculateTotals(cart);
+  logAnalytics(cart);
+  // Too many responsibilities
+});
+```
+
+### Use state management helpers
+
+Use `events.lastPayload('<event>')` to retrieve the most recent state without waiting for the next event:
+
+```javascript
+// Get current authentication state
+const isAuthenticated = events.lastPayload('authenticated');
+if (isAuthenticated) {
+  console.log('User is authenticated');
+}
+
+// Get current locale
+const currentLocale = events.lastPayload('locale');
+console.log('Current locale:', currentLocale);
+```
+
+### Handle errors gracefully
+
+Always include error listeners in production applications to gracefully handle failures and provide helpful feedback to users.
+
+---
+
+## Event sources: External vs. Internal
+
+Events can originate from different sources in your storefront:
+
+**External events** are fired by:
+- Your storefront application code (authentication, locale changes)
+- Other drop-ins (cart updates affecting checkout)
+- Third-party integrations (payment processors, analytics)
+
+**Internal events** are fired by:
+- Components within the same drop-in (checkout steps communicating with each other)
+- Drop-in initialization and state management
+
+Understanding whether an event is external or internal helps you determine:
+- Where to emit the event in your custom code
+- Which events you need to handle from your storefront
+- How drop-ins coordinate internally vs. with the broader application
+
+The following diagram illustrates this using the Checkout drop-in as an example:
+
+Integrations)
+    end
+    
+    subgraph EventBus["Event Bus"]
+        EB(Central Event Bus)
+    end
+    
+    subgraph Checkout["Checkout"]
+        direction TB
+        Container1(Address Form)
+        Container2(Shipping Methods)
+        Container3(Payment Form)
+        Container4(Order Summary)
+    end
+    
+    Storefront -->|authenticated, locale| EB
+    Cart -->|cart/initialized, cart/updated, cart/data| EB
+    ThirdParty -->|payment/complete| EB
+    
+    EB -.->|External Events| Container1
+    EB -.->|External Events| Container2
+    EB -.->|External Events| Container3
+    EB -.->|External Events| Container4
+    
+    Container2 ==>|Internal Events| Container4
+    Container3 ==>|Internal Events| Container4
+    
+    linkStyle 3 stroke:#6366f1,stroke-width:1.5px
+    linkStyle 4 stroke:#6366f1,stroke-width:1.5px
+    linkStyle 5 stroke:#6366f1,stroke-width:1.5px
+    linkStyle 6 stroke:#6366f1,stroke-width:1.5px
+    linkStyle 7 stroke:#6366f1,stroke-width:3px
+    linkStyle 8 stroke:#6366f1,stroke-width:3px
+    
+    style EventBus fill:#fef3c7,stroke:#f59e0b,stroke-width:2px
+    style Checkout fill:#e0e7ff,stroke:#6366f1,stroke-width:2px
+    style Storefront fill:#fce7f3,stroke:#ec4899,stroke-width:1.5px
+    style Cart fill:#fce7f3,stroke:#ec4899,stroke-width:1.5px
+    style ThirdParty fill:#fce7f3,stroke:#ec4899,stroke-width:1.5px
+    style EB fill:#fef3c7,stroke:#f59e0b,stroke-width:2px
+    style Container1 fill:#e0e7ff,stroke:#6366f1,stroke-width:1.5px
+    style Container2 fill:#e0e7ff,stroke:#6366f1,stroke-width:1.5px
+    style Container3 fill:#e0e7ff,stroke:#6366f1,stroke-width:1.5px
+    style Container4 fill:#e0e7ff,stroke:#6366f1,stroke-width:1.5px
+`} caption="External events (thin dashed arrows) flow from outside sources through the Event Bus to the drop-in. Internal events (thick solid arrows) coordinate between containers within the same drop-in.">
+
+The Checkout drop-in:
+- **Listens to external events**: `authenticated`, `cart/initialized`, `cart/updated`, `cart/merged`, `cart/reset`, `cart/data`, `locale`
+- **Uses internal events**: `checkout/initialized`, `checkout/updated`, `shipping/estimate` (for coordinating between its own containers)
+
+## Event declaration
+
+Events are strongly typed using TypeScript declaration merging to provide type safety and autocomplete support. Each drop-in declares its events by extending the `Events` interface from the event bus.
+
+### Basic declaration
+
+Here's a simplified example of how events are declared:
+
+```typescript title="event-bus.d.ts"
+declare module '@adobe-commerce/event-bus' {
+  interface Events {
+    'dropin/initialized': DataModel | null;
+    'dropin/updated': DataModel | null;
+    'dropin/data': DataModel;
+    authenticated: boolean;
+    locale: string;
+    error: { source: string; type: string; error: Error };
+  }
+}
+```
+
+### Complete declaration example
+
+In practice, drop-ins declare their events with imports and type extensions. Here's a more comprehensive example from the Checkout drop-in:
+
+```typescript title="event-bus.d.ts"
+
+declare module '@adobe-commerce/event-bus' {
+  interface Events {
+    'cart/initialized': CartModel | null;
+    'cart/updated': CartModel | null;
+    'cart/reset': void;
+    'cart/merged': { oldCartItems: any[] };
+    'checkout/initialized': CheckoutData | null;
+    'checkout/updated': CheckoutData | null;
+    'checkout/values': ValuesModel;
+    'shipping/estimate': ShippingEstimate;
+    authenticated: boolean;
+    error: { source: string; type: string; error: Error };
+  }
+
+  interface Cart extends CartModel {}
+}
+```
+
+This pattern allows TypeScript to provide autocomplete and type checking for both event names and their payloads throughout your application.
+
+---
+
+## Next steps
+
+- Review the [Event Bus API Reference](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/events/) for detailed API methods and code examples
+- Check individual drop-in event pages for component-specific events
+- Try drop-in tutorials for practical event usage examples
+
+---
+
+# Extend, substitute, or create?
+
+You can build on the drop-ins Adobe provides in more than one way, and the path you pick changes how much is supported for you and how much you maintain yourself. The sections below step through the tradeoffs. Start with the recommended path, then read the others if your requirements rule it out.
+
+## Choose your approach
+
+### EXTEND
+
+When you Extend (Customize existing drop-ins through supported extension points such as slots, events, styling, transformers, and configuration.) a drop-in, you keep the Adobe package and add behavior or UI through the extension levers the product exposes. This is the path that Adobe is set up to support and keep compatible across releases.
+
+> **Recommended approach** Most needs are met with the levers in Extension methods below—without replacing the whole package or writing a new drop-in from scratch.
+
+**Extend a drop-in if you need to:**
+- Change how drop-ins look or behave
+- Add custom content or UI elements
+- Integrate third-party services (like payment methods)
+- Respond to drop-in events with custom logic
+- Modify how data is displayed or processed
+
+**Note**: You can integrate third-party services using slots without replacing the entire drop-in. For example, integrate Stripe or PayPal payment methods into the Checkout drop-in rather than replacing the entire checkout flow.
+
+#### Extension methods:
+- **Slots (An extension point inside a drop-in where custom UI or behavior can be added, replaced, or removed.)** - Inject custom HTML/components at predefined points
+- **Styling (Visual customization of drop-ins through CSS overrides, token changes, and layout adjustments.)** - Override CSS, modify layouts, replace components
+- **Events (Data or lifecycle signals emitted by drop-ins that custom code can listen to in order to run additional behavior.)** - Listen to data events and add custom behavior
+- **Configuration (Settings used to change behavior without rewriting core implementation logic.)** - Modify drop-in settings and options
+- **Transformers (Functions that modify or shape data before a drop-in displays it.)** - Change how drop-ins process and display data
+
+#### Benefits:
+- Fully supported by Adobe
+- Automatic compatibility with updates
+- Lower maintenance overhead
+- Access to new features and bug fixes
+
+### SUBSTITUTE
+
+Use Substitute (Replace an Adobe drop-in with a third-party implementation and own compatibility and maintenance responsibility.) when you will put a third-party solution (An external service or component used in place of a native Adobe drop-in implementation.) in place of the Adobe drop-in for that part of the experience, so you own integration, updates, and API compatibility—not when you only need a contained integration (for example, a payment provider you wire in while still extending the Checkout drop-in).
+
+> **Proceed with caution** If you substitute, you are responsible for keeping compatibility with Commerce APIs and keeping up with changes yourself.
+
+**Replace an Adobe drop-in with a full third-party solution if you have:**
+- Complete solutions from a single provider (not just payment methods)
+- Specialized functionality that doesn't align with Adobe's approach
+- Legacy system integration requirements
+- Provider-specific workflows requiring their complete UI and logic
+
+#### Risks and responsibilities:
+- **Maintenance burden** - You own all updates, bug fixes, and compatibility
+- **API changes** - Must adapt to Commerce API changes independently
+- **Feature gaps** - May miss out on new Commerce features
+- **Support limitations** - Adobe cannot provide support for third-party code
+
+### CREATE
+
+The SDK (The Drop-in SDK used to build custom drop-ins and related integration logic.) is what you use to Create (Build a new drop-in from scratch when extension and substitution are not suitable for the required experience.) a new drop-in package. Reserve that for cases where you need a whole new feature surface that the existing family of drop-ins does not cover, and you can commit to owning it over time.
+
+> **Early access considerations** The drop-in SDK is in early access, with limited third-party support. Before you invest, contact Adobe to discuss your use case in the https://discordapp.com/channels/1131492224371277874/1220042081209421945.
+
+**Create a drop-in if you:**
+- Have a use case that no existing drop-in addresses
+- Are building entirely new functionality for multiple storefronts or brands
+- Have the resources and expertise for long-term maintenance
+
+## Boundaries and limitations
+Drop-ins work best for certain types of functionality. Understanding these boundaries helps you choose the right approach:
+
+#### Drop-ins excel at:
+- Commerce-specific UI components (product displays, cart management, checkout flows)
+- Data-driven interfaces that connect to Commerce APIs
+- Reusable functionality across multiple storefronts
+- Components that benefit from Commerce's styling and theming system
+
+#### Consider alternatives for these use cases:
+- Simple static content (use HTML/CSS instead)
+- Third-party integrations with existing UI (use vendor scripts)
+- Highly merchant-specific logic (use application-level code)
+- Temporary A/B testing variants (use feature flags)
+- Single-use, non-reusable customizations
+
+## Need a new extension point?
+If existing drop-ins don't provide the slots or events you need:
+
+1. **Document your use case** - Explain what you're trying to achieve
+1. **Identify the gap** - What specific slot or event is missing?
+1. **Submit a request** - Share your requirements in the https://discordapp.com/channels/1131492224371277874/1220042081209421945
+
+## FAQs
+
+**Q: Why does Adobe recommend extending over building new drop-ins?**  
+Extending is fully supported, maintains compatibility with updates, and reduces maintenance overhead. Most customization needs can be met through extension without the risks associated with building from scratch or substituting drop-ins.
+
+**Q: When is it acceptable to substitute a drop-in?**  
+Substitution is acceptable when you need complete solutions from a single provider, have specialized functionality that doesn't align with Adobe's approach, need legacy system integration, or require provider-specific workflows with their complete UI and logic. However, you become responsible for maintaining compatibility with Commerce APIs and handling all updates independently.
+
+**Q: Is the drop-in SDK ready for production use?**  
+No. The SDK is currently in early access with limited third-party support and no timeline for full support. Contact Adobe before investing in custom drop-in development.
+
+**Q: What extensibility options are available beyond slots?**  
+While slots are the primary mechanism, you can also:
+- Use configuration options to customize behavior
+- Change how drop-ins look or behave (styling and layouts)
+- Respond to drop-in events with custom logic
+- Modify transformers to change how drop-ins process data
+
+**Q: How do I know if my use case requires a new drop-in?**  
+Follow the decision flow in this guide. Most needs can be met by extending existing drop-ins. Only consider building new drop-ins if you have a use case that no existing drop-in addresses, are building entirely new functionality for multiple storefronts or brands, and have the resources and expertise for long-term maintenance.
+
+**Q: What happens if I substitute a drop-in and Commerce APIs change?**  
+You're responsible for updating your substitute to maintain compatibility. Adobe cannot provide support for third-party substitutes, and you may miss out on new features or security updates.
+
+---
+
+# Extending Drop-In Components
+
+Drop-in components are designed to be flexible and extensible. This guide provides an overview of how to extend drop-in components to add new features, integrate with third-party services, and customize the user experience.
+
+## Extend drop-ins with Commerce APIs
+
+The following steps describe how to add existing Commerce API services to a drop-in. For example, the Commerce API provides the necessary endpoints to fetch and update gift messages through GraphQL, but the checkout drop-in doesn't provide this feature out of the box. We will extend the checkout drop-in by adding a UI for gift messages, use the Commerce GraphQL API to update the message data on the cart, and extend the cart drop-in to include the message data when it fetches the cart.
+
+### Step-by-step
+
+### 1. Add your UI to the drop-in
+
+The first step is to create a UI for the feature and add it to the checkout drop-in. You can implement the UI however you want, as long as it can be added to the HTML DOM. For this example, we'll implement a web component (`GiftOptionsField`) that provides the form fields needed to enter a gift message. Here's an example implementation of the UI component:
+
+```js title='gift-options-field.js'
+
+const sdkStyle = document.querySelector('style[data-dropin="sdk"]');
+const checkoutStyle = document.querySelector('style[data-dropin="checkout"]');
+
+class GiftOptionsField extends HTMLElement {
+    static observedAttributes = ['cartid', 'giftmessage', 'fromname', 'toname', 'loading'];
+
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+
+        this._submitGiftMessageHandler = (event) => {
+            event.preventDefault();
+        }
+    }
+
+    set submitGiftMessageHandler(callback) {
+        this._submitGiftMessageHandler = callback;
+    }
+
+    connectedCallback() {
+        this._formTemplate = document.createElement('template');
+
+        this._formTemplate.innerHTML = `
+            <h2 class="checkout-payment-methods__title">Gift Message</h2>
+            <form id="gift-options-form" class="checkout-fields-form__form">
+                
+                
+                
+                <input type="hidden" name="cartId" />
+                
+            </form>
+        `;
+
+        this.render();
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        const toName = this.shadowRoot.querySelector('input[name="toName"]');
+        const fromName = this.shadowRoot.querySelector('input[name="fromName"]');
+        const giftMessage = this.shadowRoot.querySelector('textarea[name="giftMessage"]');
+        const cartId = this.shadowRoot.querySelector('input[name="cartId"]');
+
+        switch (name) {
+            case 'cartid':
+                cartId.value = newValue;
+                break;
+            case 'giftmessage':
+                giftMessage.value = newValue;
+                break;
+            case 'fromname':
+                fromName.value = newValue;
+                break;
+            case 'toname':
+                toName.value = newValue;
+                break;
+            case 'loading':
+                if (newValue) {
+                    toName?.setAttribute('disabled', '');
+                    fromName?.setAttribute('disabled', '');
+                    giftMessage?.setAttribute('disabled', '');
+                } else {
+                    toName?.removeAttribute('disabled');
+                    fromName?.removeAttribute('disabled');
+                    giftMessage?.removeAttribute('disabled');
+                }
+                break;
+        }
+    }
+
+    render() {
+        this.shadowRoot.innerHTML = '';
+
+        this.shadowRoot.appendChild(this._formTemplate.content.cloneNode(true));
+        this.shadowRoot.querySelector('input[name="cartId"]').value = this.getAttribute('cartId');
+        this.shadowRoot.querySelector('#gift-options-form').addEventListener('submit', this._submitGiftMessageHandler?.bind(this));
+
+        const submitWrapper = this.shadowRoot.querySelector('.submit-wrapper');
+        const fromNameWrapper = this.shadowRoot.querySelector('.fromName-wrapper');
+        const toNameWrapper = this.shadowRoot.querySelector('.toName-wrapper');
+        const giftMessageWrapper = this.shadowRoot.querySelector('.giftMessage-wrapper');
+
+        UI.render(Input,
+            {
+                type: "text",
+                name: "toName",
+                placeholder: "To name",
+                floatingLabel: "To name",
+                value: this.getAttribute('toName'),
+                disabled: !!this.hasAttribute('loading')
+            })(toNameWrapper);
+        UI.render(Input,
+            {
+                type: "text",
+                name: "fromName",
+                placeholder: "From name",
+                floatingLabel: "From name",
+                value: this.getAttribute('fromName'),
+                disabled: !!this.hasAttribute('loading')
+            })(fromNameWrapper);
+        UI.render(TextArea,
+            {
+                name: "giftMessage",
+                placeholder: "Message",
+                value: this.getAttribute('giftMessage'),
+                disabled: !!this.hasAttribute('loading')
+            })(giftMessageWrapper);
+        UI.render(Button,
+            {
+                variant: "primary",
+                children: "Add Message",
+                type: "submit",
+                enabled: true,
+                size: "medium",
+                disabled: !!this.hasAttribute('loading')
+            })(submitWrapper);
+
+        this.shadowRoot.appendChild(sdkStyle.cloneNode(true));
+        this.shadowRoot.appendChild(checkoutStyle.cloneNode(true));
+    }
+}
+
+customElements.define('gift-options-field', GiftOptionsField);
+```
+
+### 2. Render the UI into the checkout drop-in
+
+Next, we need to render the `GiftOptionsField` component into the checkout page by creating the `gift-options-field` https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements.
+
+```js
+const GiftOptionsField = document.createElement('gift-options-field');
+GiftOptionsField.setAttribute('loading', 'true');
+```
+
+Then, insert the custom element into the layouts defined on the checkout page. The following example updates the render function for mobile and desktop to insert the `giftOptionsField` element into the layouts.
+
+```js title='commerce-checkout.js'
+function renderMobileLayout(block) {
+  root.replaceChildren(
+    heading,
+    giftOptionsField,
+    ...
+  );
+
+  block.replaceChildren(root);
+}
+
+function renderDesktopLayout(block) {
+  main.replaceChildren(
+    heading,
+    giftOptionsField,
+    ...
+  );
+
+  block.replaceChildren(block);
+}
+```
+
+### 3. Add handler for gift message submission
+
+Now that we have the UI in place, we need to add a handler to save the gift message data. We'll use the `fetchGraphl()` function from the API to send a GraphQL mutation to set the gift message on the cart.
+
+```js title='commerce-checkout.js'
+giftOptionsField.submitGiftMessageHandler = async (event) => {
+  event.preventDefault();
+
+  const form = event.target;
+  const formData = new FormData(form);
+  const cartId = formData.get('cartId');
+  const fromName = formData.get('fromName');
+  const toName = formData.get('toName');
+  const giftMessage = formData.get('giftMessage');
+
+  giftOptionsField.setAttribute('loading', 'true');
+  console.log('form data', cartId, fromName, toName, giftMessage);
+
+  const giftMessageInput = {
+    from: fromName,
+    to: toName,
+    message: giftMessage,
+  }
+
+  fetchGraphQl(`
+    mutation SET_GIFT_OPTIONS($cartId: String!, $giftMessage: GiftMessageInput!) {
+        setGiftOptionsOnCart(input: {
+          cart_id: $cartId,
+          gift_message: $giftMessage
+          printed_card_included: false
+        }) {
+					cart {
+						id
+						gift_message {
+							from
+							to
+							message
+						}
+					}
+        }
+      }
+    `,
+    {
+    variables: {
+      cartId,
+      giftMessage: giftMessageInput,
+    },
+  }).then(() => {
+    refreshCart();
+    giftOptionsField.removeAttribute('loading');
+  });
+};
+```
+
+### 4. Extend the data payload for the drop-in
+
+To extend the data payload of a drop-in, first you need to update the GraphQL fragment used by the cart drop-in to request the additional field. This is done by modifying the `build.mjs` script at the root of your storefront project. In the following example, the `CART_FRAGMENT` fragment is extended to include the gift message data whenever the cart drop-in requests the cart data from GraphQL:
+
+```js title='build.mjs'
+/* eslint-disable import/no-extraneous-dependencies */
+
+// Extend the cart fragment to include the gift message
+overrideGQLOperations([
+  {
+    // The name of the drop-in to extend
+    npm: '@dropins/storefront-cart',
+    // Additional fields to include in the cart results (gift_message)
+    operations: [
+      `fragment CART_FRAGMENT on Cart {
+        gift_message {
+          from
+          to
+          message
+        }
+      }`
+    ],
+  },
+]);
+```
+
+When you run the install command, the `build.mjs` script generates a new GraphQL query for the cart drop-in that includes the `gift_message` data.
+
+### 5. Add new data to the payload
+
+Map the new GraphQL data to the payload data that the cart events provide to listeners so they can access the gift message values.
+
+Configure the cart drop-in's initializer to add the new cart data to the existing cart payload. This is done by defining a transformer function on the CartModel. This function receives the GraphQL data and returns an object that gets merged with the rest of the cart payload. As an example, here is how it might be configured:
+
+```js title='cart.js'
+/* eslint-disable import/no-cycle */
+
+initializeDropin(async () => {
+  await initializers.mountImmediately(initialize, {
+    models: {
+      CartModel: {
+        transformer: (data) => {
+          const { gift_message: giftMessage } = data;
+          return {
+            giftMessage,
+          }
+        }
+      }
+    }
+  });
+})();
+```
+
+Now when the cart emits an event with cart data, the `giftMessage` data is included.
+
+### 6. Retrieve the data and render it
+
+Get the data from the cart event and use it to populate the gift message fields on the checkout page. Here's an example of how you might do this:
+
+```js title='commerce-checkout.js'
+// Event listener to hydrate the new fields with the cart data
+events.on('cart/data', data => {
+  if (!data) return;
+
+  const { id, orderAttributes, giftMessage } = data;
+
+  // Update gift options fields
+  giftOptionsField.setAttribute('cartId', id);
+  if(giftMessage) {
+    giftOptionsField.setAttribute('giftmessage', giftMessage.message);
+    giftOptionsField.setAttribute('fromname', giftMessage.from);
+    giftOptionsField.setAttribute('toname', giftMessage.to);
+  }
+  giftOptionsField.removeAttribute('loading');
+}, { eager: true });
+```
+
+### 7. Summary
+
+After just a few changes, we were able to add a new feature to the checkout drop-in that allows users to add a gift message to their order. We added a new UI component, integrated the Commerce API to fetch and update gift messages, and extended the data payload for the drop-in to include the gift message data. You can apply these same concepts to any drop-in.
+
+## Extendable fragments by drop-in
+
+Each drop-in exports one or more `GraphQL` fragments that you can extend using `overrideGQLOperations` in your `build.mjs` file. Extending a fragment adds custom fields to the drop-in's existing queries without replacing them.
+
+| Drop-in package | Fragment name | GraphQL type | Description |
+|---|---|---|---|
+| `@dropins/storefront-cart` | `CART_FRAGMENT` | `Cart` | Extends cart queries with additional fields on the `Cart` type. |
+| `@dropins/storefront-checkout` | `CHECKOUT_DATA_FRAGMENT` | `Cart` | Extends checkout queries with additional fields on the `Cart` type. |
+| `@dropins/storefront-order` | `GUEST_ORDER_FRAGMENT` | `CustomerOrder` | Extends unauthenticated guest order detail queries with additional fields on the `CustomerOrder` type. |
+| `@dropins/storefront-order` | `CUSTOMER_ORDER_FRAGMENT` | `CustomerOrder` | Extends authenticated order detail queries with additional fields on the `CustomerOrder` type. |
+| `@dropins/storefront-account` | `CUSTOMER_ORDER_FRAGMENT` | `CustomerOrder` | Extends the orders list query with additional fields on the `CustomerOrder` type. |
+
+### Extending order and account queries
+
+To add custom fields to order data, extend the fragments for the order and account drop-ins in your `build.mjs` file. The following example shows how to add a `custom_attribute` field to both the order detail and orders list pages:
+
+```js title='build.mjs'
+
+overrideGQLOperations([
+  {
+    npm: '@dropins/storefront-order',
+    operations: [
+      `fragment GUEST_ORDER_FRAGMENT on CustomerOrder {
+        custom_attribute
+      }`,
+      `fragment CUSTOMER_ORDER_FRAGMENT on CustomerOrder {
+        custom_attribute
+      }`,
+    ],
+  },
+  {
+    npm: '@dropins/storefront-account',
+    operations: [
+      `fragment CUSTOMER_ORDER_FRAGMENT on CustomerOrder {
+        custom_attribute
+      }`,
+    ],
+  },
+]);
+```
+
+After updating `build.mjs`, run `npm install` to apply the fragment extensions. This needs to be re-run whenever you install new packages since it patches files inside `node_modules`.
+
+> You can extend multiple drop-ins in a single `overrideGQLOperations` call. Each entry in the array targets a different drop-in package.
+
+> The `returns` field on `CustomerOrder` cannot be extended via fragments because it requires query-specific arguments (like `pageSize`). To extend return data, use the model transformer approach instead.
+
+### Mapping extended data with model transformers
+
+After extending a `GraphQL` fragment, the response includes the new fields, but they are not automatically displayed. Use model transformers in the drop-in initializer to map the new fields into the drop-in data model.
+
+To make `custom_attribute` available in the order drop-in's data model, add a model transformer in the initializer:
+
+```js title='scripts/initializers/order.js'
+
+await initializers.mountImmediately(initialize, {
+  models: {
+    OrderDataModel: {
+      transformer: (data) => ({
+        customAttribute: data?.custom_attribute,
+      }),
+    },
+  },
+});
+```
+
+The transformer function receives the `GraphQL` response data and returns an object that the system merges into the existing data model. Only the fields you return are overridden; all other data renders normally.
+
+> Each drop-in has its own set of customizable models. See the initialization page of each drop-in for the full list of available models:
+
+- [Order initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/initialization/#customizing-data-models)
+- [User Account initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/user-account/initialization/#customizing-data-models)
+- [Cart initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/initialization/#customizing-data-models)
+- [Checkout initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/initialization/#customizing-data-models)
+
+## Extend drop-ins with third-party components
+
+The following steps guide you through adding a third-party component to a drop-in. We'll add a fictitious ratings & reviews component to the product details drop-in as an example.
+
+### Prerequisites
+
+- Third-party component API key. You typically need an API key to fetch data for the component.
+- Familiarity with https://www.aem.live/docs/configuration.
+
+### What you'll learn
+
+- How to configure third-party API keys for use in drop-ins.
+- How to use the `EventBus` to emit events and listen for events from the third-party component.
+- How to delay loading large data sets from third-party components to improve page performance.
+
+### Step-by-step
+
+### 1. Add your third-party API key
+
+Add your API key to your commerce configuration in your project's `config.json` file.
+
+```json
+{
+  "public": {
+    "default": {
+      "commerce-core-endpoint": "MY_ENDPOINT",
+      // other config...
+      "third-party-api-key": "THIRD_PARTY_API_KEY"
+    }
+  }
+}
+```
+
+### 2. Fetch the API key
+
+To fetch the API key, you need to import the `getConfigValue` function from the `configs.js` file. This function reads the API key from the config file and returns the value. You can then use this value to fetch data from the third-party service.
+
+```js
+
+export default async function decorate(block) {
+  // Fetch API key from the config file
+  const thirdPartyApiKey = await getConfigValue('third-party-api-key');
+
+  // Fetch the component data
+  setRatingsJson(product, thirdPartyApiKey);
+}
+```
+
+### 3. Fetch the component data
+
+After the page loads, your third-party component likely needs to fetch some data. In our case, our ratings & reviews component needs to fetch data from its rating service to display the star-rating for the product. After your API key is fetched (`thirdPartyApiKey`), you can trigger a call to the service's endpoint and use the EventBus to emit an event when the data is received.
+
+```js
+
+function setRatingsJson(product, thirdPartyApiKey) {
+  try {
+    fetch(`https://api.rating.service.com/products/${thirdPartyApiKey}/${product.externalId}/bottomline`).then(e => e.ok ? e.json() : {}).then(body => {
+      const { average_score, total_reviews } = body?.response?.bottomline || {};
+      setHtmlProductJsonLd({
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          ratingValue: average_score || 0,
+          reviewCount: total_reviews || 0,
+        }
+      });
+
+      events.emit('eds/pdp/ratings', {average: average_score, total: total_reviews});
+    });
+} catch (error) {
+    console.log(`Error fetching product ratings: ${error}`);
+    setHtmlProductJsonLd({
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: 0,
+        reviewCount: 0,
+      }
+    });
+
+    events.emit('eds/pdp/ratings', {average: 0, total: 0});
+  }
+}
+```
+
+### 4. Render the component
+
+To ensure the least amount of CLS, we'll make sure we don't render the component until after its data is returned. To do this, we need to add an event listener for the third-party component's event. This strategy, along with reserving a predefined space for the component, will minimize CLS. Here's an example implementation for our third-party ratings component:
+
+```js
+events.on('eds/pdp/ratings', ({ average, total }) => {
+  // Title slot logic
+  const titleSlotElement = document.querySelector('.title-slot');
+
+  // Optionally reserve space for the star rating to avoid CLS
+  // e.g., setting a placeholder element or CSS min-height
+
+  // Render star rating
+  titleSlotElement.innerHTML = `
+    
+      <span>Average Rating: ${average.toFixed(1)}</span>
+      <span>(${total} reviews)</span>
+    
+  `;
+});
+```
+
+### 5. Delay loading large data sets
+
+Components like ratings & reviews typically load large blocks of text to display a product's reviews. In such cases, we need to ensure that those reviews are not loaded until the user scrolls near the reviews section or clicks a "View All Reviews" button. This strategy keeps the First Contentful Paint (FCP) and Cumulative Layout Shift (CLS) scores low.
+
+The following example uses an Intersection Observer to load reviews only when a user scrolls near the reviews section or clicks "View All Reviews".
+
+```js
+// Trigger the delayed load when the user scrolls near the reviews section or clicks "View All Reviews"
+const reviewsSection = document.getElementById('reviews-section');
+
+const loadReviews = () => {
+  // Fetch or render the full reviews only when needed
+  fetch(`/path/to/full-reviews?apiKey=${YOUR_API_KEY}&productId=${PRODUCT_ID}`)
+    .then(response => response.json())
+    .then(data => {
+      reviewsSection.innerHTML = data.reviewsHtml;
+    })
+    .catch(console.error);
+};
+
+// Event listener approach for a "View All Reviews" button
+document.getElementById('view-reviews-btn').addEventListener('click', loadReviews);
+
+// OR intersection observer approach to load when user scrolls near the section
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      loadReviews();
+      observer.disconnect();
+    }
+  });
+}, { threshold: 0.1 });
+
+observer.observe(reviewsSection);
+```
+
+### 6. Summary
+
+Throughout this tutorial, we examined the key steps of integrating a fictitious third-party component. We learned how to configure API keys, fetch data, and delay loading data sets to improve page performance. You can apply these same concepts to any drop-in.
+
+---
+
+# Introduction to Drop-In Components
+
+At this point in the onboarding path, you should already have a locally running boilerplate storefront. This page explains the drop-in system you'll be working with — what every drop-in is made of, which drop-ins are available, and what you can customize. The next page, [Using drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/quick-start/), shows the code pattern you write in each block.
+
+## What is a drop-in component?
+
+A drop-in component is a ready-made npm package that provides the complete user interface and Commerce logic for one shopper job — cart, checkout, product detail, user sign-in, and so on. The boilerplate ships with all B2C drop-ins pre-installed. You wire them up; you do not build them from scratch.
+
+## Anatomy of a drop-in
+
+Every drop-in has three parts. Understanding these three parts is the key to reading and writing Commerce block code.
+
+| Part | What it is | Where you find it |
+|---|---|---|
+| npm package | The published code for that drop-in | `node_modules/@dropins/storefront-*` and `package.json` |
+| Initializer | A JavaScript file that configures the drop-in once — sets the GraphQL endpoint, loads placeholder text, and registers the drop-in | `scripts/initializers/<dropin>.js` |
+| Containers | The individual UI panels that the drop-in exposes for you to place on a page | Imported from `@dropins/storefront-*/containers/` |
+
+When you open a Commerce block file in the boilerplate, you will see all three of these parts: an import of the initializer, an import of a container, and a call that renders the container into a `div` on the page. [Using drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/quick-start/) shows exactly how those three lines fit together.
+
+> **The boilerplate already has this wired** If you are working from the Commerce boilerplate, the initializer files already exist in `scripts/initializers/` and the npm packages are already installed. You can open any Commerce block to see a real example before you write your own.
+
+## Available drop-ins
+
+The tables below list every available drop-in. Click a drop-in name to open its reference page, which includes its containers, props, slots, and events.
+
+### B2C drop-ins
+
+| Drop-in | Description |
+| ------- | ----------- |
+| [Cart](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/) | Summary of items in the cart; view and manage cart contents, update quantities, and proceed to checkout. |
+| [Checkout](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/) | Streamlined process for completing a purchase: shipping and payment information, order review, and confirmation. |
+| [Order](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/) | Tools and containers to manage and display order-related data across pages; supports customer accounts and guest workflows. |
+| [Payment Services](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/payment-services/) | Renders the credit card form and Apple Pay button for payment details; supports credit/debit cards and Apple Pay. |
+| [Personalization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/personalization/) | Displays content conditionally based on Adobe Commerce customer groups, segments, and cart price rules. |
+| [Product Details](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/) | Detailed product information: SKUs, pricing, descriptions, options; supports internationalization and accessibility. |
+| [Product Discovery](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-discovery/) | Search results, category listings, and faceted navigation so customers can find and explore products. |
+| [Recommendations](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/recommendations/) | Suggests products from browsing patterns (e.g. "Customers who viewed this also viewed"); manageable from Adobe Commerce Admin. |
+| [User Account](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/user-account/) | Personalized experience: order history, account settings, and other account-related features. |
+| [User Authentication](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/user-auth/) | Sign up, sign in, and log out; supports account confirmation, password reset, and optional ReCAPTCHA. |
+| [Wishlist](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/wishlist/) | Lets guests and registered customers save products to purchase later. |
+
+### B2B drop-ins
+
+Business-to-business (B2B) drop-ins cover workflows such as company administration, negotiable quotes, and purchase orders. You wire them up with the same three parts as in [Anatomy of a drop-in](#anatomy-of-a-drop-in): npm package, initializer, and containers. Enable B2B features on your Commerce instance so the APIs and company data these packages expect are available.
+
+| Drop-in | Description |
+| ------- | ----------- |
+| [Company Management](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-management/) | Company profile management, role-based permissions, legal address and contact information. |
+| [Company Switcher](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-switcher/) | Switch between multiple companies a user is associated with; company context and GraphQL header management. |
+| [Purchase Order](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/purchase-order/) | Purchase order workflows, approval rules, and purchase order history for B2B transactions. |
+| [Quote Management](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/quote-management/) | Negotiable quotes: request, negotiation, approval, and tracking for B2B customers. |
+| [Quick Order](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/quick-order/) | Bulk ordering by SKU, search, and CSV upload; Grid Ordering for configurable products on PDP. |
+| [Requisition List](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/requisition-list/) | Create and manage requisition lists for repeat and bulk ordering; multiple lists per account. |
+
+## What you can customize
+
+Each drop-in exposes several layers of customization. Most projects need only the first two. The rest exist for cases where configuration alone is not enough.
+
+The table below shows every approach with links to the details.
+
+| Approach | Description |
+| -------- | ----------- |
+| [Design tokens](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/branding/) | Override Adobe Commerce design tokens (colors, typography, spacing, shapes) for quick, global brand changes. |
+| [CSS classes](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/styling/) | Override or add CSS classes to restyle specific areas of a drop-in beyond what tokens provide. |
+| [Slots](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/slots/) | Use built-in extension points to add or replace UI and behavior in drop-in components. |
+| [Content enrichment](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/content-customizations/enrichment/) | Add content above or below commerce blocks by product SKU, category, and the physical position on the page. |
+| [Localization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/labeling/) | Use the placeholder system to override default drop-in text and support multiple languages. |
+| [Dictionaries](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/dictionaries/) | Customize drop-in dictionaries (deep-merge) for localization, branding, and multi-language support. |
+| [Extending](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/extending/) | Add new features and Commerce API integrations to existing drop-ins (for example, gift messages in checkout). |
+| [Layouts](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/layouts/) | Configure where drop-in containers appear on the page via HTML fragments and block layout. |
+| [Localizing links](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/linking/) | Manage localized internal links in the boilerplate so users stay within their chosen locale. |
+| [Extend, substitute, or create?](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/extend-or-create/) | Decide when to extend an existing drop-in, substitute with a third-party solution, or create a new one. |
+
+## What's next
+
+You now know what every drop-in is made of, and which ones are available. The next step is writing the code. [Using drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/quick-start/) shows the three-line pattern — import the initializer, import a container, render it with a complete working example.
+
+---
+
+# Labeling and Localizing Drop-In Components
+
+The Commerce Boilerplate provides a placeholder system that lets merchants handle labeling (Customizing UI text labels for tone, branding, or clarity while staying in the same language.) without code. Learn to implement placeholder files (JSON files that store storefront UI labels by drop-in and locale so merchants can change text without changing code.) to override default text in drop-in components.
+
+> **Merchant vs Developer guides** **Merchants translating content:** See [Commerce localization tasks](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/quick-start/content-localization-commerce-tasks/) for step-by-step guidance on localizing (Adapting UI text and formatting for specific languages and regions, including translated labels and locale-specific conventions.) placeholder files for different locales.
+
+**Developers implementing the system:** This guide explains how placeholder files integrate with drop-in dictionaries using `langDefinitions` language objects (Objects such as `langDefinitions` that map translation keys to localized UI text values.). For advanced customization beyond the placeholder system, see the [Dictionary customization guide](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/dictionaries/).
+
+## Big picture
+
+Labeling drop-in components in the storefront involves two files:
+
+1. The **placeholders files** that provide the default drop-in component UI labels that merchants can quickly update as needed.
+2. The **drop-in block** (examples, `product-details.js`, `cart.js`) where you add code to fetch, map, and override the drop-in component dictionary at runtime.
+
+The following diagram shows the process for adding and overriding labels and text for drop-in components within the boilerplate template.
+
+![Diagram of dictionary and placeholder files flowing from developers and merchants into localized text shown in Commerce drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/images/DropinDictionaries.svg)
+
+*How localization and labeling works in storefronts.*
+
+1. **Placeholder files**. Merchants can change the storefront labels by changing the values in the placeholder JSON files, which are organized by drop-in components—`cart.json`, `checkout.json`, `pdp.json`, and so on.
+1. **Import function**. You need to import the `fetchPlaceholders` function from the boilerplate's `commerce.js` file.
+1. **Fetch placeholders.** Use the `fetchPlaceholders` function to retrieve the `placeholders` key-value pairs from the content folder.
+1. **Override default dictionary**. Override the `default` property from the `langDefinitions` object with the keys and values from the `placeholder` object.
+1. **Initialize dictionary**. Use the `register` function to update the dictionary at runtime.
+
+## Step-by-step
+
+In the boilerplate code, the UI text labels in drop-in components come from the placeholder files. By using these files as the source for all storefront UI labels, merchants can easily change labels without involving developers.
+
+There are two things to be aware of when using the `fetchPlaceholders()` function:
+
+1. **During initialization**:  
+   You must provide the path to the drop-in’s placeholders file. This file will be fetched and merged into the existing placeholders object. Subsequent calls to `fetchPlaceholders()` without a path will return the merged object containing all fetched labels.
+
+2. **After initialization**:  
+   You can call `fetchPlaceholders()` without a path to retrieve all initialized placeholders as a single object. This object can be accessed from a Block or anywhere else in the project.
+
+### 1. Import `fetchPlaceholders` function
+
+In the drop-in block (for example, `product-details.js`, `cart.js`), import the `fetchPlaceholders` function from the boilerplate's `commerce.js` file.
+
+```javascript
+```
+
+### 2. Initialize placeholders with path
+
+During initialization, you must use the `fetchPlaceholders()` function using an argument to the path to your drop-in's placeholders file. This fetches and merges the placeholders into the global object.
+
+```javascript
+// Initialize placeholders for this drop-in
+const placeholders = await fetchPlaceholders('placeholders/cart.json');
+
+const langDefinitions = {
+  default: {
+    ...placeholders,
+  },
+};
+
+// Register Initializers
+initializers.mountImmediately(initialize, {
+  langDefinitions,
+  //...
+});
+```
+
+> **Locale key**: The boilerplate uses `default` as the locale key for the primary language. Under the hood, this maps to the drop-in's `en_US` locale. For multi-language implementations, see the [Dictionary customization guide](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/dictionaries/).
+
+### 3. Fetch placeholders after initialization
+
+After initialization, you can use the `fetchPlaceholders` function without a path to retrieve all merged placeholders. The following diagram and code snippet shows how to fetch the placeholders.
+
+![Spreadsheet-style placeholder table in a commerce block with label keys mapped to custom storefront copy for drop-in text](https://experienceleague.adobe.com/developer/commerce/storefront/images/LabelUsage.svg)
+
+*Using placeholder labels in your EDS commerce block*
+
+```javascript
+// Retrieve the placeholders language object
+const labels = await fetchPlaceholders();
+
+export default async function decorate(block) {
+  const $elem = document.createElement('div');
+  $elem.innerText = labels.Cart.PriceSummary.shipping.label;
+}
+```
+
+### 4. Test the changes
+
+After you've updated the drop-in component dictionary with the new `langDefinitions` object, test the changes in the storefront to ensure the new labels are displayed correctly. If the labels are not displaying as expected, review the mapping between the placeholder keys and the drop-in component dictionary keys. Make sure the keys match exactly. If the keys don't match, the drop-in component will use the default dictionary values.
+
+---
+
+# Commerce block layouts
+
+A drop-in component's layout is defined by an HTML fragment that controls where the drop-in's containers appear on the page. You can customize the layout as you would with any HTML, by using CSS and adding, removing, or rearranging the elements in the HTML. In this topic, we'll customize the product details layout by adding the Product Recommendations block.
+
+## Big picture
+
+This screenshot shows the product details page with the Product Recommendations block below the product gallery container.
+
+![Add Product Recommendations block to the page](https://experienceleague.adobe.com/developer/commerce/storefront/images/ProductDetailsLayout.png)
+
+*Add Product Recommendations block to the page*
+
+## Customize commerce block layouts
+
+For this use case, we'll customize the product details layout by adding the Product Recommendations block inside the product details block, instead of below it.
+
+### 1. Add an Edge Delivery block to a commerce page
+
+For example, add a Product Recommendations block to the product details page so that it can be rendered on the page, then referenced and moved to the layout (in code):
+
+![Add Product Recommendations block to the page](https://experienceleague.adobe.com/developer/commerce/storefront/images/PrexBlockPDP.png)
+
+*Add Product Recommendations block to the page*
+
+### 2. Add an element to the layout and reference it
+
+Add an HTML element to the commerce block's layout where you want the Edge Delivery block (or other content) to appear. In this example, we want the Product Recommendations block to appear in the left column of the product-details layout, below the product gallery. So we add a `div` element to the left column with a class of `product-details__prex`.
+
+```js ins={12}
+export default async function decorate(block) {
+  // eslint-disable-next-line no-underscore-dangle
+  const product = events._lastEvent?.['pdp/data']?.payload ?? null;
+  const labels = await fetchPlaceholders();
+
+  // Layout
+  const fragment = document.createRange().createContextualFragment(`
+    
+      
+      
+        
+        
+      
+      
+        
+        
+        
+        
+        
+          
+          
+          
+            
+            
+          
+        
+        
+        
+      
+    
+  `);
+```
+
+Then, we reference the `div` element in the layout as follows:
+
+```js
+  // Reference the element
+  const $prex = fragment.querySelector('.product-details__prex');
+```
+
+### 3. Move the Edge Delivery block to the layout
+
+Within the `eds/lcp` lifecycle event, query the Edge Delivery block's class selector from the rendered block and append it to right element in the layout. In this example, we select the Product Recommendations block using the `.product-recommendations` class, then move it to the element you want in the layout (`$prex`).
+
+```js ins={9-12}
+  events.on(
+    'eds/lcp',
+    () => {
+      if (product) {
+        setJsonLdProduct(product);
+        setMetaTags(product);
+        document.title = product.name;
+      }
+      const $productRecommendations = document.querySelector('.product-recommendations');
+      if ($productRecommendations) {
+        $prex.appendChild($productRecommendations);
+      }
+    },
+    { eager: true },
+  );
+```
+
+---
+
+# Localizing links
+
+Learn how the boilerplate automatically localizes internal links for multistore/multilingual storefronts. The system keeps users within their chosen locale as they navigate the site.
+
+> **Merchant guide** For merchant-friendly guidance on link localization and using `#nolocal` in store switchers, see [Commerce localization tasks - Link localization](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/quick-start/content-localization-commerce-tasks/#link-localization).
+
+## decorateLinks
+
+The `decorateLinks` function automatically prepends all content links with the root path for each language. This ensures users stay within their current locale as they navigate the site.
+
+**How it works:**
+- On `/en-ca/` pages: `/products/` becomes `/en-ca/products/`
+- On `/fr/` pages: `/products/` becomes `/fr/products/`
+- Links with `#nolocal` hash are not modified (useful for store switcher links)
+
+This function is enabled by default in the Commerce Boilerplate via `scripts/script.js`.
+
+```js
+
+/**
+ * Decorates the main element.
+ * @param {Element} main The main element
+ */
+export function decorateMain(main) {
+  decorateLinks(main); // enables localization of links
+  decorateButtons(main);
+  decorateIcons(main);
+  buildAutoBlocks(main);
+  decorateSections(main);
+  decorateBlocks(main);
+}
+```
+
+## rootLink
+
+The `rootLink` function prepends the appropriate language root path to a given link. Use it within a block to localize links from a drop-in for loading scripts, styles or links to other pages within a drop-in. This approach ensures consistency across languages and store views.
+
+```js
+
+export async function decorateMyBlock(block) {
+  const atag = document.createElement('a');
+  atag.innerText = 'My Link';
+  atag.href = rootLink('/my-path'); // returns the localized url for '/my-path'
+  // ...
+}
+```
+
+---
+
+# Using drop-ins
+
+Drop-in components add Commerce functionality to your storefront. The https://github.com/hlxsites/aem-boilerplate-commerce includes all drop-ins pre-installed—no package installation needed.
+
+## How to use drop-ins
+
+Three steps: import the initializer (A JavaScript module that configures a drop-in when imported, such as setting endpoints, registering dictionaries, and preparing runtime behavior.), import the container (A pre-built UI module that renders drop-in functionality and manages logic, state, and data for a feature.), and render it. Most blocks use a single container.
+
+### 1. Import the initializer
+
+Import the initializer for the drop-in. This configures the GraphQL endpoint, loads placeholder text, and registers the drop-in.
+
+```js title="blocks/commerce-login/commerce-login.js"
+// Import initializer (side-effect import handles all setup)
+```
+
+> **Initializers** Initializers run once when imported. They configure the drop-in for use throughout your application.
+
+### 2. Import the container
+
+Import the container you need and the render provider (The render function exported by a drop-in package that mounts containers into a storefront block.). Import maps in `head.html` resolve paths to the optimized code.
+
+```js title="blocks/commerce-login/commerce-login.js"
+// Import the container
+
+// Import the provider
+```
+
+### 3. Render the container
+
+Render the container in your block decorate function (The JavaScript module that runs for a block after the page loads. It imports the initializer, then calls provider.render() to mount the drop-in UI into the block region of the page.). Pass configuration options to customize behavior.
+
+```js title="blocks/commerce-login/commerce-login.js"
+
+export default async function decorate(block) {
+  await authRenderer.render(SignIn, {
+    routeForgotPassword: () => rootLink('/customer/forgot-password'),
+    routeRedirectOnSignIn: () => rootLink('/customer/account'),
+  })(block);
+}
+```
+
+**Complete example:**
+
+```js title="blocks/commerce-login/commerce-login.js"
+
+export default async function decorate(block) {
+  await authRenderer.render(SignIn, {
+    routeForgotPassword: () => rootLink('/customer/forgot-password'),
+    routeRedirectOnSignIn: () => rootLink('/customer/account'),
+  })(block);
+}
+```
+
+> **Container documentation** See the Containers documentation for each drop-in for available configuration options.
+
+## Drop-in specific guides
+
+Each drop-in has its own Quick Start page with package names, versions, and drop-in-specific requirements:
+
+- [Cart](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/quick-start/)
+- [Checkout](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/quick-start/)
+- [Order](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/quick-start/)
+- [Payment Services](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/payment-services/installation/)
+- [Personalization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/personalization/quick-start/)
+- [Product Details](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/quick-start/)
+- [Product Discovery](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-discovery/quick-start/)
+- [Recommendations](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/recommendations/quick-start/)
+- [User Account](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/user-account/quick-start/)
+- [User Auth](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/user-auth/quick-start/)
+- [Wishlist](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/wishlist/quick-start/)
+
+## Advanced patterns
+
+These patterns show how to handle more complex scenarios in your blocks.
+
+### Multiple containers in one block
+
+Most blocks use a single container, but complex blocks can render multiple containers together. Use `Promise.all()` to render them in parallel for better performance. The Cart block demonstrates this pattern:
+
+```js title="blocks/commerce-cart/commerce-cart.js"
+
+export default async function decorate(block) {
+  // Create layout structure
+  const fragment = document.createRange().createContextualFragment(`
+    
+    
+  `);
+  
+  const $list = fragment.querySelector('.cart__list');
+  const $summary = fragment.querySelector('.cart__order-summary');
+  block.appendChild(fragment);
+
+  // Helper to create product links
+  const createProductLink = (product) => getProductLink(product.url.urlKey, product.topLevelSku);
+
+  // Render multiple containers in parallel
+  await Promise.all([
+    provider.render(CartSummaryList, {
+      routeProduct: createProductLink,
+      enableRemoveItem: true,
+    })($list),
+
+    provider.render(OrderSummary, {
+      routeCheckout: () => rootLink('/checkout'),
+    })($summary),
+  ]);
+}
+```
+
+### Nesting containers with slots
+
+Render containers inside other container slots for advanced composition. Use conditional logic to control which slots render:
+
+```js title="blocks/commerce-cart/commerce-cart.js"
+
+export default async function decorate(block) {
+  const { 'enable-estimate-shipping': enableEstimateShipping = 'false' } = readBlockConfig(block);
+  const createProductLink = (product) => getProductLink(product.url.urlKey, product.topLevelSku);
+
+  await provider.render(OrderSummary, {
+    routeProduct: createProductLink,
+    routeCheckout: () => rootLink('/checkout'),
+    slots: {
+      EstimateShipping: async (ctx) => {
+        if (enableEstimateShipping === 'true') {
+          const wrapper = document.createElement('div');
+          await provider.render(EstimateShipping, {})(wrapper);
+          ctx.replaceWith(wrapper);
+        }
+      },
+      Coupons: (ctx) => {
+        const coupons = document.createElement('div');
+        provider.render(Coupons)(coupons);
+        ctx.appendChild(coupons);
+      },
+    },
+  })(block);
+}
+```
+
+### Combining multiple drop-ins
+
+Use multiple drop-ins in a single block when functionality overlaps. The Cart block combines Cart and Wishlist:
+
+```js title="blocks/commerce-cart/commerce-cart.js"
+// Import event bus
+
+// Import initializers for both drop-ins
+
+// Import from both drop-ins
+
+export default async function decorate(block) {
+  // Create notification area
+  const fragment = document.createRange().createContextualFragment(`
+    
+  `);
+  const $notification = fragment.querySelector('.cart__notification');
+  block.appendChild(fragment);
+  
+  // Wishlist route
+  const routeToWishlist = '/wishlist';
+  
+  // Helper to create product links
+  const createProductLink = (product) => getProductLink(product.url.urlKey, product.topLevelSku);
+  
+  // Render cart with wishlist functionality in slots
+  await provider.render(CartSummaryList, {
+    routeProduct: createProductLink,
+    slots: {
+      Footer: (ctx) => {
+        // Add wishlist toggle to each cart item
+        const $wishlistToggle = document.createElement('div');
+        $wishlistToggle.classList.add('cart__action--wishlist-toggle');
+        
+        wishlistRender.render(WishlistToggle, {
+          product: ctx.item,
+          removeProdFromCart: Cart.updateProductsFromCart,
+        })($wishlistToggle);
+        
+        ctx.appendChild($wishlistToggle);
+      },
+    },
+  })(block);
+  
+  // Listen for wishlist events
+  events.on('wishlist/alert', ({ action, item }) => {
+    wishlistRender.render(WishlistAlert, {
+      action,
+      item,
+      routeToWishlist,
+    })($notification);
+    
+    setTimeout(() => {
+      $notification.innerHTML = '';
+    }, 5000);
+  });
+}
+```
+
+### Using API functions without containers
+
+Call API functions directly for programmatic control without rendering UI:
+
+```js title="blocks/custom-block/custom-block.js"
+
+export default async function decorate(block) {
+  // Get cached cart data synchronously
+  const cachedCart = Cart.getCartDataFromCache();
+  console.log('Cached cart:', cachedCart);
+  
+  // Fetch fresh cart data
+  const freshCart = await Cart.getCartData();
+  console.log('Fresh cart:', freshCart);
+  
+  // Add products programmatically
+  const button = block.querySelector('.add-to-cart-button');
+  if (button) {
+    button.addEventListener('click', async () => {
+      try {
+        await Cart.addProductsToCart([
+          { sku: 'ABC123', quantity: 1 }
+        ]);
+        console.log('Product added successfully');
+      } catch (error) {
+        console.error('Failed to add product:', error);
+      }
+    });
+  }
+  
+  // Update cart totals in custom UI
+  events.on('cart/data', (cartData) => {
+    const totalElement = block.querySelector('.cart-total');
+    if (totalElement && cartData?.prices?.grandTotal) {
+      totalElement.textContent = cartData.prices.grandTotal.value;
+    }
+  }, { eager: true });
+}
+```
+
+### Error handling
+
+Handle errors gracefully with try/catch blocks and user notifications:
+
+```js title="blocks/commerce-mini-cart/commerce-mini-cart.js"
+
+export default async function decorate(block) {
+  const placeholders = await fetchPlaceholders();
+  let currentModal = null;
+
+  // Custom message display function
+  const showMessage = (message) => {
+    const messageEl = block.querySelector('.mini-cart__message');
+    if (messageEl) {
+      messageEl.textContent = message;
+      messageEl.classList.add('visible');
+      setTimeout(() => messageEl.classList.remove('visible'), 3000);
+    }
+  };
+
+  async function handleEditButtonClick(cartItem) {
+    try {
+      // Attempt to load and show mini PDP
+      const miniPDPContent = await createMiniPDP(cartItem);
+      currentModal = await createModal([miniPDPContent]);
+      
+      if (currentModal.block) {
+        currentModal.block.setAttribute('id', 'mini-pdp-modal');
+      }
+      
+      currentModal.showModal();
+    } catch (error) {
+      console.error('Error opening mini PDP modal:', error);
+      
+      // Show error message using mini-cart's message system
+      showMessage(placeholders?.Global?.ProductLoadError || 'Failed to load product');
+    }
+  }
+  
+  // ... rest of block implementation
+}
+```
+
+> **Always provide feedback** Always provide feedback to users when operations fail. The example shows how to define a custom message function, but you can also use the `InLineAlert` component from `@dropins/tools/components.js` for consistent error messaging.
+
+## What the boilerplate provides
+
+The boilerplate includes everything you need:
+
+- Drop-in packages installed in `package.json`.
+- Optimized code in `scripts/__dropins__/`.
+- Import maps in `head.html`.
+- Initializers in `scripts/initializers/` for automatic setup.
+- Example blocks demonstrating usage.
+
+## How it works
+
+The following diagram shows how drop-ins integrate into your boilerplate project:
+
+![Drop-in Setup Flow](https://experienceleague.adobe.com/developer/commerce/storefront/images/pdp/pdp-installation.svg)
+
+## Additional concepts
+
+Additional terms you'll encounter as you work with drop-ins.
+
+**Drop-in**  
+A self-contained Commerce component (Cart, Checkout, Product Details) that includes containers, API functions, and events.
+
+**Import maps** (in `head.html`)  
+Configuration that maps clean import paths (for example, `@dropins/storefront-cart`) to optimized code in `scripts/__dropins__/`. The boilerplate includes these pre-configured.
+
+**Event bus** (`@dropins/tools/event-bus.js`)  
+Pub/sub system for drop-in communication. Drop-ins emit events when state changes (for example, `cart/data`, `checkout/updated`). Listen to events to update custom UI or trigger logic.
+
+**API functions**  
+Programmatic interfaces to control drop-in behavior without rendering UI. Fetch data, trigger actions, and read cached state (for example, `Cart.addProductsToCart()`, `Cart.getCartData()`).
+
+**Slots**  
+Extension points in containers where you can inject custom content or replace default behavior. Used for deep customization beyond configuration options.
+
+## Summary
+
+The boilerplate makes using drop-ins straightforward: import an initializer for automatic setup, import the containers you need, render them with configuration options, and optionally listen to events for custom behavior. No manual package installation or complex configuration required.
+
+---
+
+# Slots
+
+Using slots (An extension point inside a drop-in where custom UI or behavior can be added, replaced, or removed.) provides the deepest level of customization for drop-in components. A slot provides a place in a drop-in container (A pre-built UI module that renders drop-in functionality and manages logic, state, and data for a feature.) to add your own UI components and functions. This architecture makes it easy to change the default look, layout, and behavior. Let's learn how slots work.
+
+## Big Picture
+
+![What is a slot?](https://experienceleague.adobe.com/developer/commerce/storefront/images/slots/what-is-a-slot.svg)
+
+*What is a slot?*
+
+The following functions are available to all slots:
+
+1. `prependSibling`: Prepends a new HTML element before the content of the slot.
+1. `prependChild`: Prepends a new HTML element to the content of the slot.
+1. `replaceWith`: Replaces the content of the slot with a new HTML element.
+1. `appendChild`: Appends a new HTML element to the content of the slot.
+1. `appendSibling`: Appends a new HTML element after the content of the slot.
+1. `remove`: Removes the slot from the DOM.
+1. `getSlotElement`: Gets a slot element.
+1. `onChange`: Listens to changes in the context of the slot.
+1. `dictionary`: Provides a JSON Object for the current locale. If the locale changes, the `dictionary` values change to reflect the values for the selected language.
+
+## Best practice for dynamic slot content
+
+**Do not use context methods inside other context methods.** Context methods include `appendChild()`, `prependChild()`, `replaceWith()`, `appendSibling()`, `prependSibling()`, `remove()`, `getSlotElement()`, and `onChange()`.
+
+Instead, create and append wrapper elements on mount, then update their content inside callbacks using standard DOM methods like `innerHTML`:
+
+```js
+slots: {
+  MySlot: (ctx) => {
+    const wrapper = document.createElement('div');
+    
+    // Use context method on mount (outside other context methods)
+    ctx.appendChild(wrapper);
+    
+    // Update content inside onChange using standard DOM methods
+    ctx.onChange((next) => {
+      if (next.data.condition) {
+        wrapper.innerHTML = 'Content A';
+      } else {
+        wrapper.innerHTML = 'Content B';
+      }
+    });
+  }
+}
+```
+
+```js
+// ❌ Incorrect: Calling context method inside context method
+ctx.onChange((next) => {
+  const element = document.createElement('div');
+  ctx.appendChild(element);  // Incorrect - context method inside context method
+});
+```
+
+## Related resources
+
+- [Extending drop-in components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/extending/) - Advanced customization techniques
+- [Cart drop-in](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/) - Cart drop-in documentation
+- [Recommendations drop-in](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/recommendations/) - Recommendations drop-in documentation
+
+---
+
+# Styling Drop-In Components
+
+export const brandColors = [
+  {
+    "name": "--color-brand-300",
+    "value": "#6d6d6d",
+    "resolvedColor": "#6d6d6d"
+  },
+  {
+    "name": "--color-brand-500",
+    "value": "#454545",
+    "resolvedColor": "#454545"
+  },
+  {
+    "name": "--color-brand-600",
+    "value": "#383838",
+    "resolvedColor": "#383838"
+  },
+  {
+    "name": "--color-brand-700",
+    "value": "#2b2b2b",
+    "resolvedColor": "#2b2b2b"
+  }
+];
+
+export const neutralColors = [
+  {
+    "name": "--color-neutral-50",
+    "value": "#fff",
+    "resolvedColor": "#fff"
+  },
+  {
+    "name": "--color-neutral-100",
+    "value": "#fafafa",
+    "resolvedColor": "#fafafa"
+  },
+  {
+    "name": "--color-neutral-200",
+    "value": "#f5f5f5",
+    "resolvedColor": "#f5f5f5"
+  },
+  {
+    "name": "--color-neutral-300",
+    "value": "#e8e8e8",
+    "resolvedColor": "#e8e8e8"
+  },
+  {
+    "name": "--color-neutral-400",
+    "value": "#d6d6d6",
+    "resolvedColor": "#d6d6d6"
+  },
+  {
+    "name": "--color-neutral-500",
+    "value": "#b8b8b8",
+    "resolvedColor": "#b8b8b8"
+  },
+  {
+    "name": "--color-neutral-600",
+    "value": "#8f8f8f",
+    "resolvedColor": "#8f8f8f"
+  },
+  {
+    "name": "--color-neutral-700",
+    "value": "#666",
+    "resolvedColor": "#666"
+  },
+  {
+    "name": "--color-neutral-800",
+    "value": "#3d3d3d",
+    "resolvedColor": "#3d3d3d"
+  },
+  {
+    "name": "--color-neutral-900",
+    "value": "#292929",
+    "resolvedColor": "#292929"
+  }
+];
+
+export const semanticColors = [
+  {
+    "name": "--color-positive-200",
+    "value": "#eff5ef",
+    "resolvedColor": "#eff5ef"
+  },
+  {
+    "name": "--color-positive-500",
+    "value": "#7fb078",
+    "resolvedColor": "#7fb078"
+  },
+  {
+    "name": "--color-positive-800",
+    "value": "#53824c",
+    "resolvedColor": "#53824c"
+  },
+  {
+    "name": "--color-informational-200",
+    "value": "#eeeffb",
+    "resolvedColor": "#eeeffb"
+  },
+  {
+    "name": "--color-informational-500",
+    "value": "#6978d9",
+    "resolvedColor": "#6978d9"
+  },
+  {
+    "name": "--color-informational-800",
+    "value": "#5d6dd6",
+    "resolvedColor": "#5d6dd6"
+  },
+  {
+    "name": "--color-warning-200",
+    "value": "#fdf3e9",
+    "resolvedColor": "#fdf3e9"
+  },
+  {
+    "name": "--color-warning-500",
+    "value": "#e79f5c",
+    "resolvedColor": "#e79f5c"
+  },
+  {
+    "name": "--color-warning-800",
+    "value": "#cc7a2e",
+    "resolvedColor": "#cc7a2e"
+  },
+  {
+    "name": "--color-alert-200",
+    "value": "#ffebeb",
+    "resolvedColor": "#ffebeb"
+  },
+  {
+    "name": "--color-alert-500",
+    "value": "#db7070",
+    "resolvedColor": "#db7070"
+  },
+  {
+    "name": "--color-alert-800",
+    "value": "#c35050",
+    "resolvedColor": "#c35050"
+  }
+];
+
+export const buttonColors = [
+  {
+    "name": "--color-button-active",
+    "value": "var(--color-brand-700)",
+    "resolvedColor": "#2b2b2b"
+  },
+  {
+    "name": "--color-button-focus",
+    "value": "var(--color-neutral-400)",
+    "resolvedColor": "#d6d6d6"
+  },
+  {
+    "name": "--color-button-hover",
+    "value": "var(--color-brand-600)",
+    "resolvedColor": "#383838"
+  },
+  {
+    "name": "--color-action-button-active",
+    "value": "var(--color-neutral-50)",
+    "resolvedColor": "#fff"
+  },
+  {
+    "name": "--color-action-button-hover",
+    "value": "var(--color-neutral-300)",
+    "resolvedColor": "#e8e8e8"
+  }
+];
+
+export const opacityColors = [
+  {
+    "name": "--color-opacity-16",
+    "value": "rgb(255 255 255 / 16%)",
+    "resolvedColor": "rgb(255 255 255 / 16%)"
+  },
+  {
+    "name": "--color-opacity-24",
+    "value": "rgb(255 255 255 / 24%)",
+    "resolvedColor": "rgb(255 255 255 / 24%)"
+  }
+];
+
+Customize drop-in components using the design token system and CSS classes from the boilerplate. This guide covers the universal styling approach used across all drop-ins.
+
+## Drop-in-specific styles
+
+Each drop-in has a dedicated styles page with practical customization examples. See the individual drop-in documentation:
+
+- [Cart styles](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/styles/)
+- [Checkout styles](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/styles/)
+- [Order styles](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/styles/)
+- [Payment Services styles](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/payment-services/styles/)
+- [Personalization styles](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/personalization/styles/)
+- [Product Details styles](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/styles/)
+- [Product Discovery styles](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-discovery/styles/)
+- [Recommendations styles](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/recommendations/styles/)
+- [User Account styles](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/user-account/styles/)
+- [User Auth styles](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/user-auth/styles/)
+- [Wishlist styles](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/wishlist/styles/)
+
+## Where to add custom styles
+
+Add your custom CSS in the appropriate location based on the scope of your changes:
+
+### Global styles and design token overrides
+
+- Edit https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/styles/styles.css to override design tokens or add site-wide styles
+- These styles load immediately and affect all drop-ins
+
+### Block-specific styles
+
+- Add styles to `blocks/{block-name}/{block-name}.css`
+- For example: https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/product-details/product-details.css
+- These styles load only when the block is used
+- See all https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks in the boilerplate
+
+### Deferred global styles
+
+- Add to https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/styles/lazy-styles.css for non-critical styles that can load after page render
+- Improves initial page load performance
+
+## Design tokens
+
+The drop-in components use CSS custom properties (design tokens) defined in the `styles/styles.css` file from the boilerplate. These tokens ensure consistent styling across all drop-ins and make global theme changes easy to apply.
+
+### Override design tokens
+
+Change the appearance of all drop-ins by overriding design tokens in your custom CSS:
+
+```css
+:root {
+  /* Brand colors */
+  --color-brand-500: #0066cc;
+  --color-brand-600: #0052a3;
+  --color-brand-700: #003d7a;
+  
+  /* Typography */
+  --type-base-font-family: 'Inter', system-ui, sans-serif;
+  
+  /* Spacing */
+  --spacing-small: 12px;
+  --spacing-medium: 20px;
+}
+```
+
+## Finding CSS classes
+
+Use the browser DevTools to find specific class names for your customizations:
+
+Inspect the UI of any drop-in component using your browser developer tools:
+
+![Browser developer tools inspecting a PDP drop-in element with the Styles panel listing BEM-style CSS classes to override](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/findstyles.webp)
+
+*Find CSS classes to override.*
+
+1. **Inspect the element** you want to customize (right-click the element and select "Inspect" from the menu).
+1. **Identify the CSS class(es)** for the element. We use https://getbem.com/naming/, which makes components and their elements easy to identify. For example, `.pdp-product__title` indicates the title element of the product component.
+1. **Copy the CSS class** to your CSS file to override existing rules or add new rules. If the class uses design tokens (like `var(--spacing-small)`), override the token value instead of removing it. This keeps your customizations consistent with the design system.
+
+## Examples
+
+These examples show common component customization patterns:
+
+```css
+/* Adjust layout for a specific component */
+.pdp-product__options {
+  grid-column: 1 / span 3;
+}
+
+.pdp-product__quantity {
+  grid-column: 1 / span 3;
+}
+
+/* Modify spacing using design tokens */
+.pdp-product__buttons {
+  gap: var(--spacing-small);
+}
+```
+
+## Responsive breakpoints
+
+Drop-in components use these breakpoints:
+
+- **Mobile**: up to 767px
+- **Tablet**: 768px - 1023px  
+- **Desktop**: 1024px and up
+
+Use a mobile-first approach when you add responsive styles:
+
+```css
+/* Mobile styles (default) */
+.my-component {
+  padding: var(--spacing-small);
+}
+
+/* Desktop styles */
+@media (min-width: 1024px) {
+  .my-component {
+    padding: var(--spacing-big);
+  }
+}
+```
+
+## Design tokens reference
+
+The following sections show all available design tokens with their default values for reference when customizing your storefront.
+
+### Colors
+
+Color tokens define the palette for branding, UI elements, semantic states, and interactive components.
+
+#### Brand Colors
+
+#### Neutral Colors
+
+#### Semantic Colors
+
+#### Button Colors
+
+#### Opacity
+
+### Spacing
+
+Spacing tokens provide consistent padding, margins, and gaps across all components.
+
+```css
+--spacing-xxsmall: 4px
+--spacing-xsmall: 8px
+--spacing-small: 16px
+--spacing-medium: 24px
+--spacing-big: 32px
+--spacing-xbig: 40px
+--spacing-xxbig: 48px
+--spacing-large: 64px
+--spacing-xlarge: 72px
+--spacing-xxlarge: 96px
+--spacing-huge: 120px
+--spacing-xhuge: 144px
+--spacing-xxhuge: 192px
+```
+
+### Typography
+
+Typography tokens define font families, sizes, weights, line heights, and letter spacing for text elements.
+
+#### Font Families
+
+```css
+--type-base-font-family: adobe-clean, roboto, roboto-fallback, system-ui, sans-serif
+--type-fixed-font-family: adobe-clean, "Roboto Mono", menlo, consolas, "Liberation Mono", monospace, system-ui, sans-serif
+```
+
+#### Type Scales
+
+```css
+--type-display-1-font: normal normal 300 6rem/7.2rem var(--type-base-font-family)
+--type-display-1-letter-spacing: 0.04em
+--type-display-2-font: normal normal 300 4.8rem/5.6rem var(--type-base-font-family)
+--type-display-2-letter-spacing: 0.04em
+--type-display-3-font: normal normal 300 3.4rem/4rem var(--type-base-font-family)
+--type-display-3-letter-spacing: 0.04em
+--type-headline-1-font: normal normal 400 2.4rem/3.2rem var(--type-base-font-family)
+--type-headline-1-letter-spacing: 0.04em
+--type-headline-2-default-font: normal normal 300 2rem/2.4rem var(--type-base-font-family)
+--type-headline-2-default-letter-spacing: 0.04em
+--type-headline-2-strong-font: normal normal 700 2rem/2.4rem var(--type-base-font-family)
+--type-headline-2-strong-letter-spacing: 0.04em
+--type-body-1-default-font: normal normal 300 1.6rem/2.4rem var(--type-base-font-family)
+--type-body-1-default-letter-spacing: 0.04em
+--type-body-1-strong-font: normal normal 700 1.6rem/2.4rem var(--type-base-font-family)
+--type-body-1-strong-letter-spacing: 0.04em
+--type-body-1-emphasized-font: normal normal 700 1.6rem/2.4rem var(--type-base-font-family)
+--type-body-1-emphasized-letter-spacing: 0.04em
+--type-body-2-default-font: normal normal 300 1.4rem/2rem var(--type-base-font-family)
+--type-body-2-default-letter-spacing: 0.04em
+--type-body-2-strong-font: normal normal 700 1.4rem/2rem var(--type-base-font-family)
+--type-body-2-strong-letter-spacing: 0.04em
+--type-body-2-emphasized-font: normal normal 700 1.4rem/2rem var(--type-base-font-family)
+--type-body-2-emphasized-letter-spacing: 0.04em
+--type-button-1-font: normal normal 400 2rem/2.6rem var(--type-base-font-family)
+--type-button-1-letter-spacing: 0.08em
+--type-button-2-font: normal normal 400 1.6rem/2.4rem var(--type-base-font-family)
+--type-button-2-letter-spacing: 0.08em
+--type-details-caption-1-font: normal normal 400 1.2rem/1.6rem var(--type-base-font-family)
+--type-details-caption-1-letter-spacing: 0.08em
+--type-details-caption-2-font: normal normal 300 1.2rem/1.6rem var(--type-base-font-family)
+--type-details-caption-2-letter-spacing: 0.08em
+--type-details-overline-font: normal normal 400 1.2rem/2rem var(--type-base-font-family)
+--type-details-overline-letter-spacing: 0.16em
+```
+
+### Shapes & Borders
+
+Shape tokens control the visual appearance of borders, shadows, and icon strokes.
+
+#### Border Radius
+
+```css
+--shape-border-radius-1: 3px
+--shape-border-radius-2: 8px
+--shape-border-radius-3: 24px
+```
+
+#### Border Width
+
+```css
+--shape-border-width-1: 1px
+--shape-border-width-2: 1.5px
+--shape-border-width-3: 2px
+--shape-border-width-4: 4px
+```
+
+#### Shadows
+
+```css
+--shape-shadow-1: 0 0 16px 0 rgb(0 0 0 / 16%)
+--shape-shadow-2: 0 2px 16px 0 rgb(0 0 0 / 16%)
+--shape-shadow-3: 0 2px 3px 0 rgb(0 0 0 / 16%)
+```
+
+#### Icon Stroke
+
+```css
+--shape-icon-stroke-1: 1px
+--shape-icon-stroke-2: 1.5px
+--shape-icon-stroke-3: 2px
+--shape-icon-stroke-4: 4px
+```
+
+### Grid System
+
+```css
+--grid-1-columns: 4
+--grid-1-margins: 0
+--grid-1-gutters: 16px
+--grid-2-columns: 12
+--grid-2-margins: 0
+--grid-2-gutters: 16px
+--grid-3-columns: 12
+--grid-3-margins: 0
+--grid-3-gutters: 24px
+--grid-4-columns: 12
+--grid-4-margins: 0
+--grid-4-gutters: 24px
+--grid-5-columns: 12
+--grid-5-margins: 0
+--grid-5-gutters: 24px
+```
+
+## Advanced customization
+
+### Inspect CSS variables in use
+
+Use the browser DevTools to discover which CSS variables (design tokens) a component is using:
+
+1. **Right-click on any element** and select "Inspect"
+2. **In the Styles panel**, look for properties using `var()` syntax
+3. **Click the variable name** (e.g., `var(--spacing-medium)`) to see its computed value
+4. **In the Computed tab**, filter by "spacing", "color", etc. to see all applied tokens
+
+#### Example: Inspecting a button might show
+
+```css
+padding: var(--spacing-small);    /* Resolves to: 16px */
+background: var(--color-brand-500); /* Resolves to: #454545 */
+```
+
+### How tokens flow through components
+
+Design tokens control the visual appearance of components by mapping to specific CSS properties. Understanding this flow helps you predict what changes when you override a token.
+
+#### The flow:
+1. A design token is defined in the boilerplate: `--spacing-small: 16px`
+2. A component uses it in a CSS property: `gap: var(--spacing-small);`
+3. The browser resolves it to the actual value: `gap: 16px`
+4. The visual effect appears: 16px of spacing between grid items
+
+#### Real-world example: Cart grid spacing
+
+The grid component for the Cart drop-in uses `--spacing-small` to control the gap between product images:
+
+```css
+.cart-cart-summary-grid__content {
+  display: grid;
+  gap: var(--spacing-small);  /* Controls spacing between rows and columns */
+  grid-template-columns: repeat(6, 1fr);
+}
+```
+
+```
+┌─────────┐ ←──16px──→ ┌─────────┐ ←──16px──→ ┌─────────┐
+│ Product │            │ Product │            │ Product │
+│  Image  │            │  Image  │            │  Image  │
+└─────────┘            └─────────┘            └─────────┘
+     ↓                      ↓                      ↓
+   16px                   16px                   16px
+     ↓                      ↓                      ↓
+┌─────────┐            ┌─────────┐            ┌─────────┐
+│ Product │            │ Product │            │ Product │
+│  Image  │            │  Image  │            │  Image  │
+└─────────┘            └─────────┘            └─────────┘
+     ↓                      ↓                      ↓
+   16px                   16px                   16px
+     ↓                      ↓                      ↓
+┌─────────┐            ┌─────────┐            ┌─────────┐
+│ Product │            │ Product │            │ Product │
+│  Image  │            │  Image  │            │  Image  │
+└─────────┘            └─────────┘            └─────────┘
+
+gap: var(--spacing-small) = 16px
+```
+
+*The gap property controls spacing between grid items in both directions.*
+
+When you override `--spacing-small`, you directly change how tightly or loosely the product images are packed together. A smaller value (8px) creates a denser grid, while a larger value (24px) creates more breathing room.
+
+#### Common token-to-property mappings
+
+- `--spacing-*` tokens → `gap`, `padding`, `margin` properties → Controls whitespace
+- `--color-*` tokens → `background`, `color`, `border-color` properties → Controls visual identity
+- `--shape-border-radius-*` tokens → `border-radius` property → Controls corner roundness
+- `--type-*` tokens → `font`, `font-size`, `line-height` properties → Controls typography
+
+### Scoped token overrides
+
+Override design tokens for specific components only, rather than globally:
+
+```css
+/* Global override - affects all drop-ins */
+:root {
+  --spacing-small: 12px;
+}
+
+/* Scoped override - only affects Cart drop-in */
+.cart-cart-summary-grid {
+  --spacing-small: 16px;
+  /* This component now uses 16px, others still use the global value */
+}
+
+/* Scoped to a specific element state */
+.dropin-button:hover {
+  --color-brand-500: #0066cc;
+  background: var(--color-brand-500); /* Uses the hover value */
+}
+```
+
+---
+
+# Overview
+
+Drop-ins are pre-built, customizable UI components that provide complete commerce functionality for your storefront. Each drop-in handles a specific aspect of the shopping experience, from browsing products to completing checkout.
+
+| Item | Description |
+|------|-------------|
+| [Cart overview](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/) | Provides editable controls to help you view, update, and merge the products in your cart and mini-cart, including image thumbnails, pricing. |
+| [Checkout overview](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/) | Provides customizable controls to help complete a purchase. |
+| [Order overview](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/) | Provides tools to manage and display order-related data across various pages and scenarios. |
+| [Payment Services overview](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/payment-services/) | Renders the credit card form and the Apple Pay button. |
+| [Personalization overview](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/personalization/) | Provides tools to display content conditionally, based on Adobe Commerce customer groups, segments, and cart price rules. |
+| [Product details page overview](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/) | Renders detailed information about your products, including descriptions, specifications, options, pricing, and images. |
+| [Product Discovery overview](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-discovery/) | Enables you to display and customize product search results, category listings, and faceted navigation. |
+| [Product Recommendations overview](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/recommendations/) | Enables you to suggest products to customers based on their browsing patterns and behaviors. |
+| [User account overview](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/user-account/) | Provides account management features. |
+| [User auth overview](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/user-auth/) | Provides user authentication to allow customers to sign up, log in, and log out. |
+| [Wishlist overview](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/wishlist/) | Lets customers store products they are interested in purchasing later. |

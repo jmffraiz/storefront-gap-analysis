@@ -14,32 +14,28 @@ The intended loop for each new page/feature:
 
 1. Load a mockup PNG, a design (one image, multiple frames/breakpoints/variants inside it).
 2. Crop and downsample to readable tiles with `sips` (the original PNGs are too large to read directly — see Image-handling notes).
-3. Run the **`/storefront-gapanalysis`** slash command — it owns the per-page template and process, providing the design and user input.
-4. Source Commerce facts from the **`accs-storefront-architect`** skill (drop-in names, container props, slot names, events, services). Source generic EDS facts from **`eds-knowledge`**.
+3. Invoke the **`storefront-gapanalysis`** skill (slash command) with the Figma slices and a description of the feature to be built — it owns the per-page template and process.
+4. Source Commerce facts from the **`storefront-knowledge`** skill (drop-in names, container props, slot names, events, services). Source generic EDS facts from **`eds-knowledge`**.
 
 Always emit the completed gap analysis into `backlog/` — that is the deliverable store, not an archive.
 
-## Skills and agent (project-local)
+## Skills (project-local)
 
 Project-local config lives in `.claude/`:
 
-- **`.claude/skills/accs-storefront-architect/`** — Commerce-layer knowledge base (drop-ins, services, GraphQL endpoints, ACCS vs PaaS, Universal Editor wiring). `SKILL.md` plus `references/*.md` per topic and `references/llms-full.txt` (2.8 MB — **grep first, never read whole**).
+- **`.claude/skills/storefront-knowledge/`** — Commerce-layer knowledge base (drop-ins, containers, slots, events, services, GraphQL endpoints, commerce blocks, SDK, configuration). `SKILL.md` plus `references/*.txt` — Adobe's official per-topic LLM bundles stored verbatim (30–225 KB each — **grep first, never read whole**).
 - **`.claude/skills/eds-knowledge/`** — EDS delivery-layer knowledge (blocks, sections, authoring, metadata, indexing, Lighthouse).
-- **`.claude/commands/storefront-gapanalysis.md`** — slash command that owns the gap-doc process. Reads the template at `.claude/templates/page-gap-analysis.template.md` and pulls Commerce facts from `accs-storefront-architect` (via the `storefront-architect` subagent).
-- **`.claude/agents/storefront-architect.md`** — opus-backed architect agent that pulls from both knowledge skills above. Invoke via the `storefront-architect` subagent type for design / "should we…" / architecture-review questions.
+- **`.claude/skills/storefront-gapanalysis/`** — the entry point, invoked as a slash command with Figma slices + a feature description. Owns the gap-doc process and template (`references/page-gap-analysis.template.md`); greps the `storefront-knowledge` bundles for Commerce facts and reads `eds-knowledge` for delivery-layer facts.
 
-Phrasing discipline carried over from the architect skill: **"block"** = EDS block (`decorate(block)`); **"container"** = drop-in container; **"drop-in"** = the npm package; **"slot"** = named extension point inside a container. Use Adobe's official names verbatim (ACCS, ACO, Adobe Commerce PaaS, Storefront Compatibility Package, Catalog Service, Live Search, Product Recommendations, Payment Services, AEM Commerce Prerender, etc.).
+Phrasing discipline carried over from the knowledge skill: **"block"** = EDS block (`decorate(block)`); **"container"** = drop-in container; **"drop-in"** = the npm package; **"slot"** = named extension point inside a container. Use Adobe's official names verbatim (ACCS, ACO, Adobe Commerce PaaS, Storefront Compatibility Package, Catalog Service, Live Search, Product Recommendations, Payment Services, AEM Commerce Prerender, etc.).
 
-## Gap-doc conventions (match the existing files)
+## Gap-doc conventions
 
-When producing a new gap analysis, mirror the archived examples in `backlog/` (e.g. `backlog/plp.md`, `backlog/minibasket-gap-analysis.md`, `backlog/vuse-pdp-gap-analysis.md`):
+The section structure, table columns, legend, and complexity buckets are defined **once**, in the template at `.claude/skills/storefront-gapanalysis/references/page-gap-analysis.template.md` — do not restate or restructure them. The document shape is: **§1 Feature gap analysis** (a single combined table — one row per feature, with **Gap to close**, **Complexity**, and **Risk** as the primary columns), **§2 Assumptions and open questions**, **§3 Explicitly out of scope**. Beyond the template:
 
-- **Header block** with mockup source link, variants/states included, in/out scope, author (Jose Maria Franco), date.
-- One-paragraph **architecture lead** naming the host block, drop-in, and key container(s).
-- **§1 Feature decomposition** table: `# · Feature · Description in the design · Variant/state · Type · Observations`. Type is one of `Cross-cutting | Commerce | Authored content`.
-- **§2 Gap analysis** table with the legend `✅ provided · 🟡 partial · ❌ none` and columns: `Feature · Existing drop-in / block · Coverage · What it gives OOTB · Gap to close · Touch points · Dependencies · Complexity · Risk`. Complexity buckets are defined at the top of each doc (Low / Medium / High) — keep that definition block.
-- **§3 Overall assumptions and open questions** — list assumptions, then numbered open questions each with *Recommendation* + *Impact A / Impact B* branches.
-- Link drop-in/container/slot names to the matching Adobe Experience League page. Use exact identifiers (`@dropins/storefront-cart`, `MiniCart`, `ProductActions`, `cart/product/added`, `commerce-endpoint`, etc.).
+- Author is **Jose Maria Franco**.
+- Mirror the existing examples in `backlog/` (e.g. `backlog/plp.md`, `backlog/minibasket.md`, `backlog/pdp.md`) for tone and granularity.
+- Deliverables always go to `backlog/<page-or-feature-slug>.md`.
 
 ## Image-handling notes
 
@@ -62,7 +58,7 @@ Workflow: get pixel dimensions first → downsample whole image to find the fram
 ## What NOT to do
 
 - Don't try to `Read` the raw `*.png` files at full resolution — crop/resample first.
-- Don't `Read` or `Grep` the skill `llms-full.txt` whole — grep with a narrow pattern.
-- Don't invent drop-in / container / slot / event / config-key names — verify against the `accs-storefront-architect` references.
+- Don't `Read` a `storefront-knowledge` bundle whole — grep with a narrow pattern, then read only the matching line range.
+- Don't invent drop-in / container / slot / event / config-key names — verify against the `storefront-knowledge` bundles.
 - Don't propose custom components when an Adobe container exists; don't mix the deprecated monolithic `ProductDetails` with the modular containers.
 - Don't restructure the gap-doc template — the columns, legend, and §1/§2/§3 layout are load-bearing for downstream estimation.

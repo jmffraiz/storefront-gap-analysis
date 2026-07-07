@@ -1,0 +1,3038 @@
+<SYSTEM>This is the Catalog drop-ins bundle for Adobe Commerce Storefront on Edge Delivery Services</SYSTEM>
+
+# Catalog drop-ins
+
+> Product discovery (Live Search), recommendations, and personalization drop-in reference
+> Generated: 2026-06-26T22:40:20.158Z
+> Source: https://experienceleague.adobe.com/developer/commerce/storefront
+
+
+---
+
+# Personalization Containers
+
+The **Personalization** drop-in provides pre-built container components for integrating into your storefront.
+
+<strong>Version: 3.1.1</strong>
+
+## What are Containers?
+
+Containers are pre-built UI components that combine functionality, state management, and presentation. They provide a complete solution for specific features and can be customized through props, slots, and CSS.
+
+## Available Containers
+
+| Container | Description |
+| --------- | ----------- |
+| [TargetedBlock](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/personalization/containers/targeted-block/) | Learn about the `TargetedBlock` container in the personalization drop-in component. |
+
+> Each container is designed to work independently but can be composed together to create comprehensive user experiences.
+
+---
+
+# TargetedBlock container
+
+The `TargetedBlock` container wraps the conditional content.
+
+## Configurations
+
+The `TargetedBlock` container provides the following configuration options:
+
+```text
+[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['slots', '{Content: SlotProps}', 'Yes', 'The slot that provides the content to be displayed conditionally.'],
+        ['personalizationData', 'PersonalizationData', 'Yes', 'The customer groups, segments, and cart price rules that must be active for the block to render.'],
+        ['type', 'string', 'No', 'Specify this value when you want only the first Targeted Block of this type that matches the conditions to be displayed on the page.']
+    ]
+```
+
+## Example
+
+The following example demonstrates how to integrate the `TargetedBlock` container:
+
+```javascript
+export default async function decorate(block) {
+  const blockConfig = readBlockConfig(block);
+
+  const {
+    fragment,
+    type,
+    segments,
+    groups,
+    cartRules,
+  } = blockConfig;
+
+  const content = (blockConfig.fragment !== undefined)
+    ? await loadFragment(fragment)
+    : block.children[block.children.length - 1];
+
+  render.render(TargetedBlock, {
+    type,
+    personalizationData: {
+      segments,
+      groups,
+      cartRules,
+    },
+    slots: {
+      Content: (ctx) => {
+        const container = document.createElement('div');
+        container.append(content);
+        ctx.replaceWith(container);
+      },
+    },
+  })(block);
+}
+```
+
+---
+
+# Personalization Dictionary
+
+The **Personalization dictionary** contains all user-facing text, labels, and messages displayed by this drop-in. Customize the dictionary to:
+
+- **Localize** the drop-in for different languages and regions
+- **Customize** labels and messages to match your brand voice
+- **Override** default text without modifying source code for the drop-in
+
+Dictionaries use the **i18n (internationalization)** pattern, where each text string is identified by a unique key path.
+
+<strong>Version: 3.1.1</strong>
+
+## How to customize
+
+Override dictionary values during drop-in initialization. The drop-in deep-merges your custom values with the defaults.
+
+```javascript
+
+await initialize({
+  langDefinitions: {
+    en_US: {
+        "Personalization": {
+          "Component": {
+            "heading": "My Custom Heading",
+            "buttonText": "Click Me"
+          }
+        }
+      }
+  }
+});
+```
+
+You only need to include the keys you want to change. For multi-language support and advanced patterns, see the [Dictionary customization guide](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/dictionaries/).
+
+## Default keys and values
+
+Below are the default English (`en_US`) strings provided by the **Personalization** drop-in:
+
+```json title="en_US.json"
+{
+  "": {}
+}
+```
+
+---
+
+# Personalization Data & Events
+
+The **Personalization** drop-in uses the [event bus](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/events/) to emit and listen to events for communication between drop-ins and external integrations.
+
+<strong>Version: 3.1.1</strong>
+
+## Events reference
+
+{/* EVENTS_TABLE_START */}
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [cart/initialized](#cartinitialized-listens) | Listens | Fired by Cart (`cart`) when the component completes initialization. |
+| [cart/updated](#cartupdated-listens) | Listens | Fired by Cart (`cart`) when the component state is updated. |
+| [order/placed](#orderplaced-listens) | Listens | Fired by Order (`order`) when an order is placed. |
+| [personalization/updated](#personalizationupdated-emits-and-listens) | Emits and listens | Triggered when the component state is updated. |
+
+{/* EVENTS_TABLE_END */}
+
+## Event details
+
+The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
+
+### `cart/initialized` (listens)
+
+Fired by Cart (`cart`) when the component completes initialization.
+
+#### Event payload
+
+```typescript
+CartModel | null
+```
+
+See [`CartModel`](#cartmodel) for full type definition.
+
+#### Example
+
+```js
+
+events.on('cart/initialized', (payload) => {
+  console.log('cart/initialized event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `cart/updated` (listens)
+
+Fired by Cart (`cart`) when the component state is updated.
+
+#### Event payload
+
+```typescript
+CartModel | null
+```
+
+See [`CartModel`](#cartmodel) for full type definition.
+
+#### Example
+
+```js
+
+events.on('cart/updated', (payload) => {
+  console.log('cart/updated event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `order/placed` (listens)
+
+Fired by Order (`order`) when an order is placed.
+
+#### Event payload
+
+```typescript
+OrderDataModel
+```
+
+See [`OrderDataModel`](#orderdatamodel) for full type definition.
+
+#### Example
+
+```js
+
+events.on('order/placed', (payload) => {
+  console.log('order/placed event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `personalization/updated` (emits and listens)
+
+Triggered when the component state is updated.
+
+#### Event payload
+
+```typescript
+PersonalizationData,
+'personalization/type-matched': string,
+'cart/initialized': CartModel | null
+```
+
+See [`PersonalizationData`](#personalizationdata), [`CartModel`](#cartmodel) for full type definitions.
+
+#### Example
+
+```js
+
+events.on('personalization/updated', (payload) => {
+  console.log('personalization/updated event received:', payload);
+  // Add your custom logic here
+});
+```
+
+## Data Models
+
+The following data models are used in event payloads for this drop-in.
+
+### CartModel
+
+Used in: [`cart/initialized`](#cartinitialized-listens), [`cart/updated`](#cartupdated-listens), [`personalization/updated`](#personalizationupdated-emits-and-listens).
+
+```ts
+interface CartModel {
+  id: string;
+}
+```
+
+### OrderDataModel
+
+Used in: [`order/placed`](#orderplaced-listens).
+
+```ts
+interface OrderDataModel {
+  id: string;
+}
+```
+
+### PersonalizationData
+
+Used in: [`personalization/updated`](#personalizationupdated-emits-and-listens).
+
+```ts
+interface PersonalizationData {
+    segments: string[],
+    groups: string[],
+    cartRules: string[]
+}
+```
+
+---
+
+# Personalization Functions
+
+The Personalization drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
+
+<strong>Version: 3.1.1</strong>
+
+| Function | Description |
+| --- | --- |
+| [`fetchPersonalizationData`](#fetchpersonalizationdata) | Request the customer groups, applied segments, and cart price rules from Adobe Commerce based on the cart ID. |
+| [`getPersonalizationData`](#getpersonalizationdata) | Retrieves the saved personalization data from a cookie. |
+| [`getStoreConfig`](#getstoreconfig) | Returns information about the store configuration related to personalization. |
+| [`savePersonalizationData`](#savepersonalizationdata) | Saves the personalization data to a cookie for later retrieval. |
+
+## fetchPersonalizationData
+
+The `fetchPersonalizationData` function can be used to request the customer groups, applied segments, and cart price rules from Adobe Commerce based on the cart ID.
+
+```ts
+const fetchPersonalizationData = async (
+  cartId: string
+): Promise<PersonalizationData | null>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `cartId` | `string` | Yes | The ID of the shopping cart. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`PersonalizationData`](#personalizationdata) or `null`.
+
+## getPersonalizationData
+
+The `getPersonalizationData` function retrieves the saved personalization data from a cookie.
+
+```ts
+const getPersonalizationData = async (): PersonalizationData
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`PersonalizationData`](#personalizationdata).
+
+## getStoreConfig
+
+The `getStoreConfig` function returns information about the store configuration related to personalization.
+
+```ts
+const getStoreConfig = async (): Promise<StoreConfigModel | null>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`StoreConfigModel`](#storeconfigmodel) or `null`.
+
+## savePersonalizationData
+
+The `savePersonalizationData` function saves the personalization data to a cookie for later retrieval.
+
+```ts
+const savePersonalizationData = async (
+  data: PersonalizationData
+): Promise<void>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `data` | `PersonalizationData` | Yes | Personalization data containing groups, segments, and cart price rules. |
+
+### Events
+
+Emits the `personalization/updated` event.
+
+Emits the **personalization-updated** event with the saved personalization data, including customer segments, groups, and cart price rules.
+
+### Returns
+
+Returns `void`.
+
+## Data Models
+
+The following data models are used by functions in this drop-in.
+
+### PersonalizationData
+
+The `PersonalizationData` object is returned by the following functions: [`fetchPersonalizationData`](#fetchpersonalizationdata), [`getPersonalizationData`](#getpersonalizationdata).
+
+```ts
+interface PersonalizationData {
+    segments: string[],
+    groups: string[],
+    cartRules: string[]
+}
+```
+
+### StoreConfigModel
+
+The `StoreConfigModel` object is returned by the following functions: [`getStoreConfig`](#getstoreconfig).
+
+```ts
+interface StoreConfigModel {
+  shareActiveSegments: boolean;
+  shareCustomerGroup: boolean;
+  shareAppliedCartRule: boolean;
+  customerAccessTokenLifetime: number;
+}
+```
+
+{/* This documentation is auto-generated from the drop-in source repository: REPO_URL */}
+
+---
+
+# Personalization overview
+
+The personalization drop-in component provides a set of tools and containers designed to display content conditionally, based on Adobe Commerce customer groups, segments, and cart price rules.
+
+## Overview
+
+The personalization drop-in component provides the [`TargetedBlock`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/personalization/containers/targeted-block/) container, which requires you to specify the content (or a path to a fragment containing the content), and optionally specify the block type, Adobe Commerce customer groups, segments, and cart price rules that determine which customers can view the content.
+
+The component's initialization sets up event listeners that respond to changes in authentication state and cart state.
+
+These listeners request the currently applied customer groups, segments, and cart price rules from Adobe Commerce and save them to a cookie.
+
+When you add a `TargetedBlock` container to a page, it displays only when the customer groups, segments, and cart price rules specified in the block configuration match the groups, segments, and rules stored in the cookie.
+
+When you specify a block type for a `TargetedBlock`, only the first targeted block of that type is rendered on the page. This behavior enables you to create a fallback chain of targeted blocks.
+
+---
+
+# Personalization initialization
+
+The **Personalization initializer** configures personalization features including user preferences, behavioral tracking, and content customization. Use initialization to customize personalization data models and enhance user experience.
+
+<strong>Version: 3.1.1</strong>
+
+## Configuration options
+
+The following table describes the configuration options available for the **Personalization** initializer:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
+
+## Default configuration
+
+The initializer runs with these defaults when no configuration is provided:
+
+```javascript title="scripts/initializers/personalization.js"
+
+// All configuration options are optional
+await initializers.mountImmediately(initialize, {
+  langDefinitions: {}, // Uses built-in English strings
+  models: {}, // Uses default data models
+  
+});
+```
+
+## Language definitions
+
+Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override default text for the drop-in.
+
+```javascript title="scripts/initializers/personalization.js"
+
+const customStrings = {
+  'AddToCart': 'Add to Bag',
+  'Checkout': 'Complete Purchase',
+  'Price': 'Cost',
+};
+
+const langDefinitions = {
+  default: customStrings,
+};
+
+await initializers.mountImmediately(initialize, { langDefinitions });
+```
+
+> For complete dictionary customization including all available keys and multi-language support, see the [Personalization Dictionary](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/personalization/dictionary/) page.
+
+## Customizing data models
+
+Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
+
+### Available models
+
+The following models can be customized through the `models` configuration option:
+
+> No customizable models are available for this drop-in.
+
+The following example shows how to customize the `CustomModel` model for the **Personalization** drop-in:
+
+```javascript title="scripts/initializers/personalization.js"
+
+const models = {
+  CustomModel: {
+    transformer: (data) => ({
+      // Add custom fields from backend data
+      customField: data?.custom_field,
+      promotionBadge: data?.promotion?.label,
+      // Transform existing fields
+      displayPrice: data?.price?.value ? `${data.price.value}` : 'N/A',
+    }),
+  },
+};
+
+await initializers.mountImmediately(initialize, { models });
+```
+
+## Configuration types
+
+The following TypeScript definitions show the structure of each configuration object:
+
+### langDefinitions
+
+Maps locale identifiers to dictionaries of key-value pairs. The `default` locale is used as the fallback when no specific locale matches. Each dictionary key corresponds to a text string used in the drop-in UI.
+
+```typescript
+langDefinitions?: {
+  [locale: string]: {
+    [key: string]: string;
+  };
+};
+```
+
+---
+
+# Personalization Quick Start
+
+The Personalization drop-in enables dynamic, AI-powered content recommendations based on real-time customer behavior and Adobe Experience Platform data.
+
+<strong>Version: 3.1.1</strong>
+
+## Quick example
+
+The Personalization drop-in is included in the https://github.com/hlxsites/aem-boilerplate-commerce. This example shows the basic pattern:
+
+```js
+// 1. Import initializer (handles all setup)
+
+// 2. Import the container you need
+
+// 3. Import the provider
+
+// 4. Render in your block
+export default async function decorate(block) {
+  await provider.render(TargetedBlock, {
+    // Configuration options - see Containers page
+  })(block);
+}
+```
+
+**New to drop-ins?** See the [Using drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/quick-start/) guide for complete step-by-step instructions.
+
+## Quick reference
+
+**Import paths:**
+- Initializer: `import '../../scripts/initializers/personalization.js'`
+- Containers: `import ContainerName from '@dropins/storefront-personalization/containers/ContainerName.js'`
+- Provider: `import { render } from '@dropins/storefront-personalization/render.js'`
+
+**Package:** `@dropins/storefront-personalization`
+
+**Version:** 3.1.1 (verify compatibility with your Commerce instance)
+
+**Example container:** `TargetedBlock`
+
+## Learn more
+
+- [Containers](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/personalization/containers/) - Available UI components and configuration options
+- [Initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/personalization/initialization/) - Customize initializer settings and data models
+- [Functions](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/personalization/functions/) - Control drop-in behavior programmatically
+- [Events](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/personalization/events/) - Listen to and respond to drop-in state changes
+- [Slots](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/personalization/slots/) - Extend containers with custom content
+
+---
+
+# Personalization Slots
+
+The Personalization drop-in exposes slots for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/extending/).
+
+<strong>Version: 3.1.1</strong>
+
+| Container | Slots |
+|-----------|-------|
+| [`TargetedBlock`](#targetedblock-slots) | `Content` |
+
+> **Slot usage best practice** Do not use context methods inside other context methods (for example, `appendChild()` inside `onChange()`). See [Slots best practices](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/slots/#best-practice-for-dynamic-slot-content) for details and examples.
+
+## TargetedBlock slots
+
+The slots for the `TargetedBlock` container allow you to customize its appearance and behavior.
+
+```typescript
+interface TargetedBlockProps {
+  slots?: {
+    Content: SlotProps
+  };
+}
+```
+
+---
+
+# Personalization styles
+
+Customize the Personalization drop-in using CSS classes and design tokens. This page covers the Personalization-specific container classes and customization examples. For comprehensive information about design tokens, responsive breakpoints, and styling best practices, see [Styling Drop-In Components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/styling/).
+
+<strong>Version: 3.1.1</strong>
+
+## Customization example
+
+Add this to the CSS file of the specific https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/ where you're using the Personalization drop-in.
+
+For a complete list of available design tokens (colors, spacing, typography, and more), see the [Design tokens reference](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/styling/#design-tokens-reference).
+
+```css title="styles/styles.css"
+/* Target Personalization containers */
+.personalization-container {
+  /* Use the browser DevTools to find the specific classes you need */
+}
+```
+
+## Container classes
+
+The Personalization drop-in uses BEM-style class naming. Use the browser DevTools to inspect elements and find specific class names.
+
+---
+
+# Facets container
+
+The Facets container lists and manages search filters (facets) to refine product search results.
+
+## Import
+
+```javascript
+```
+
+## Configurations
+
+The `Facets` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['scope', 'string', 'No', 'Scope identifier for isolated instances. Default: undefined.'],
+    ['slots', 'object', 'No', 'Allows passing custom components for Facet, SelectedFacets, and Facets slots.'],
+  ]
+```
+
+## Basic Usage
+
+```javascript
+// Basic facets container
+await provider.render(Facets)($container);
+
+// With scope
+await provider.render(Facets, {
+  scope: 'popover',
+})($container);
+```
+
+## Slots
+
+The `Facets` container supports several customization slots. For detailed information about available slots and their usage, see [Product Discovery Slots](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-discovery/slots/).
+
+### Example Slot Usage
+
+```javascript
+slots: {
+  FacetBucketLabel: (ctx) => {
+    // Here we are overriding the default Facet labels.
+    const $label = document.createElement('span');
+    $label.innerText = `${ctx.data.name ?? ctx.data.title} (${ctx.data.count})`;
+
+    // If the facet has an icon, add it to the label
+    if (ctx.data.icon) {
+      const $icon = document.createElement('img');
+      $icon.className = 'facet-bucket-label__icon';
+      $icon.src = ctx.data.icon;
+      $label.prepend($icon);
+    }
+
+    ctx.replaceWith($label);
+  },
+}
+```
+
+### Real-time Updates
+
+The container automatically updates when search events are received:
+
+1. **Search Results**: Updates available facets based on results
+2. **Filter Changes**: Automatically triggers new searches with updated filters
+
+### Scope Support
+
+The Facets container supports isolated instances through scope configuration:
+
+```javascript
+// Global scope (default) Listens to all search events
+await provider.render(Facets)($container);
+
+// Only listens to events with scope: 'popover'
+await provider.render(Facets, { scope: 'popover' })($container);
+```
+
+### Selected Filters Display
+
+- Shows all currently selected filters as removable buttons
+- Displays filter labels with appropriate formatting (including currency for price ranges)
+- Provides individual remove functionality for each selected filter
+
+### Clear All Functionality
+
+- "Clear All" button to remove all selected filters at once
+- Automatically triggers a new search with no filters applied
+
+## Integration Examples
+
+### Basic PLP Setup
+
+```javascript
+await provider.render(Facets)($facetsContainer);
+```
+
+### Scoped Facets
+
+```javascript
+await provider.render(Facets, {
+  scope: 'popover',
+})($popoverFacets);
+```
+
+## Best Practices
+
+1. **Scope Management**: Use unique scope identifiers for multiple instances
+2. **Scope Configuration**: Use appropriate scope identifiers for multiple instances
+3. **Real-time Updates**: Let the container handle updates automatically
+5. **Performance**: Use scoping to limit unnecessary updates
+6. **Slot Customization**: Use slots for merchant-specific facet styling
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Container Not Updating**: Check scope configuration and event handling
+2. **Slots Not Rendering**: Ensure the element is added to the slot using `ctx.appendChild()`, `ctx.replaceWith()`, etc.
+3. **Performance Issues**: Use proper scoping to limit unnecessary updates
+4. **Styling Conflicts**: Use specific CSS classes to avoid conflicts
+
+### Facet Selection Behavior
+
+- **Dynamic Facets**: Facets are automatically generated based on search results and available product attributes.
+- **Category-Relative Filtering**: If a `categoryPath` is provided in the search, facet selections will automatically include the categoryPath to ensure filters are relative to the current category.
+
+---
+
+# Product Discovery Containers
+
+The **Product Discovery** drop-in provides pre-built container components for integrating into your storefront.
+
+<strong>Version: 3.1.0</strong>
+
+## What are Containers?
+
+Containers are pre-built UI components that combine functionality, state management, and presentation. They provide a complete solution for specific features and can be customized through props, slots, and CSS.
+
+## Available Containers
+
+| Container | Description |
+| --------- | ----------- |
+| [Facets](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-discovery/containers/facets/) | Learn about the Facets container and configurations for the Product Discovery drop-in component v3.0.0. |
+| [Pagination](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-discovery/containers/pagination/) | Learn about the Pagination container and configurations for the Product Discovery drop-in component v3.0.0. |
+| [SearchResults](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-discovery/containers/search-results/) | Learn about the `SearchResults` container and configurations for the Product Discovery drop-in component v3.0.0. |
+| [SortBy](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-discovery/containers/sort-by/) | Learn about the `SortBy` container and configurations for the Product Discovery drop-in component v3.0.0. |
+
+> Each container is designed to work independently but can be composed together to create comprehensive user experiences.
+
+---
+
+# Pagination container
+
+The `Pagination` container handles paging for search results. It shows next, previous, and page number controls and keeps the page in sync with the results.
+
+## Import
+
+```javascript
+```
+
+## Configurations
+
+The `Pagination` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['scope', 'string', 'No', 'Scope identifier for isolated instances. Default: undefined.'],
+    ['onPageChange', 'function', 'No', 'Callback when page changes. Receives new page number.'],
+  ]
+```
+
+## Basic Usage
+
+```javascript
+await provider.render(Pagination)($container);
+```
+
+## Features
+
+### Automatic Page Management
+
+- **Page State**: Automatically tracks current page and total pages from search results
+- **Page Info**: Extracts pagination data from `pageInfo.currentPage` and `pageInfo.totalPages`
+- **Conditional Rendering**: Only renders when pagination data is available
+- **Search Integration**: Page changes trigger new search calls with updated page parameters
+
+### Navigation Controls
+
+- **Page Numbers**: Direct navigation to specific pages
+- **Current Page Display**: Shows current page position
+- **Total Pages**: Displays total number of available pages
+- **Responsive Design**: Adapts to different screen sizes
+
+### Scope Support
+
+The Pagination container supports isolated instances through scope configuration:
+
+```javascript
+// Global scope (default) Listens to all search events
+await provider.render(Pagination)($container);
+
+// Only listens to events with scope: 'popover'
+await provider.render(Pagination, { scope: 'popover' })($container);
+```
+
+## Real-time Updates
+
+The container automatically updates when search events are received:
+
+1. **Search Results**: Updates pagination based on `pageInfo` from results
+2. **Page Changes**: Automatically triggers new searches with updated page
+
+## Integration Examples
+
+### Basic PLP Setup
+
+```javascript
+await provider.render(Pagination, {
+  onPageChange: (page) => {
+    // scroll to the top of the page after changing pages
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+})($paginationContainer);
+```
+
+## Best Practices
+
+1. **Scope Management**: Use unique scope identifiers for multiple instances
+2. **Page Callbacks**: Use `onPageChange` for custom page handling
+3. **Real-time Updates**: Let the container handle updates automatically
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Container Not Updating**: Check scope configuration and event handling
+2. **Page Not Changing**: Verify search API is being called with correct page
+3. **Container Not Rendering**: Ensure search results include `pageInfo` data
+4. **Styling Conflicts**: Use specific CSS classes to avoid conflicts
+
+### Pagination Behavior
+
+- **Conditional Rendering**: Container only renders when `currentPage` and `totalPages` are available
+- **Search Integration**: Page changes automatically trigger new search calls
+- **State Management**: Page state is maintained through search variables
+
+---
+
+# SearchResults container
+
+The SearchResults container displays products for the current search. You can customize it with slots and run separate instances; the container handles loading states, errors, and real-time updates.
+
+## Import
+
+```javascript
+```
+
+## Configurations
+
+The `SearchResults` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['skeletonCount', 'number', 'No', 'Number of skeleton items to show while loading. Default: 8.'],
+    ['scope', 'string', 'No', 'Scope identifier for isolated instances. Default: undefined.'],
+    ['imageWidth', 'number', 'No', 'Width in pixels for product images. Default: 400.'],
+    ['imageHeight', 'number', 'No', 'Height in pixels for product images. Default: 450.'],
+    ['routeProduct', 'function', 'No', 'Function to generate product URLs. Receives a Product object as parameter.'],
+    ['onSearchResult', 'function', 'No', 'Callback when search results are received. Receives products array.'],
+    ['slots', 'object', 'No', 'Custom slot renderers for Header, Footer, ProductActions.'],
+  ]
+```
+
+## Basic Usage
+
+```javascript
+// Basic search results container
+await provider.render(SearchResults, {
+  skeletonCount: 12,
+  routeProduct: (product) => `/product/${product.sku}`
+})($container);
+
+// With scope for isolated instance
+await provider.render(SearchResults, {
+  skeletonCount: 6,
+  scope: 'popover',
+  routeProduct: (product) => `/product/${product.sku}`
+})($container);
+
+// With callback for custom handling
+await provider.render(SearchResults, {
+  skeletonCount: 12,
+  onSearchResult: (products) => {
+    console.log('Received', products.length, 'results');
+  }
+})($container);
+```
+
+## Slots
+
+The `SearchResults` container supports several customization slots. For detailed information about available slots and their usage, see [Product Discovery Slots](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-discovery/slots/).
+
+### Example Slot Usage
+
+```javascript
+slots: {
+  Header: (ctx) => {
+    const header = document.createElement('div');
+    header.innerHTML = `
+      
+
+## Search Results
+
+      
+
+Found ${ctx.products.length} products
+
+    `;
+    ctx.appendChild(header);
+  },
+  
+  ProductActions: (ctx) => {
+    const actions = document.createElement('div');
+    
+    const addToCartBtn = document.createElement('button');
+    addToCartBtn.textContent = 'Add to Cart';
+    addToCartBtn.onclick = () => addToCart(ctx.product);
+    
+    const quickViewBtn = document.createElement('button');
+    quickViewBtn.textContent = 'Quick View';
+    quickViewBtn.onclick = () => openQuickView(ctx.product);
+    
+    actions.appendChild(addToCartBtn);
+    actions.appendChild(quickViewBtn);
+    
+    ctx.appendChild(actions);
+  }
+}
+```
+
+## Features
+
+### Automatic Loading States
+
+- **Skeleton Loading**: Configurable skeleton items while fetching results
+- **Loading Indicators**: Automatic loading state management
+- **Error Handling**: Graceful error display with user-friendly messages
+- **Empty States**: Appropriate messaging when no results are found
+
+### Real-time Updates
+
+The container automatically updates when search events are received:
+
+1. **Search Start**: Shows loading state with skeleton items
+2. **Search Results**: Updates with new product data
+3. **Search Complete**: Removes loading state
+4. **Error Handling**: Displays error state if applicable
+
+### Product Routing
+
+Customize how products link to their detail pages:
+
+```javascript
+// Basic product routing
+routeProduct: (product) => `/product/${product.sku}`
+```
+
+## Integration Examples
+
+### Basic PLP Setup
+
+```javascript
+await provider.render(SearchResults, {
+  skeletonCount: 12,
+  routeProduct: (product) => `/product/${product.sku}`
+})($searchResults);
+```
+
+### Quick Search Popover
+
+```javascript
+await render.render(SearchResults, {
+  skeletonCount: pageSize,
+  scope: 'popover',
+  routeProduct: ({ urlKey, sku }) => rootLink(`/products/${urlKey}/${sku}`),
+  onSearchResult: (results) => {
+    searchResult.style.display = results.length > 0 ? 'block' : 'none';
+  },
+  slots: {
+    Footer: async (ctx) => {
+      // View all results button
+      const viewAllResultsWrapper = document.createElement('div');
+
+      const viewAllResultsButton = await UI.render(Button, {
+        children: labels.Global?.SearchViewAll,
+        variant: 'secondary',
+        href: rootLink('/search'),
+      })(viewAllResultsWrapper);
+
+      ctx.appendChild(viewAllResultsWrapper);
+
+      ctx.onChange((next) => {
+        viewAllResultsButton?.setProps((prev) => ({
+          ...prev,
+          href: `${rootLink('/search')}?q=${encodeURIComponent(next.variables?.phrase || '')}`,
+        }));
+      });
+    },
+  },
+})(searchResult);
+```
+
+### Search Results Integration
+
+```javascript
+await provider.render(SearchResults, {
+  routeProduct: (product) => rootLink(`/products/${product.urlKey}/${product.sku}`),
+  slots: {
+    ProductActions: (ctx) => {
+      // Wrapper
+      const wrapper = document.createElement('div');
+      wrapper.className = 'product-discovery-product-actions';
+      
+      // Add to Cart Button
+      const addToCartBtn = document.createElement('button');
+      addToCartBtn.className = 'product-discovery-product-actions__add-to-cart';
+      addToCartBtn.innerText = placeholders.Global.AddToCartLabel;
+      addToCartBtn.addEventListener('click', () => console.log(ctx.product));
+
+      // Append element to Slot
+      ctx.appendChild(addToCartBtn);
+    },
+  },
+})($productList);
+```
+
+## Best Practices
+
+1. **Scope Management**: Use unique scope identifiers for multiple instances
+2. **Slot Customization**: Use slots for merchant-specific customization
+3. **Performance**: Use lazy loading for off-screen containers
+4. **Error Handling**: Let the container handle errors automatically
+5. **Real-time Updates**: Let the container handle updates automatically
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Container Not Updating**: Check scope configuration and event handling
+2. **Slots Not Rendering**: Ensure the element is added to the slot using `ctx.appendChild()`, `ctx.replaceWith()`, etc.
+3. **Styling Conflicts**: Use specific CSS classes to avoid conflicts
+
+---
+
+# SortBy container
+
+The SortBy container manages sorting for search results, offers customizable criteria, and automatically maintains sort state for both default and custom options.
+
+## Import
+
+```javascript
+```
+
+## Configurations
+
+The `SortBy` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['scope', 'string', 'No', 'Scope identifier for isolated instances. Default: undefined.'],
+    ['onSortChange', 'function', 'No', 'Callback when sort order changes. Receives new sort array.'],
+  ]
+```
+
+## Basic Usage
+
+```javascript
+// Basic sort by container
+await provider.render(SortBy)($container);
+
+// With sort change callback
+await provider.render(SortBy, {
+  onSortChange: (value) => {
+    console.log('Sort changed:', value);
+  }
+})($container);
+
+// With scope
+await provider.render(SortBy, {
+  scope: 'popover',
+  onSortChange: (value) => {
+    console.log('Sort changed:', value);
+  }
+})($container);
+```
+
+## Features
+
+### Sort Options
+
+The container's sort options are dynamically driven by Adobe Commerce rules and option labels:
+
+- **Dynamic Population**: Sort options are automatically populated from search metadata
+- **Commerce Rules**: Available sort attributes are determined by Adobe Commerce configuration
+- **Option Labels**: Display text comes from Commerce system labels and translations
+- **Context-Aware**: Sort options may vary based on category, product type, or search context
+
+### Sort State Management
+
+- **Automatic Updates**: Sort state updates automatically with search parameters
+- **Search Integration**: Sort changes trigger new search calls with updated parameters
+- **State Persistence**: Sort preferences maintained across search requests
+
+### Scope Support
+
+The SortBy container supports isolated instances through scope configuration:
+
+```javascript
+// Global scope (default) Listens to all search events
+await provider.render(SortBy)($container);
+
+// Only listens to events with scope: 'popover'
+await provider.render(SortBy, { scope: 'popover' })($container);
+```
+
+## Real-time Updates
+
+The container automatically updates when search events are received:
+
+1. **Search Results**: Updates sort options based on available attributes
+2. **Sort Changes**: Automatically triggers new searches with updated sort
+
+## Integration Examples
+
+### Basic PLP Setup
+
+```javascript
+await provider.render(SortBy, {
+  onSortChange: (value) => {
+    console.log('Sort order changed:', value);
+  }
+})($sortByContainer);
+```
+
+## Best Practices
+
+1. **Scope Management**: Use unique scope identifiers for multiple instances
+2. **Sort Callbacks**: Use `onSortChange` for custom sort handling
+3. **Real-time Updates**: Let the container manage updates automatically.
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Container Not Updating**: Check scope configuration and event handling
+2. **Sort Not Changing**: Verify search API is being called with correct sort
+3. **Styling Conflicts**: Use specific CSS classes to avoid conflicts
+
+### Sort Behavior
+
+- **Dynamic Options**: Sort options are automatically populated from search metadata
+- **State Persistence**: Sort state is maintained across search requests
+- **Search Integration**: Sort changes trigger new search calls with updated parameters
+
+---
+
+# Product Discovery Dictionary
+
+The **Product Discovery dictionary** contains all user-facing text, labels, and messages displayed by this drop-in. Customize the dictionary to:
+
+- **Localize** the drop-in for different languages and regions
+- **Customize** labels and messages to match your brand voice
+- **Override** default text without modifying source code for the drop-in
+
+Dictionaries use the **i18n (internationalization)** pattern, where each text string is identified by a unique key path.
+
+<strong>Version: 3.1.0</strong>
+
+## How to customize
+
+Override dictionary values during drop-in initialization. The drop-in deep-merges your custom values with the defaults.
+
+```javascript
+
+await initialize({
+  langDefinitions: {
+    en_US: {
+      "Search": {
+        "PLP": {
+          "noResults": "No items found",
+          "searchError": "Custom value"
+        }
+      }
+    }
+  }
+});
+```
+
+You only need to include the keys you want to change. For multi-language support and advanced patterns, see the [Dictionary customization guide](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/dictionaries/).
+
+## Default keys and values
+
+Below are the default English (`en_US`) strings provided by the **Product Discovery** drop-in:
+
+```json title="en_US.json"
+{
+  "Search": {
+    "PLP": {
+      "noResults": "Your search returned no results.",
+      "searchError": "An error occurred while searching."
+    },
+    "Facet": {
+      "showMore": "Show more",
+      "showLess": "Show less",
+      "clearAll": "Clear all"
+    },
+    "SortBy": {
+      "title": "Sort by",
+      "lowToHigh": "Low to High",
+      "highToLow": "High to Low",
+      "relevance": "Relevance",
+      "position": "Position",
+      "name": "Product Name",
+      "price": "Price"
+    }
+  }
+}
+```
+
+---
+
+# Product Discovery Data & Events
+
+The **Product Discovery** drop-in uses the [event bus](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/events/) to emit and listen to events for communication between drop-ins and external integrations.
+
+<strong>Version: 3.1.0</strong>
+
+## Events reference
+
+{/* EVENTS_TABLE_START */}
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [search/error](#searcherror-emits-and-listens) | Emits and listens | Triggered when an error occurs. |
+| [search/loading](#searchloading-emits-and-listens) | Emits and listens | Triggered when loading state changes. |
+| [search/result](#searchresult-emits-and-listens) | Emits and listens | Triggered when results are available. |
+
+{/* EVENTS_TABLE_END */}
+
+## Event details
+
+The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
+
+### `search/error` (emits and listens)
+
+Emitted when an error occurs during search operations such as query execution or facet loading.
+
+#### Event payload
+
+```typescript
+string
+```
+
+#### Example
+
+```js
+
+events.on('search/error', (payload) => {
+  console.log('search/error event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `search/loading` (emits and listens)
+
+Triggered when loading state changes.
+
+#### Event payload
+
+```typescript
+boolean
+```
+
+#### Example
+
+```js
+
+events.on('search/loading', (payload) => {
+  console.log('search/loading event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `search/result` (emits and listens)
+
+Triggered when results are available.
+
+#### Event payload
+
+```typescript
+{
+  result: ProductSearchResult;
+  request: SearchVariables;
+}
+```
+
+See [`ProductSearchResult`](#productsearchresult) and [`SearchVariables`](#searchvariables) for full type definitions.
+
+#### Example
+
+```js
+
+events.on('search/result', (payload) => {
+  console.log('search/result event received:', payload);
+  // Add your custom logic here
+});
+```
+
+## Data Models
+
+The following data models are used in event payloads for this drop-in.
+
+### ProductSearchResult
+
+Used in: [`search/result`](#searchresult-emits-and-listens).
+
+```ts
+interface ProductSearchResult {
+  facets: SearchFacet[];
+  items: Product[];
+  pageInfo: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    pageSize: number;
+  };
+  suggestions?: string[];
+  totalCount: number;
+  metadata?: {
+    filterableAttributes: RefineOption[];
+    sortableAttributes: RefineOption[];
+  };
+}
+```
+
+### SearchVariables
+
+Used in: [`search/result`](#searchresult-emits-and-listens).
+
+```ts
+interface SearchVariables {
+  scope?: Scope;
+  phrase?: string;
+  filter?: SearchFilter[];
+  sort?: SortOrder[];
+  currentPage?: number;
+  pageSize?: number;
+  context?: SearchContext;
+}
+```
+
+---
+
+# Product Discovery Functions
+
+The Product Discovery drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
+
+<strong>Version: 3.1.0</strong>
+
+| Function | Description |
+| --- | --- |
+| [`search`](#search) | Performs a product search using the provided parameters. |
+
+## search
+
+The `search` function performs a product search using the parameters you pass. It updates the search context and emits events consumed by containers such as `SearchResults`, `Facets`, `Pagination`, and `SortBy`.
+
+Passing `null` as the `request` parameter clears the current search state and resets related containers.
+
+```ts
+const search = async (
+  request: SearchVariables | null,
+  options: SearchOptions = {}
+): Promise<ProductSearchResult>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `request` | `SearchVariables \| null` | Yes | Search variables including \`phrase\` (search term), \`pageSize\` (results per page), \`currentPage\` (page number), \`filter\` (array of filter conditions), and \`sort\` (array of sort criteria). Pass \`null\` to clear the search state. |
+| `options` | `SearchOptions` | No | Optional search configuration options. |
+
+### Events
+
+Emits the [`search/loading`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-discovery/events/#searchloading-emits-and-listens), [`search/result`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-discovery/events/#searchresult-emits-and-listens), and [`search/error`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-discovery/events/#searcherror-emits-and-listens) events during the search lifecycle to update containers with search state and results.
+
+### Returns
+
+Returns [`ProductSearchResult`](#productsearchresult).
+
+## Data Models
+
+The following data models are used by functions in this drop-in.
+
+### ProductSearchResult
+
+The `ProductSearchResult` object is returned by the following functions: [`search`](#search).
+
+```ts
+interface ProductSearchResult {
+  facets: SearchFacet[];
+  items: Product[];
+  pageInfo: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    pageSize: number;
+  };
+  suggestions?: string[];
+  totalCount: number;
+  metadata?: {
+    filterableAttributes: RefineOption[];
+    sortableAttributes: RefineOption[];
+  };
+}
+```
+
+{/* This documentation is auto-generated from the drop-in source repository: REPO_URL */}
+
+---
+
+# Product Discovery overview
+
+The Product Discovery drop-in enables you to display and customize product search results, category listings, and faceted navigation within your storefront.
+
+The Product Discovery drop-in component provides a set of modular, event-driven containers—such as product lists, facets, sort controls, and pagination—that can be used individually or composed together to build tailored product listing pages (PLPs), category pages, and quick search experiences.
+
+Each container reacts to search events orchestrated by the **[search](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-discovery/functions/)** API functions, ensuring the UI stays in sync as shoppers search, filter, sort, and paginate through results. Multiple search instances can run on the same page using scoped contexts, allowing for features like a full-page PLP and a quick search overlay.
+
+## Data Flows
+
+### PLP Search
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant API as search() API
+    participant EB as Event Bus
+    participant SR as SearchResults
+    participant F as Facets
+    participant P as Pagination
+    participant S as SortBy
+    participant GQL as GraphQL API
+    %% Initial search
+    U->>API: search({phrase: "shirts"})
+    API->>GQL: request data from Catalog Services
+    GQL-->>API: return results
+    API->>EB: emit('search/loading', true)
+    API->>EB: emit('search/result', { request, result })
+    API->>EB: emit('search/loading', false)
+    
+    %% All containers receive loading and result events
+    EB->>SR: search/loading
+search/result
+    EB->>F: search/loading
+search/result
+    EB->>P: search/loading
+search/result
+    EB->>S: search/loading
+search/result
+```
+
+*Event Driven Architecture — Search*
+
+### Scoped Quick Search Flow (pop-over)
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant API as search() API
+    participant EB as Event Bus
+    participant SR as SearchResults
+(scope: "popover")
+    participant GQL as GraphQL API
+    %% Quick search
+    U->>API: search({phrase: "shirt"}, {scope: "popover"})
+    API->>GQL: request data from Catalog Services
+    GQL-->>API: return results
+    API->>EB: emit('search/loading', true, {scope: "popover"})
+    API->>EB: emit('search/result', { request, result }, {scope: "popover"})
+    API->>EB: emit('search/loading', false, {scope: "popover"})
+    
+    %% Only SearchResults receives events (scoped)
+    EB->>SR: search/loading
+search/result (scope: "popover")
+```
+
+*Event Driven Architecture — Quick Search*
+
+## Core Design Principles
+- **Event-Driven**: Container communication via a central event bus
+- **Modular**: UI is split into purpose-specific containers
+- **Scoped**: Supports multiple isolated search instances with full ACDL compliance
+
+## Key capabilities
+- Composable. Use `SearchResults`, `Facets`, `Pagination`, and `SortBy` containers to build your desired layout.
+- Scoped search contexts to support multiple independent search areas on a single page (for example, PLP and quick search).
+- Slot-based customization: extend or replace UI parts, such as headers, footers, or product action areas.
+- Pre-selected filters, sort order, and pagination stay in sync with the current search state.
+- Pre-integrated data collection events compatible with ACDL for each stage of the search lifecycle.
+
+## Use cases
+
+- Product listing pages (PLPs) – Display results by filtering, sorting, and paginating.
+- Category pages – Show products and refinements scoped to a specific category.
+- Quick search overlays to provide instant results as shoppers type.
+
+## Supported Commerce features
+
+The following table provides an overview of the Adobe Commerce features that the Product Discovery drop-in component supports:
+
+| Feature          | Status                                       |
+| ---------------- | -------------------------------------------- |
+| Simple Product View | Supported |
+| Complex Product View | Supported      |
+
+---
+
+# Product Discovery initialization
+
+The **Product Discovery initializer** configures search and filtering functionality, including faceted search, sorting, and product listing. Use initialization to customize search behavior and product discovery data models.
+
+<strong>Version: 3.1.0</strong>
+
+## Configuration options
+
+The following table describes the configuration options available for the **Product Discovery** initializer:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
+| `models` | [`Record<string, any>`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
+
+## Default configuration
+
+The initializer runs with these defaults when no configuration is provided:
+
+```javascript title="scripts/initializers/product-discovery.js"
+
+// All configuration options are optional
+await initializers.mountImmediately(initialize, {
+  langDefinitions: {}, // Uses built-in English strings
+  models: {}, // Uses default data models
+  
+});
+```
+
+## Language definitions
+
+Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override default text for the drop-in.
+
+```javascript title="scripts/initializers/product-discovery.js"
+
+const customStrings = {
+  'AddToCart': 'Add to Bag',
+  'Checkout': 'Complete Purchase',
+  'Price': 'Cost',
+};
+
+const langDefinitions = {
+  default: customStrings,
+};
+
+await initializers.mountImmediately(initialize, { langDefinitions });
+```
+
+> For complete dictionary customization including all available keys and multi-language support, see the [Product Discovery Dictionary](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-discovery/dictionary/) page.
+
+## Customizing data models
+
+Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
+
+### Available models
+
+The following models can be customized through the `models` configuration option:
+
+| Model | Description |
+|---|---|
+| [`Product`](#product) | Transforms Product data from `GraphQL`. |
+| [`ProductSearchResult`](#productsearchresult) | Transforms `ProductSearchResult` data from `GraphQL`. |
+
+The following example shows how to customize the `Product` model for the **Product Discovery** drop-in:
+
+```javascript title="scripts/initializers/product-discovery.js"
+
+const models = {
+  Product: {
+    transformer: (data) => ({
+      // Add custom fields from backend data
+      customField: data?.custom_field,
+      promotionBadge: data?.promotion?.label,
+      // Transform existing fields
+      displayPrice: data?.price?.value ? `${data.price.value}` : 'N/A',
+    }),
+  },
+};
+
+await initializers.mountImmediately(initialize, { models });
+```
+
+## Configuration types
+
+The following TypeScript definitions show the structure of each configuration object:
+
+### langDefinitions
+
+Maps locale identifiers to dictionaries of key-value pairs. The `default` locale is used as the fallback when no specific locale matches. Each dictionary key corresponds to a text string used in the drop-in UI.
+
+```typescript
+langDefinitions?: {
+  [locale: string]: {
+    [key: string]: string;
+  };
+};
+```
+
+### models
+
+Maps model names to transformer functions. Each transformer receives data from GraphQL and returns a modified or extended version. Use the `Model<T>` type from `@dropins/tools` to create type-safe transformers.
+
+```typescript
+models?: {
+  [modelName: string]: Model<any>;
+};
+```
+
+## Model definitions
+
+The following TypeScript definitions show the structure of each customizable model:
+
+### Product
+
+```typescript
+export interface ProductSearchResponse {
+  productSearch: ProductSearchResult;
+}
+```
+
+### ProductSearchResult
+
+```typescript
+export interface ProductSearchResult {
+  facets: SearchFacet[];
+  items: Product[];
+  pageInfo: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    pageSize: number;
+  };
+  suggestions?: string[];
+  totalCount: number;
+  metadata?: {
+    filterableAttributes: RefineOption[];
+    sortableAttributes: RefineOption[];
+  };
+}
+```
+
+---
+
+# Product Discovery Quick Start
+
+The Product Discovery drop-in powers search and category browsing with AI-enhanced results, faceted filtering, sorting options, and customizable product listings.
+
+<strong>Version: 3.1.0</strong>
+
+## Quick example
+
+The Product Discovery drop-in is included in the https://github.com/hlxsites/aem-boilerplate-commerce. This example shows the basic pattern:
+
+```js
+// 1. Import initializer (handles all setup)
+
+// 2. Import the container you need
+
+// 3. Import the provider
+
+// 4. Render in your block
+export default async function decorate(block) {
+  await provider.render(Facets, {
+    // Configuration options - see Containers page
+  })(block);
+}
+```
+
+**New to drop-ins?** See the [Using drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/quick-start/) guide for complete step-by-step instructions.
+
+## Quick reference
+
+**Import paths:**
+- Initializer: `import '../../scripts/initializers/search.js'`
+- Containers: `import ContainerName from '@dropins/storefront-product-discovery/containers/ContainerName.js'`
+- Provider: `import { render } from '@dropins/storefront-product-discovery/render.js'`
+
+**Package:** `@dropins/storefront-product-discovery`
+
+**Version:** 3.1.0 (verify compatibility with your Commerce instance)
+
+**Example container:** `Facets`
+
+## Learn more
+
+- [Containers](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-discovery/containers/) - Available UI components and configuration options
+- [Initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-discovery/initialization/) - Customize initializer settings and data models
+- [Functions](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-discovery/functions/) - Control drop-in behavior programmatically
+- [Events](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-discovery/events/) - Listen to and respond to drop-in state changes
+- [Slots](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-discovery/slots/) - Extend containers with custom content
+
+---
+
+# Product Discovery Slots
+
+The Product Discovery drop-in exposes slots for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/extending/).
+
+<strong>Version: 3.1.0</strong>
+
+| Container | Slots |
+|-----------|-------|
+| [`Facets`](#facets-slots) | `Facet`, `SelectedFacets`, `Facets`, `FacetBucket`, `FacetBucketLabel` |
+| [`SearchResults`](#searchresults-slots) | `ProductActions`, `ProductPrice`, `ProductName`, `ProductImage`, `NoResults`, `Header`, `Footer` |
+
+> **Slot usage best practice** Do not use context methods inside other context methods (for example, `appendChild()` inside `onChange()`). See [Slots best practices](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/slots/#best-practice-for-dynamic-slot-content) for details and examples.
+
+## Facets slots
+
+The slots for the Facets container allow you to customize its appearance and behavior.
+
+```typescript
+interface FacetsProps {
+  slots?: {
+    Facet?: SlotProps<{ data: SearchFacet }>;
+    SelectedFacets?: SlotProps<{ data: SearchFacet[] }>;
+    Facets?: SlotProps<{ data: SearchFacet[] }>;
+    FacetBucket?: SlotProps<{ data: FacetBucket }>;
+    FacetBucketLabel?: SlotProps<{ data: FacetBucket }>;
+  };
+}
+```
+
+### Facet slot
+
+The Facet slot allows you to customize the facet section of the Facets container.
+
+#### Example
+
+```js
+
+await provider.render(Facets, {
+  slots: {
+    Facet: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Facet';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### SelectedFacets slot
+
+The `SelectedFacets` slot allows you to customize the selected facets section of the Facets container.
+
+#### Example
+
+```js
+
+await provider.render(Facets, {
+  slots: {
+    SelectedFacets: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom SelectedFacets';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Facets slot
+
+The Facets slot allows you to customize the facets section of the Facets container.
+
+#### Example
+
+```js
+
+await provider.render(Facets, {
+  slots: {
+    Facets: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Facets';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### FacetBucket slot
+
+The `FacetBucket` slot allows you to customize the facet bucket section of the Facets container.
+
+#### Example
+
+```js
+
+await provider.render(Facets, {
+  slots: {
+    FacetBucket: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom FacetBucket';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### FacetBucketLabel slot
+
+The `FacetBucketLabel` slot allows you to customize the facet bucket label section of the Facets container.
+
+#### Example
+
+```js
+
+await provider.render(Facets, {
+  slots: {
+    FacetBucketLabel: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom FacetBucketLabel';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+## SearchResults slots
+
+The slots for the `SearchResults` container allow you to customize its appearance and behavior.
+
+```typescript
+interface SearchResultsProps {
+  slots?: {
+    ProductActions?: SlotProps<SlotDefaultContext>;
+    ProductPrice?: SlotProps<SlotDefaultContext>;
+    ProductName?: SlotProps<SlotDefaultContext>;
+    ProductImage?: SlotProps<SlotDefaultContext & { defaultImageProps: ImageProps }>;
+    NoResults?: SlotProps<{ error: string | null; variables: SearchVariables | null }>;
+    Header?: SlotProps<{ products: Product[]; variables: SearchVariables | null }>;
+    Footer?: SlotProps<{ products: Product[]; variables: SearchVariables | null }>;
+  };
+}
+```
+
+### ProductActions slot
+
+The `ProductActions` slot allows you to customize the product actions section of the `SearchResults` container.
+
+#### Example
+
+```js
+
+await provider.render(SearchResults, {
+  slots: {
+    ProductActions: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ProductActions';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ProductPrice slot
+
+The `ProductPrice` slot allows you to customize the product price section of the `SearchResults` container.
+
+#### Example
+
+```js
+
+await provider.render(SearchResults, {
+  slots: {
+    ProductPrice: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ProductPrice';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ProductName slot
+
+The `ProductName` slot allows you to customize the product name section of the `SearchResults` container.
+
+#### Example
+
+```js
+
+await provider.render(SearchResults, {
+  slots: {
+    ProductName: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ProductName';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ProductImage slot
+
+The `ProductImage` slot allows you to customize the product image section of the `SearchResults` container.
+
+#### Example
+
+```js
+
+await provider.render(SearchResults, {
+  slots: {
+    ProductImage: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ProductImage';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### NoResults slot
+
+The `NoResults` slot allows you to customize the no results section of the `SearchResults` container.
+
+#### Example
+
+```js
+
+await provider.render(SearchResults, {
+  slots: {
+    NoResults: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom NoResults';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Header slot
+
+The Header slot allows you to customize the header section of the `SearchResults` container.
+
+#### Example
+
+```js
+
+await provider.render(SearchResults, {
+  slots: {
+    Header: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Header';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Footer slot
+
+The Footer slot allows you to customize the footer section of the `SearchResults` container.
+
+#### Example
+
+```js
+
+await provider.render(SearchResults, {
+  slots: {
+    Footer: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Footer';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+---
+
+# Product Discovery styles
+
+Customize the Product Discovery drop-in using CSS classes and design tokens. This page covers the Product Discovery-specific container classes and customization examples. For comprehensive information about design tokens, responsive breakpoints, and styling best practices, see [Styling Drop-In Components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/styling/).
+
+<strong>Version: 3.1.0</strong>
+
+## Customization example
+
+Add this to the CSS file of the specific https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/ where you're using the Product Discovery drop-in.
+
+For a complete list of available design tokens (colors, spacing, typography, and more), see the [Design tokens reference](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/styling/#design-tokens-reference).
+
+```css title="styles/styles.css" del={2-2} ins={3-3}
+.product-discovery-facet {
+  padding-block: var(--spacing-small);
+  padding-block: var(--spacing-medium);
+}
+```
+
+## Container classes
+
+The Product Discovery drop-in uses BEM-style class naming. Use the browser DevTools to inspect elements and find specific class names.
+
+```css
+/* Facet */
+.dropin-price--bold {}
+.dropin-price--small {}
+.dropin-price-range {}
+.dropin-radio-button__label {}
+.product-discovery-facet {}
+.product-discovery-facet--last {}
+.product-discovery-facet__bucket {}
+.product-discovery-facet__header {}
+
+/* FacetList */
+.dropin-divider {}
+.dropin-price--bold {}
+.dropin-price--small {}
+.dropin-price-range {}
+.dropin-radio-button {}
+.product-discovery-facet-list {}
+.product-discovery-facet-list__facet-options {}
+.product-discovery-facet-list__facet-options--hidden {}
+.product-discovery-facet-list__selected-filters {}
+
+/* ProductList */
+.dropin-product-item-card {}
+.dropin-product-item-card__skeleton__image {}
+.product-discovery-product-list {}
+.product-discovery-product-list__container {}
+.product-discovery-product-list__grid {}
+
+/* SearchAlertMessage */
+.product-discovery-search-alert-message {}
+.product-discovery-search-alert-message__content {}
+.product-discovery-search-alert-message__wrapper {}
+```
+
+---
+
+# Recommendations Containers
+
+The **Recommendations** drop-in provides pre-built container components for integrating into your storefront.
+
+<strong>Version: 4.0.1</strong>
+
+## What are Containers?
+
+Containers are pre-built UI components that combine functionality, state management, and presentation. They provide a complete solution for specific features and can be customized through props, slots, and CSS.
+
+## Available Containers
+
+| Container | Description |
+| --------- | ----------- |
+| [ProductList](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/recommendations/containers/product-list/) | Learn about the `ProductList` container. |
+
+> Each container is designed to work independently but can be composed together to create comprehensive user experiences.
+
+---
+
+# ProductList container
+
+The `ProductList` container manages and displays a list of recommended products based on the current product. Its behavior is driven by configuration options such as `currentProduct`, `recId`, and routing through `routeProduct` callbacks.
+
+![ProductList container](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/recommendations/product-list.png)
+
+*ProductList container*
+
+## Configurations
+
+The `ProductList` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['recId', 'string', 'Yes', 'Unique identifier for the recommendation unit.'],
+    ['currentProduct', 'object', 'No', 'Anchor product context (`{ sku: string; price?: number }`). Required fields depend on unit type and price filter operator. See [Product context](#product-context).'],
+    ['currentSku', 'string', 'No', 'Deprecated as of v4.0.3. Use `currentProduct` instead.'],
+    ['cartSkus', 'string[]', 'No', 'Cart SKUs for recommendation context.'],
+    ['userPurchaseHistory', 'any[]', 'No', 'User Purchase History for recommendation context.'],
+    ['userViewHistory', 'any[]', 'No', 'User View History for recommendation context.'],
+    ['routeProduct', 'function', 'No', 'Callback function that returns a product URL.'],
+    ['hideHeading', 'boolean', 'No', 'Hide recommendations heading text.'],
+    ['initialData', 'object', 'No', 'Pre-loaded recommendation data to avoid initial fetch.'],
+    ['pagePlacement', 'string', 'No', 'Identifies the placement of the recommendations unit on the page (for example, `product-list`). Used for ACDL analytics event tracking.'],
+    ['slots', 'object', 'No', 'Slots for customizing heading, thumbnail, price, title, SKU, and footer.'],
+  ]
+```
+
+> **Deprecated prop** The `currentSku` prop is deprecated as of v4.0.3 and will be removed in a future release. Use `currentProduct` instead.
+
+## Product context
+
+Pass product context with the optional `currentProduct` prop:
+
+```ts
+currentProduct?: { sku: string; price?: number };
+```
+
+- **`currentProduct.sku`** — seed product SKU for anchor-based recommendation unit types.
+- **`currentProduct.price`** — anchor product price. Required only when the unit uses dynamic or relative price filter operators (Adobe Commerce Optimizer and Adobe Commerce as a Cloud Service only).
+
+Whether each value is required depends on the **recommendation unit type** and the **price filter operator**:
+
+| Unit type | Seed SKU (`currentProduct.sku`) | Anchor price (`currentProduct.price`) |
+| --- | --- | --- |
+| **Anchor-based** (more-like-this, visual similarity, viewed-viewed, viewed-bought, bought-bought) | Required | Only for dynamic or relative price filter operators |
+| **Context-free** (most-viewed, most-purchased, and similar popularity or behavioral types) | Not required | Not applicable |
+
+A static price filter defines a fixed price range in the filter rule. It does not remove the need for a seed SKU on anchor-based types. Anchor-based units with static price filters work with the seed SKU alone—`currentProduct.price` is not sent.
+
+### How context is supplied
+
+- **PDP pages**: The Commerce boilerplate block reads `currentProduct` from the Adobe Client Data Layer (ACDL) product context. You do not need to pass `currentProduct` in block configuration.
+- **Non-PDP pages**: There is no product context on PLP, cart, home, and similar pages. For **anchor-based** unit types, set `currentsku` in the [product-recommendations block configuration](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/content-customizations/product-recommendations/#configuration). Add `currentprice` only when the unit uses dynamic or relative price filter operators.
+- **Context-free unit types**: Omit `currentProduct`. The dropin renders with `recId` alone on any page type.
+
+> **Do not omit seed SKU on anchor-based units** On non-PDP pages, anchor-based unit types return no products when the seed SKU is missing—even if the unit uses a static price filter. Only **context-free** unit types can run with `recId` alone.
+
+## Query routing
+
+The container selects a GraphQL query based on whether anchor price is present:
+
+- When `currentProduct.price` is present (**Adobe Commerce Optimizer and Adobe Commerce as a Cloud Service only**), the container uses `GetRecommendationsByUnitIdsWithCurrentProduct`, which supports dynamic and relative price filter operators.
+- When only `currentProduct.sku` is present, or `currentProduct` is absent, the container uses `GetRecommendationsByUnitIds`, which is compatible with all backend types, including PaaS.
+
+On Adobe Commerce Optimizer and Adobe Commerce as a Cloud Service, the dropin sends `currentProduct.price` whenever it is available from the product context — it does not inspect the unit's configured filter operator. The extended query is selected whenever price is present; the backend applies the anchor only when the unit's filter uses a dynamic or relative operator, and ignores it for static or non-price filters.
+
+The `ProductListProps` interface has the following shape:
+
+```ts
+export interface ProductListProps extends HTMLAttributes<HTMLDivElement> {
+  recId: string;
+  currentProduct?: {
+    sku: string;
+    price?: number;
+  };
+  /** @deprecated As of v4.0.3. Use `currentProduct` instead. */
+  currentSku?: string;
+  initialData?: {
+    recommendations?: {
+      results: RecommendationUnitModel[];
+      totalProducts: number;
+    };
+  };
+  hideHeading?: boolean;
+  routeProduct?: (item: Item) => string;
+  cartSkus?: string[];
+  userPurchaseHistory?: any[];
+  userViewHistory?: any[];
+  slots?: {
+    Heading?: SlotProps;
+    Footer?: SlotProps;
+    Title?: SlotProps<{
+      item: Item;
+      productUrl: string;
+    }>;
+    Sku?: SlotProps<{
+      item: Item;
+    }>;
+    Price?: SlotProps<{
+      item: Item;
+    }>;
+    Thumbnail?: SlotProps<{
+      item: any;
+      defaultImageProps: ImageProps;
+    }>;
+  };
+}
+```
+
+The `RecommendationUnitModel` object has the following shape:
+
+```ts
+export interface RecommendationUnitModel {
+  displayOrder: number;
+  pageType: PageType;
+  title: string;
+  items: Item[];
+  totalProducts: number;
+  typeId: string;
+  unitId: string;
+  unitName: string;
+}
+
+export type PageType = 'Product'; // Always hardcoded to 'Product' per requirements
+
+export interface Item {
+  uid: string;
+  sku: string;
+  name: string;
+  urlKey: string;
+  images: ItemImage[];
+  price: FinalPrice;
+  priceRange?: {
+    minimum?: FinalPrice;
+    maximum?: FinalPrice;
+  };
+  visibility: string;
+  queryType: string;
+  itemType: string;
+  inStock?: boolean;
+}
+
+interface ItemImage {
+  label: string;
+  roles: string[];
+  url: string;
+}
+
+export interface Price {
+  value: number | null;
+  currency: string | null;
+}
+
+export interface FinalPrice {
+  final?: {
+    amount?: Price;
+  };
+}
+
+export interface RecommendationsResponse {
+  results: RecommendationUnitModel[];
+  totalResults: number;
+}
+
+export interface GraphQLResponse {
+  errors?: Array<{ message: string }>;
+  data?: {
+    recommendations: RecommendationsResponse;
+  };
+}
+```
+
+## Supported Slots
+
+The `ProductList` container supports the following slots:
+
+* **Heading** - Customize the recommendations heading
+* **Footer** - Customize the action button area (Add to Cart / View Product)
+* **Title** - Customize the product title display
+* **Sku** - Customize the SKU display
+* **Price** - Customize the price display
+* **Thumbnail** - Customize the product image display
+
+Each slot receives context data relevant to its purpose, allowing for highly customizable product displays.
+
+## Example configuration
+
+The following example demonstrates how to render the `ProductList` container with `recId`, `currentProduct`, and `routeProduct` callbacks with different slots:
+
+```js
+
+// Render Container
+provider.render(ProductList, {
+  recId: 'recommendation-unit-1',
+  routeProduct: (item) => `/products/${item.urlKey}`,
+  currentProduct: { sku: 'ADB150', price: 49.99 },
+  hideHeading: false,
+  slots: {
+      // Example of how to prepend or append to the default Heading
+      Heading: (ctx) => {
+        const heading = document.createElement('div');
+        heading.innerText = 'Slot: Content before default heading';
+        ctx.prependChild(heading);
+        const footer = document.createElement('div');
+        footer.innerText = 'Slot: Content after default heading';
+        ctx.appendChild(footer);
+      },
+
+      // Example of how to prepend or append to the default Thumbnail
+      Thumbnail: (ctx) => {
+        const thumbnail = document.createElement('div');
+        thumbnail.innerText = 'Slot: Content before default thumbnail';
+        ctx.prependChild(thumbnail);
+        const footer = document.createElement('div');
+        footer.innerText = 'Slot: Content after default thumbnail';
+        ctx.appendChild(footer);
+      },
+
+      // Example of how to prepend or append to the default Price
+      Price: (ctx) => {
+        const price = document.createElement('div');
+        price.innerText = 'Slot: Content before default price';
+        ctx.prependChild(price);
+        const footer = document.createElement('div');
+        footer.innerText = 'Slot: Content after default price';
+        ctx.appendChild(footer);
+      },
+
+      // Example of how to replace default Footer with a custom footer based on product type
+      Footer: (ctx) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'footer__wrapper';
+        const addToCart = document.createElement('div');
+        addToCart.className = 'footer__button--add-to-cart';
+        wrapper.appendChild(addToCart);
+
+        if (ctx.item.itemType === 'SimpleProductView') {
+          // Add to Cart Button
+          UI.render(Button, {
+            children: 'Add to Cart',
+            onClick: ctx.item.inStock
+              ? () => {
+                // Call add to cart function from cart/api
+                console.log('Add to Cart');
+              }
+              : undefined,
+            variant: 'primary',
+            disabled: !ctx.item.inStock,
+          })(addToCart);
+        } else {
+          // View Product Button
+          UI.render(Button, {
+            children: 'Select Options',
+            onClick: () => {
+              console.log('Select Options');
+              window.location.href = ctx.item.urlKey;
+            },
+            variant: 'tertiary',
+          })(addToCart);
+        }
+        ctx.replaceWith(wrapper);
+      },
+    },
+}));
+
+```
+
+## Key Features
+
+- **Automatic Data Fetching**: Fetches recommendations based on `currentProduct` (or legacy `currentSku`) and other context
+- **Intersection Observer**: Automatically tracks when recommendations are viewed
+- **Event Publishing**: Publishes render and view events for analytics
+- **Loading States**: Handles loading states during data fetching
+- **Empty States**: Gracefully handles empty recommendation results
+- **Internationalization**: Supports multiple languages through i18n
+- **Customizable Slots**: Extensive customization options for all UI elements
+
+---
+
+# Recommendations Dictionary
+
+The **Recommendations dictionary** contains all user-facing text, labels, and messages displayed by this drop-in. Customize the dictionary to:
+
+- **Localize** the drop-in for different languages and regions
+- **Customize** labels and messages to match your brand voice
+- **Override** default text without modifying source code for the drop-in
+
+Dictionaries use the **i18n (internationalization)** pattern, where each text string is identified by a unique key path.
+
+<strong>Version: 4.0.1</strong>
+
+## How to customize
+
+Override dictionary values during drop-in initialization. The drop-in deep-merges your custom values with the defaults.
+
+```javascript
+
+await initialize({
+  langDefinitions: {
+    en_US: {
+      "Recommendations": {
+        "ProductList": {
+          "addToCart": "Custom value",
+          "selectOptions": "Custom value"
+        }
+      }
+    }
+  }
+});
+```
+
+You only need to include the keys you want to change. For multi-language support and advanced patterns, see the [Dictionary customization guide](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/dictionaries/).
+
+## Default keys and values
+
+Below are the default English (`en_US`) strings provided by the **Recommendations** drop-in:
+
+```json title="en_US.json"
+{
+  "Recommendations": {
+    "ProductList": {
+      "addToCart": "Add To Cart",
+      "selectOptions": "Select Options",
+      "viewProduct": "View Product"
+    }
+  }
+}
+```
+
+---
+
+# Recommendations Data & Events
+
+The **Recommendations** drop-in uses the [event bus](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/events/) to emit and listen to events for communication between drop-ins and external integrations.
+
+<strong>Version: 4.0.1</strong>
+
+## Events reference
+
+{/* EVENTS_TABLE_START */}
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [recommendations/data](#recommendationsdata-emits-and-listens) | Emits and listens | Triggered when data is available or changes. |
+
+{/* EVENTS_TABLE_END */}
+
+## Event details
+
+The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
+
+### `recommendations/data` (emits and listens)
+
+Emitted when product recommendations are loaded. This includes recommended products based on user behavior, cart contents, or product associations.
+
+#### Event payload
+
+```typescript
+RecommendationUnitModel[] | null
+```
+
+See [`RecommendationUnitModel`](#recommendationunitmodel) for full type definition.
+
+#### Example
+
+```js
+
+events.on('recommendations/data', (payload) => {
+  console.log('recommendations/data event received:', payload);
+  // Add your custom logic here
+});
+```
+
+## Data Models
+
+The following data models are used in event payloads for this drop-in.
+
+### RecommendationUnitModel
+
+Used in: [`recommendations/data`](#recommendationsdata-emits-and-listens).
+
+```ts
+interface RecommendationUnitModel {
+  displayOrder: number;
+  pageType: PageType;
+  title: string;
+  items: Item[];
+  totalProducts: number;
+  typeId: string;
+  unitId: string;
+  unitName: string;
+}
+```
+
+---
+
+# Recommendations Functions
+
+The Recommendations drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
+
+<strong>Version: 4.0.1</strong>
+
+| Function | Description |
+| --- | --- |
+| [`getRecommendationsByUnitIds`](#getrecommendationsbyunitids) | Retrieves product recommendations based on various parameters such as current SKU, recommendation ID, and user history. |
+| [`publishRecsItemAddToCartClick`](#publishrecsitemaddtocartclick) | Publishes an event when a user adds a recommended product to their cart, used for tracking recommendation performance. |
+
+## getRecommendationsByUnitIds
+
+The `getRecommendationsByUnitIds` function retrieves product recommendations based on various parameters such as current SKU, recommendation ID, and user history. It calls the https://developer.adobe.com/commerce/webapi/graphql-api/saas/index.html#query-recommendationsByUnitIds GraphQL query and transforms the response into a standardized format.
+
+```ts
+const getRecommendationsByUnitIds = async (
+  params: GetRecommendationsProps
+): Promise<RecommendationUnitModel[] | null>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `GetRecommendationsProps` | Yes | Parameters for retrieving recommendations including \`pageType\` (where recommendations are shown), \`currentSku\` (product being viewed), \`cartSkus\` (items in cart), \`userPurchaseHistory\` (previous purchases), and \`userViewHistory\` (previously viewed products). |
+
+### Events
+
+Emits the [`recommendations/data`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/recommendations/events/#recommendationsdata-emits-and-listens) event with the transformed recommendations data as the payload.
+
+### Returns
+
+Returns an array of [`RecommendationUnitModel`](#recommendationunitmodel) objects or `null`.
+
+## publishRecsItemAddToCartClick
+
+The `publishRecsItemAddToCartClick` function publishes an event when a user adds a recommended product to their cart, used for tracking recommendation performance.
+
+```ts
+const publishRecsItemAddToCartClick = async (
+  params: PublishParams
+): any
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `PublishParams` | Yes | Parameters for the add-to-cart event including the recommended product details and recommendation unit information. |
+
+### Examples
+
+From product recommendations block:
+
+```js
+
+publishRecsItemAddToCartClick({
+  recommendationUnit,
+  pagePlacement: 'product-list',
+  yOffsetTop: addToCart.getBoundingClientRect().top ?? 0,
+  yOffsetBottom:
+  addToCart.getBoundingClientRect().bottom ?? 0,
+  productId: ctx.index,
+})
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## Data Models
+
+The following data models are used by functions in this drop-in.
+
+### RecommendationUnitModel
+
+The `RecommendationUnitModel` object is returned by the following functions: [`getRecommendationsByUnitIds`](#getrecommendationsbyunitids).
+
+```ts
+interface RecommendationUnitModel {
+  displayOrder: number;
+  pageType: PageType;
+  title: string;
+  items: Item[];
+  totalProducts: number;
+  typeId: string;
+  unitId: string;
+  unitName: string;
+}
+```
+
+{/* This documentation is auto-generated from the drop-in source repository: REPO_URL */}
+
+---
+
+# Product Recommendations overview
+
+The product recommendations drop-in component provides a powerful way to suggest products to customers based on their browsing patterns and behaviors. These recommendations are displayed as units with descriptive labels such as "Customers who viewed this product also viewed" or "Customers who bought this product also bought". The component can be managed and deployed across different store views directly from the Adobe Commerce Admin.
+
+## Supported Commerce features
+
+The following table provides an overview of the Adobe Commerce features that the product recommendations component supports:
+
+| Feature                                                          | Status                                       |
+| ---------------------------------------------------------------- | -------------------------------------------- |
+| Product-based recommendations                                    | Supported |
+| Category-based recommendations                                   | Supported |
+| Personalized recommendations                                     | Supported |
+| Real-time recommendation updates                                | Supported |
+| Multiple recommendation types per page                          | Supported |
+| Custom recommendation labels                                    | Supported |
+| A/B testing support                                            | Supported |
+| Analytics integration                                          | Supported |
+| Cross-sell recommendations                                     | Supported |
+| Up-sell recommendations                                       | Supported |
+| Related products                                              | Supported |
+| Recently viewed products                                      | Supported |
+| Popular products                                              | Supported |
+| Trending products                                             | Supported |
+| No-code UI configurations                                     | Supported |
+| Slots for extensibility                                      | Supported |
+
+## Section topics
+
+The topics in this section will help you understand how to customize and use the product recommendations effectively within your storefront.
+
+### Quick Start
+
+Provides quick reference information and getting started guide for the Recommendations drop-in. This topic covers package details, import paths, and basic usage examples to help you integrate product recommendations into your site. Visit the [Recommendations quick start](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/recommendations/quick-start/) page to get started.
+
+### Styles
+
+Describes how to customize the appearance of the product recommendations using CSS. We provide guidelines and examples for applying styles to various components within the drop-in. This customization allows brands to align the drop-in component's look and feel with their overall design aesthetic, enhancing brand consistency across the platform. Visit the [recommendations styles](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/recommendations/styles/) page to learn more.
+
+### Containers
+
+Describes the structural elements of the product recommendations, specifically focusing on how the container manages and displays content. It includes information on configuration options and how to leverage these settings to customize the user experience. Understanding the container is essential for developers looking to optimize the layout and styling of the recommendations. Visit the [recommendations containers](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/recommendations/containers/) page to learn more.
+
+### Slots
+
+Slots allow developers to customize the appearance of the product recommendations by adding or modifying content within specific sections of the drop-in component. Visit the [recommendations slots](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/recommendations/slots/) page to learn more.
+
+### Functions
+
+Describes the API functions available in the Product Recommendations drop-in. These functions allow developers to retrieve and display detailed recommendation information dynamically. Visit the [Recommendations Functions](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/recommendations/functions/) page to learn more.
+
+---
+
+# Recommendations initialization
+
+The **Recommendations initializer** configures product recommendation features including personalized suggestions, frequently bought together, and related products. Use initialization to customize recommendation algorithms and data models.
+
+<strong>Version: 4.0.1</strong>
+
+## Configuration options
+
+The following table describes the configuration options available for the **Recommendations** initializer:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
+| `models` | [`Record<string, any>`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
+
+## Default configuration
+
+The initializer runs with these defaults when no configuration is provided:
+
+```javascript title="scripts/initializers/recommendations.js"
+
+// All configuration options are optional
+await initializers.mountImmediately(initialize, {
+  langDefinitions: {}, // Uses built-in English strings
+  models: {}, // Uses default data models
+  
+});
+```
+
+## Language definitions
+
+Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override default text for the drop-in.
+
+```javascript title="scripts/initializers/recommendations.js"
+
+const customStrings = {
+  'AddToCart': 'Add to Bag',
+  'Checkout': 'Complete Purchase',
+  'Price': 'Cost',
+};
+
+const langDefinitions = {
+  default: customStrings,
+};
+
+await initializers.mountImmediately(initialize, { langDefinitions });
+```
+
+> For complete dictionary customization including all available keys and multi-language support, see the [Recommendations Dictionary](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/recommendations/dictionary/) page.
+
+## Customizing data models
+
+Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
+
+### Available models
+
+The following models can be customized through the `models` configuration option:
+
+| Model | Description |
+|---|---|
+| [`RecommendationUnitModel`](#recommendationunitmodel) | Transforms recommendation data from Adobe Sensei including product suggestions, recommendation types, and tracking identifiers. Use this to add custom fields or modify recommendation display logic. |
+
+The following example shows how to customize the `RecommendationUnitModel` model for the **Recommendations** drop-in:
+
+```javascript title="scripts/initializers/recommendations.js"
+
+const models = {
+  RecommendationUnitModel: {
+    transformer: (data) => ({
+      // Add custom fields from backend data
+      customField: data?.custom_field,
+      promotionBadge: data?.promotion?.label,
+      // Transform existing fields
+      displayPrice: data?.price?.value ? `${data.price.value}` : 'N/A',
+    }),
+  },
+};
+
+await initializers.mountImmediately(initialize, { models });
+```
+
+## Configuration types
+
+The following TypeScript definitions show the structure of each configuration object:
+
+### langDefinitions
+
+Maps locale identifiers to dictionaries of key-value pairs. The `default` locale is used as the fallback when no specific locale matches. Each dictionary key corresponds to a text string used in the drop-in UI.
+
+```typescript
+langDefinitions?: {
+  [locale: string]: {
+    [key: string]: string;
+  };
+};
+```
+
+### models
+
+Maps model names to transformer functions. Each transformer receives data from GraphQL and returns a modified or extended version. Use the `Model<T>` type from `@dropins/tools` to create type-safe transformers.
+
+```typescript
+models?: {
+  [modelName: string]: Model<any>;
+};
+```
+
+## Model definitions
+
+The following TypeScript definitions show the structure of each customizable model:
+
+### RecommendationUnitModel
+
+```typescript
+export interface RecommendationUnitModel {
+  displayOrder: number;
+  pageType: PageType;
+  title: string;
+  items: Item[];
+  totalProducts: number;
+  typeId: string;
+  unitId: string;
+  unitName: string;
+}
+```
+
+---
+
+# Recommendations Quick Start
+
+The Recommendations drop-in displays personalized product recommendations powered by Adobe Sensei, with support for various recommendation types and customizable display layouts.
+
+<strong>Version: 4.0.1</strong>
+
+## Quick example
+
+The Recommendations drop-in is included in the https://github.com/hlxsites/aem-boilerplate-commerce. This example shows the basic pattern:
+
+```js
+// 1. Import initializer (handles all setup)
+
+// 2. Import the container you need
+
+// 3. Import the provider
+
+// 4. Render in your block
+export default async function decorate(block) {
+  await provider.render(ProductList, {
+    // Configuration options - see Containers page
+  })(block);
+}
+```
+
+**New to drop-ins?** See the [Using drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/quick-start/) guide for complete step-by-step instructions.
+
+## Quick reference
+
+**Import paths:**
+- Initializer: `import '../../scripts/initializers/recommendations.js'`
+- Containers: `import ContainerName from '@dropins/storefront-recommendations/containers/ContainerName.js'`
+- Provider: `import { render } from '@dropins/storefront-recommendations/render.js'`
+
+**Package:** `@dropins/storefront-recommendations`
+
+**Version:** 4.0.1 (verify compatibility with your Commerce instance)
+
+**Example container:** `ProductList`
+
+## Learn more
+
+- [Containers](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/recommendations/containers/) - Available UI components and configuration options
+- [Initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/recommendations/initialization/) - Customize initializer settings and data models
+- [Functions](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/recommendations/functions/) - Control drop-in behavior programmatically
+- [Events](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/recommendations/events/) - Listen to and respond to drop-in state changes
+- [Slots](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/recommendations/slots/) - Extend containers with custom content
+
+---
+
+# Recommendations Slots
+
+The Recommendations drop-in exposes slots for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/extending/).
+
+<strong>Version: 4.0.1</strong>
+
+| Container | Slots |
+|-----------|-------|
+| [`ProductList`](#productlist-slots) | `Heading`, `Footer`, `Title`, `Sku`, `Price`, `Thumbnail` |
+
+> **Slot usage best practice** Do not use context methods inside other context methods (for example, `appendChild()` inside `onChange()`). See [Slots best practices](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/slots/#best-practice-for-dynamic-slot-content) for details and examples.
+
+## ProductList slots
+
+The slots for the `ProductList` container allow you to customize its appearance and behavior.
+
+```typescript
+interface ProductListProps {
+  slots?: {
+    Heading?: SlotProps;
+    Footer?: SlotProps;
+    Title?: SlotProps<{
+    item: Item;
+    productUrl: string;
+    }>;
+    Sku?: SlotProps<{
+    item: Item;
+    }>;
+    Price?: SlotProps<{
+    item: Item;
+    }>;
+    Thumbnail?: SlotProps<{
+    item: any;
+    defaultImageProps: ImageProps;
+    }>;
+  };
+}
+```
+
+### Heading slot
+
+The Heading slot allows you to customize the heading section of the `ProductList` container.
+
+#### Example
+
+```js
+
+await provider.render(ProductList, {
+  slots: {
+    Heading: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Heading';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Footer slot
+
+The Footer slot allows you to customize the footer section of the `ProductList` container.
+
+#### Example
+
+```js
+
+await provider.render(ProductList, {
+  slots: {
+    Footer: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Footer';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Title slot
+
+The Title slot allows you to customize the title section of the `ProductList` container.
+
+#### Example
+
+```js
+
+await provider.render(ProductList, {
+  slots: {
+    Title: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Title';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Sku slot
+
+The Sku slot allows you to customize the sku section of the `ProductList` container.
+
+#### Example
+
+```js
+
+await provider.render(ProductList, {
+  slots: {
+    Sku: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Sku';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Price slot
+
+The Price slot allows you to customize the price section of the `ProductList` container.
+
+#### Example
+
+```js
+
+await provider.render(ProductList, {
+  slots: {
+    Price: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Price';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Thumbnail slot
+
+The Thumbnail slot allows you to customize the thumbnail section of the `ProductList` container.
+
+#### Example
+
+```js
+
+await provider.render(ProductList, {
+  slots: {
+    Thumbnail: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Thumbnail';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+---
+
+# Recommendations styles
+
+Customize the Recommendations drop-in using CSS classes and design tokens. This page covers the Recommendations-specific container classes and customization examples. For comprehensive information about design tokens, responsive breakpoints, and styling best practices, see [Styling Drop-In Components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/styling/).
+
+<strong>Version: 4.0.1</strong>
+
+## Customization example
+
+Add this to the CSS file of the specific https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/ where you're using the Recommendations drop-in.
+
+For a complete list of available design tokens (colors, spacing, typography, and more), see the [Design tokens reference](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/styling/#design-tokens-reference).
+
+```css title="styles/styles.css" del={2-2} ins={3-3}
+.recommendations-product-list {
+  gap: var(--spacing-size-6);
+  gap: var(--color-brand-800);
+}
+```
+
+## Container classes
+
+The Recommendations drop-in uses BEM-style class naming. Use the browser DevTools to inspect elements and find specific class names.
+
+```css
+/* ProductList */
+.dropin-button--primary {}
+.dropin-price--default {}
+.dropin-product-item-card {}
+.dropin-product-item-card__price {}
+.dropin-product-item-card__sku {}
+.recommendations-carousel__content {}
+.recommendations-product-list {}
+.recommendations-product-list--empty {}
+.recommendations-product-list__heading {}
+```

@@ -1,0 +1,1704 @@
+<SYSTEM>This is the Boilerplate bundle for Adobe Commerce Storefront on Edge Delivery Services</SYSTEM>
+
+# Boilerplate
+
+> Boilerplate setup, configuration, blocks reference, customization, Universal Editor, and updates
+> Generated: 2026-06-26T22:40:20.158Z
+> Source: https://experienceleague.adobe.com/developer/commerce/storefront
+
+
+---
+
+# Blocks reference
+
+This reference provides technical details for all Commerce blocks included in the boilerplate. Each block integrates one or more drop-in components to provide complete Commerce functionality.
+
+## Quick reference by functionality
+
+The Merchant topic column links to merchant-facing documentation when you need the block title authors use in documents. The Block column links to the GitHub source folder.
+
+{/* Block column: GitHub source. Merchant topic: internal merchant docs when a topic exists. */}
+
+| Block | Merchant topic | Primary Drop-ins | Key Features |
+|-------|----------------|------------------|--------------|
+| Shopping Experience | | | |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/product-list-page | [Product List Page](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/product-list-page/) | storefront-product-discovery, tools, storefront-wishlist, storefront-requisition-list, storefront-cart | Search, filtering, sorting, pagination, wishlist integration |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/product-details | [Product Details](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/product-details/) | tools, storefront-pdp, storefront-wishlist, storefront-requisition-list | Product options, pricing, add to cart, wishlist toggle |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/product-recommendations | [Product Recommendations](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/content-customizations/product-recommendations/) | tools, storefront-cart, storefront-recommendations, storefront-wishlist | AI-powered recommendations, multiple page types |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-cart | [Commerce Cart](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-cart/) | tools, storefront-cart, storefront-wishlist, storefront-quote-management | Item management, coupon codes, gift options, move to wishlist |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-mini-cart | [Commerce Mini Cart](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-mini-cart/) | storefront-cart, tools | Dropdown cart summary, quick view, checkout navigation |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-checkout | [Commerce Checkout](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-checkout/) | tools, storefront-order, storefront-checkout | Complete checkout flow, shipping, payment, order review |
+| Customer Account | | | |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-login | [Commerce Login](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-login/) | storefront-auth | Email/password authentication, redirect handling |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-create-account | [Commerce Create Account](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-create-account/) | storefront-auth | Registration form, validation, account creation |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-confirm-account | [Commerce Confirm Account](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-confirm-account/) | storefront-auth, tools | Email confirmation landing, account activation |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-forgot-password | [Commerce Forgot Password](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-forgot-password/) | storefront-auth, tools | Password reset request, email trigger |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-create-password | [Commerce Create Password](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-create-password/) | storefront-auth, tools | Password reset form, token validation |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-account-header | [Commerce Account Header](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-account-header/) | tools | Customer name display, logout functionality |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-account-sidebar | [Commerce Account Sidebar](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-account-sidebar/) | tools, storefront-account | Account navigation menu, active state management |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-addresses | [Commerce Addresses](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-addresses/) | storefront-account | Address CRUD operations, default address management |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-customer-information | [Commerce Customer Information](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-customer-information/) | storefront-account | Profile editing, email/name updates |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-customer-details | [Commerce Customer Details](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-customer-details/) | storefront-order | Customer info display in order context |
+| Order Management | | | |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-orders-list | [Commerce Orders List](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-orders-list/) | storefront-account, tools | Order history, status display, order details navigation |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-search-order | [Commerce Search Order](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-search-order/) | storefront-auth, storefront-order, tools | Guest order lookup, email and order number validation |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-order-header | [Commerce Order Header](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-order-header/) | tools | Order number, date, status badge |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-order-status | [Commerce Order Status](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-order-status/) | storefront-order | Detailed status, tracking info, delivery estimates |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-order-product-list | [Commerce Order Product List](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-order-product-list/) | storefront-order, storefront-cart, tools | Line items, reorder functionality, product images |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-order-cost-summary | [Commerce Order Cost Summary](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-order-cost-summary/) | storefront-order | Subtotal, taxes, shipping, discounts, grand total |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-shipping-status | [Commerce Shipping Status](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-shipping-status/) | storefront-order, tools | Shipment tracking, carrier info, delivery status |
+| Returns & Exchanges | | | |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-returns-list | [Commerce Returns List](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-returns-list/) | storefront-order, tools | Return history, status tracking, return details navigation |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-create-return | [Commerce Create Return](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-create-return/) | storefront-order, tools | Return request form, item selection, reason codes |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-order-returns | [Commerce Order Returns](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-order-returns/) | tools, storefront-order | Return details for specific order |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-return-header | [Commerce Return Header](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-return-header/) | tools | Return number, date, status display |
+| Gift Options | | | |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-gift-options | [Commerce Gift Options](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-gift-options/) | storefront-cart | Gift messages, gift wrapping, gift receipt options |
+| Wishlist | | | |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-wishlist | [Commerce Wishlist](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-wishlist/) | storefront-cart, storefront-pdp, storefront-wishlist, storefront-auth, tools | Saved items, move to cart, item management |
+
+## Integration patterns
+
+### Block decoration flow
+
+Every Commerce block follows this initialization pattern:
+
+1. **Server-side rendering**: Edge Delivery Services transforms the document table into HTML
+2. **Client-side decoration**: The block's JavaScript decorator runs via `decorateBlock()`
+3. **Drop-in initialization**: Drop-in containers are initialized with configuration and providers
+4. **Rendering**: Drop-in components render into the block's DOM
+5. **Event handling**: Event listeners connect to the global event bus
+
+### Common integration patterns
+
+#### Simple drop-in rendering
+
+Blocks like Login and Forgot Password simply render a single drop-in container:
+
+```javascript
+export default async function decorate(block) {
+  const { render } = await import('@dropins/storefront-auth/containers/SignIn.js');
+  await render(SignInContainer, {})({});
+}
+```
+
+#### Multi-drop-in coordination
+
+Complex blocks like Cart and Checkout coordinate multiple drop-ins:
+
+```javascript
+// Cart block uses cart + wishlist drop-ins
+```
+
+#### Configuration from block tables
+
+Blocks read configuration from document authoring tables:
+
+```javascript
+const config = readBlockConfig(block);
+const hideHeading = config['hide-heading'] === 'true';
+```
+
+#### Event bus integration
+
+Blocks listen to events from drop-ins and other blocks:
+
+```javascript
+events.on('cart/updated', () => {
+  // React to cart changes
+});
+```
+
+## Implementation details
+
+### Drop-in dependencies
+
+All drop-ins are loaded via import maps defined in `head.html`:
+
+```json
+{
+  "imports": {
+    "@dropins/storefront-cart/": "/scripts/__dropins__/storefront-cart/",
+    "@dropins/storefront-checkout/": "/scripts/__dropins__/storefront-checkout/"
+  }
+}
+```
+
+### Provider initialization
+
+Drop-ins require providers to be initialized in `scripts/initializers/`:
+
+- **GraphQL provider**: Configures Commerce backend endpoint and headers
+- **Authentication provider**: Manages customer sessions and tokens
+- **Event provider**: Sets up the global event bus
+
+See [Configuration](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/configuration/) for provider setup details.
+
+### Styling
+
+Each block includes:
+
+1. **Base styles**: Block-specific CSS in `blocks/*/block-name.css`
+2. **Drop-in tokens**: Design tokens in `scripts/initializers/dropin-name.js`
+3. **Global tokens**: Shared tokens in `scripts/initializers/`
+
+## Blocks by page type
+
+### Essential implementations
+
+Every storefront requires these pages:
+
+- **Homepage**: Product Recommendations, Product List Page
+- **Product Page (PDP)**: Product Details, Product Recommendations
+- **Cart Page**: Cart, Product Recommendations
+- **Checkout Page**: Checkout
+- **Account Dashboard**: Account Header, Account Sidebar
+
+### Common additions
+
+Enhance your storefront with:
+
+- **Wishlist Page**: Wishlist
+- **Order Tracking**: Search Order, Order Status, Orders List
+- **Returns Portal**: Create Return, Returns List, Order Returns
+- **Account Management**: Addresses, Customer Information
+
+## Performance considerations
+
+For storefront-wide guidance see [Performance best practices](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/performance/).
+
+### Lazy loading
+
+Commerce blocks are lazy-loaded automatically:
+
+1. Blocks below the fold are loaded when scrolled into view
+2. Drop-in containers are code-split and loaded on demand
+3. Heavy dependencies (like checkout) are loaded only when needed
+
+### Critical rendering path
+
+For optimal performance:
+
+1. Keep Mini Cart in header (loads early)
+2. Defer non-critical blocks below the fold
+3. Use Product Recommendations sparingly (loads ML models)
+
+## Development workflow
+
+### Local testing
+
+1. Start the AEM CLI: `aem up`.
+2. Modify block JavaScript in `blocks/commerce-*/`.
+3. Observe changes hot-reload automatically.
+4. Test with demo backend or configure your own in `config.json` (copy from https://main--aem-boilerplate-commerce--hlxsites.aem.live/config.json or use the https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator).
+
+### Adding new blocks
+
+To create a custom Commerce block:
+
+1. Create a new directory: `blocks/my-custom-block/`
+2. Add decorator: `my-custom-block.js`
+3. Add styles: `my-custom-block.css`
+4. Import and render drop-in containers
+5. Initialize required providers
+
+See https://www.aem.live/docs/exploring-blocks for block creation basics.
+
+## Related resources
+
+- [Boilerplate overview](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/) - Complete technical reference
+- [Configuration page](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/configuration/) - Setup and provider configuration
+- [Drop-in documentation](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/introduction/) - Drop-in technical details
+- [Merchant block reference](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/) - Business user perspective
+- https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks
+
+## Need help?
+
+- **Block not rendering?** Verify drop-in providers are initialized in `scripts/initializers/`
+- **GraphQL errors?** Check Commerce backend configuration in your `config.json` file
+- **Styling issues?** Review design token configuration in drop-in initializers
+- **Event not firing?** Ensure event bus is initialized and event names match documentation
+
+---
+
+# Configuration
+
+The AEM Commerce boilerplate requires configuration to connect to your Adobe Commerce instance and customize the storefront behavior.
+
+## Configuration overview
+
+The boilerplate uses multiple configuration files depending on your deployment stage:
+
+- **Local development** - Copy of the demo configuration for Commerce backend connection
+- **Production deployment** - Configuration Service with template files for site setup
+- **Drop-in initialization** - Initializer files in `scripts/initializers/`
+
+## Endpoints by backend
+
+Which endpoints you set depends on your Commerce backend:
+
+- **Adobe Commerce as a Cloud Service** — Set only **`commerce-endpoint`** to the GraphQL endpoint URL for that service.
+- **Adobe Commerce Optimizer** — Set **`commerce-endpoint`** to the Adobe Commerce Optimizer GraphQL URL for the catalog, and set **`commerce-core-endpoint`** to your Commerce core endpoint URL (for example, Commerce PaaS or another Adobe Commerce host you manage).
+
+For full details and examples, see [Storefront configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/).
+
+## Demo Configuration (Local Development)
+
+For local development, you can use the demo configuration for the boilerplate as a starting point. The live demo configuration is available at https://main--aem-boilerplate-commerce--hlxsites.aem.live/config.json and connects to the sample Commerce backend for the boilerplate:
+
+```json
+{
+  "public": {
+    "default": {
+      "commerce-core-endpoint": "https://www.aemshop.net/graphql",
+      "commerce-endpoint": "https://www.aemshop.net/cs-graphql",
+      "commerce-assets-enabled": false,
+      "headers": {
+        "all": {
+          "Store": "default"
+        },
+        "cs": {
+          "Magento-Store-Code": "main_website_store",
+          "Magento-Store-View-Code": "default",
+          "Magento-Website-Code": "base",
+          "x-api-key": "4dfa19c9fe6f4cccade55cc5b3da94f7",
+          "Magento-Environment-Id": "f38a0de0-764b-41fa-bd2c-5bc2f3c7b39a"
+        }
+      },
+      "analytics": {
+        "base-currency-code": "USD",
+        "environment": "Testing",
+        "environment-id": "f38a0de0-764b-41fa-bd2c-5bc2f3c7b39a",
+        "store-code": "main_website_store",
+        "store-id": 1,
+        "store-name": "Main Website Store",
+        "store-url": "https://www.aemshop.net",
+        "store-view-code": "default",
+        "store-view-id": 1,
+        "store-view-name": "Default Store View",
+        "website-code": "base",
+        "website-id": 1,
+        "website-name": "Main Website"
+      },
+      "plugins": {
+        "picker": {
+          "rootCategory": "YOUR_ROOT_CATEGORY_ID"
+        }
+      }
+    }
+  }
+}
+```
+
+### Local vs Production Configuration
+
+#### For local development
+- Save a copy of the demo configuration (from https://main--aem-boilerplate-commerce--hlxsites.aem.live/config.json) as `config.json` in your project root.
+- The AEM CLI will automatically serve `config.json` at runtime.
+- Alternatively, use the https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator to generate a configuration with your backend values (may contain placeholders to fill in).
+- Update the values to connect to your own Commerce backend as needed.
+
+#### For production deployment
+
+- **Configuration Service (Recommended)** - Use the Configuration Service, which stores configuration at `https://admin.hlx.page/config/{ORG}/sites/{SITE}/public.json`. This approach allows configuration updates without code deployments and is the preferred method for all production sites. See the https://www.aem.live/docs/config-service-setup for details.
+
+   :::caution
+   Do **not** commit `config.json` to the `main` branch if you are using the Configuration Service. A `config.json` present on a code branch takes precedence over the Configuration Service, which means your production config service values will be silently ignored. Reserve `config.json` for local development and branch-based testing only.
+   :::
+
+   #### If `config.json` is already on `main`
+
+   If you previously committed `config.json` to your `main` branch, you must complete these steps before the Configuration Service takes effect. Edge Delivery serves a `config.json` file from the repository before it falls back to the Configuration Service, so copying settings into the service alone is not enough until the repository file is gone.
+
+   
+
+   1. Copy all values from the `public` section of your repository `config.json`. That object is what you publish as `public.json` in the Configuration Service.
+
+   1. POST that JSON to `https://admin.hlx.page/config/{ORG}/sites/{SITE}/public.json` using the Configuration Service API. Authenticate the request and set the body as described in the https://www.aem.live/docs/config-service-setup and the https://www.aem.live/docs/admin.html.
+
+   1. Delete `config.json` from the repository and merge that change into `main`. After the file no longer exists on `main`, the CDN can resolve configuration from the Configuration Service instead of the repository copy.
+
+   1. When you verify in a browser, clear session storage for your site in Developer Tools (Application → Session storage), then reload. The storefront caches configuration in session storage, so clearing it avoids stale values after you switch sources. For caching behavior and timing, see [Storefront configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/).
+
+   
+
+- **Repository-based config (local dev and branch testing only)** - A `config.json` file in your repository root is useful for local development and testing on feature branches. Edge Delivery Services will serve this file at `/config.json` and it will override the Configuration Service. Do not use this approach for production — remove or exclude `config.json` from your `main` branch.
+
+## Production Configuration Templates
+
+The boilerplate includes template configuration files with placeholders for your site setup:
+
+### default-site.json
+
+Comprehensive site configuration template for production deployment:
+
+```json
+{
+  "version": 1,
+  "code": {
+    "owner": "{ORG}",
+    "repo": "{REPO}",
+    "source": {
+      "type": "github",
+      "url": "https://github.com/{ORG}/{REPO}"
+    }
+  },
+  "content": {
+    "source": {
+      "url": "{CONTENT_SOURCE}",
+      "type": "onedrive"
+    }
+  },
+  "folders": {
+    "/products/": "/products/default"
+  },
+  "cdn": {
+    "live": {
+      "host": "main--{SITE}--{ORG}.aem.live"
+    },
+    "preview": {
+      "host": "main--{SITE}--{ORG}.aem.page"
+    }
+  },
+  "headers": {},
+  "public": {
+    "default": {
+      "commerce-core-endpoint": "{ENDPOINT}",
+      "commerce-endpoint": "{CATALOG_ENDPOINT}",
+      "headers": {
+        "all": {
+          "Store": "default"
+        },
+        "cs": {
+          "Magento-Store-Code": "{STORE_CODE}",
+          "Magento-Store-View-Code": "{STORE_VIEW_CODE}",
+          "Magento-Website-Code": "{WEBSITE_CODE}",
+          "x-api-key": "{COMMERCE_API_KEY}",
+          "Magento-Environment-Id": "{COMMERCE_ENVIRONMENT_ID}"
+        }
+      },
+      "analytics": {
+        "aep-ims-org-id": "{IMS_ORG_ID}",
+        "aep-datastream-id": "{DATASTREAM_ID}",
+        "base-currency-code": "USD",
+        "environment": "Production",
+        "store-id": "{STORE_ID}",
+        "store-name": "Main Website Store",
+        "store-url": "{DOMAIN}",
+        "store-view-id": "{STORE_VIEW_ID}",
+        "store-view-name": "Default Store View",
+        "website-id": "{WEBSITE_ID}",
+        "website-name": "Main Website"
+      },
+      "plugins": {
+        "picker": {
+          "rootCategory": "{YOUR_ROOT_CATEGORY_ID}"
+        }
+      }
+    }
+  },
+  "robots": {
+    "txt": "User-agent: *\nAllow: /\nDisallow: /drafts/\nDisallow: /enrichment/\nDisallow: /tools/\nDisallow: /plugins/experimentation/\n\nSitemap: https://{DOMAIN}/sitemap-index.xml"
+  },
+  "access": {
+    "admin": {
+      "role": {
+        "config_admin": ["{ADMIN_USER_EMAIL}"]
+      },
+      "requireAuth": "auto"
+    }
+  }
+}
+```
+
+Replace the `{PLACEHOLDER}` values with your actual configuration.
+
+### default-query.yaml
+
+Content indexing configuration for generating sitemap and enrichment data:
+
+```yaml
+version: 1
+indices:
+  sitemap:
+    target: /sitemap.json
+    exclude:
+      - 'drafts/**'
+      - 'enrichment/**'
+      - 'fragments/**'
+      - 'products/**'
+    properties:
+      title:
+        select: head > meta[property="og:title"]
+        value: |
+          attribute(el, 'content')
+      image:
+        select: head > meta[property="og:image"]
+        value: |
+          attribute(el, 'content')
+      description:
+        select: head > meta[name="description"]
+        value: |
+          attribute(el, 'content')
+      template:
+        select: head > meta[name="template"]
+        value: |
+          attribute(el, 'content')
+      robots:
+        select: head > meta[name="robots"]
+        value: |
+          attribute(el, 'content')
+      lastModified:
+        select: none
+        value: parseTimestamp(headers["last-modified"], "ddd, DD MMM YYYY hh:mm:ss GMT")
+  enrichment:
+    target: /enrichment/enrichment.json
+    include:
+      - '**/enrichment/**'
+    properties:
+      title:
+        select: head > meta[property="og:title"]
+        value: |
+          attribute(el, 'content')
+      products:
+        select: head > meta[name="enrichment-products"]
+        values: |
+          match(attribute(el, 'content'), '([^,]+)')
+      categories:
+        select: head > meta[name="enrichment-categories"]
+        values: |
+          match(attribute(el, 'content'), '([^,]+)')
+      positions:
+        select: head > meta[name="enrichment-positions"]
+        values: |
+          match(attribute(el, 'content'), '([^,]+)')
+```
+
+### default-sitemap.yaml
+
+Sitemap generation configuration:
+
+```yaml
+sitemaps:
+  default:
+    source: /sitemap.json
+    destination: /sitemap-content.xml
+    lastmod: YYYY-MM-DD
+```
+
+The sitemap reads from the generated `sitemap.json` (created by `default-query.yaml`) and outputs an XML sitemap.
+
+## Drop-in Initializers
+
+Configure individual drop-ins in `scripts/initializers/`:
+
+### Example: cart.js
+
+```javascript
+
+await initializeDropin(async () => {
+  // Set Fetch GraphQL (Core)
+  setEndpoint(CORE_FETCH_GRAPHQL);
+
+  // Fetch placeholders
+  const labels = await fetchPlaceholders('placeholders/cart.json');
+
+  const langDefinitions = {
+    default: {
+      ...labels,
+    },
+  };
+
+  // Initialize cart
+  return initializers.mountImmediately(initialize, { langDefinitions });
+})();
+```
+
+## Environment-Specific Configuration
+
+> Use different configuration values for different environments:
+
+- **Local**: `config.json` in your project root (copy from https://main--aem-boilerplate-commerce--hlxsites.aem.live/config.json or generate with the https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator).
+- **Preview**: Configure in AEM.page branch settings.
+- **Production**: Configure in AEM.live production settings.
+
+## Related Documentation
+
+- [Boilerplate overview](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/) - Complete reference
+- [Storefront configuration page](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/) - Detailed setup instructions
+- [CORS setup](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/cors-setup/) - Security configuration
+- [Multistore setup](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/multistore-setup/) - Multiple stores/languages
+
+---
+
+# Blocks customization
+
+All Commerce blocks in the boilerplate work out of the box, but you can customize them to match your business requirements. This page covers the main customization approaches.
+
+## Ways to customize
+
+### CSS styling
+
+Modify block styles by editing the CSS file in the block directory:
+
+```css
+/* blocks/commerce-cart/commerce-cart.css */
+.commerce-cart {
+  padding: var(--spacing-large) 0;
+  position: relative;
+}
+
+.cart__wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--grid-4-gutters);
+}
+```
+
+#### Design tokens
+
+Use CSS variables from your theme for consistent styling:
+
+```css
+/* Common design tokens */
+var(--spacing-small)              /* 16px */
+var(--spacing-medium)             /* 24px */
+var(--spacing-large)              /* 64px */
+var(--color-brand-500)            /* #454545 - Brand color */
+var(--color-neutral-100)          /* #fafafa - Light background */
+var(--type-body-1-default-font)   /* 16px/24px - Body text */
+```
+
+### JavaScript behavior
+
+Modify block logic by editing the JavaScript file in the block directory:
+
+```javascript
+// blocks/commerce-cart/commerce-cart.js
+
+export default async function decorate(block) {
+  // Read configuration from document authoring
+  const config = readBlockConfig(block);
+  
+  // Your custom logic here
+  const maxItems = parseInt(config['max-items'], 10) || 10;
+  
+  // Create container element
+  const $list = document.createElement('div');
+  $list.className = 'cart__list';
+  block.appendChild($list);
+  
+  // Render drop-in container to the list element
+  await provider.render(CartSummaryList, {
+    maxItems,
+    enableRemoveItem: true,
+  })($list);
+}
+```
+
+### Drop-in customization
+
+Use drop-in slots and events for advanced customization.
+
+#### Slots
+
+Inject custom content into drop-in containers by passing slot functions in the configuration:
+
+```javascript
+// Inside the decorate function for your block
+
+// Create container element
+const $list = document.createElement('div');
+$list.className = 'cart__list';
+block.appendChild($list);
+
+// Render cart with custom slot
+await provider.render(CartSummaryList, {
+  slots: {
+    Footer: (ctx) => {
+      // Add custom content to cart item footer
+      const customElement = document.createElement('div');
+      customElement.className = 'custom-promotion';
+      customElement.textContent = 'Free shipping over $50!';
+      ctx.appendChild(customElement);
+    },
+  },
+})($list);
+```
+
+#### Events
+
+Listen to and respond to drop-in events using the event bus:
+
+```javascript
+// Inside the decorate function for your block or at the module level
+
+events.on('cart/data', (cartData) => {
+  console.log('Cart updated:', cartData);
+  
+  // Example: Show notification when cart has items
+  if (cartData.totalQuantity > 0) {
+    console.log(`You have ${cartData.totalQuantity} items in your cart`);
+  }
+});
+```
+
+## Creating DOM elements
+
+The boilerplate uses two approaches for creating DOM elements. **The key distinction: use `createContextualFragment` for multiple elements, `createElement()` for single elements.**
+
+### Template literals with `createContextualFragment`
+
+Use this approach when creating **two or more elements** or **complex nested structures**.
+
+```javascript
+// Best for: Complex layout structures with multiple nested elements
+const fragment = document.createRange().createContextualFragment(`
+  
+  
+    
+      
+    
+    
+      
+    
+  
+`);
+
+const $list = fragment.querySelector('.cart__list');
+block.appendChild(fragment);
+```
+
+#### When to use
+
+- Creating **two or more elements** at once.
+- Setting up initial block structure with nested elements.
+- HTML hierarchy visualization improves code readability.
+
+#### Why this approach
+
+- More efficient than multiple `createElement()` calls.
+- Clear visual representation of HTML structure.
+- Easier to maintain complex layouts.
+
+#### Boilerplate examples
+- https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-cart/commerce-cart.js#L62-L75
+- https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/product-details/product-details.js#L86-L110
+
+### `document.createElement()`
+
+Use this approach when creating **a single element**. This is cleaner and more explicit than template literals for one element.
+
+```javascript
+// Best for: Single elements created dynamically
+// Inside a drop-in slot function
+const $wishlistToggle = document.createElement('div');
+$wishlistToggle.classList.add('cart__action--wishlist-toggle');
+
+wishlistRender.render(WishlistToggle, {
+  product: ctx.item,
+  size: 'medium',
+})($wishlistToggle);
+
+ctx.appendChild($wishlistToggle);
+```
+
+#### When to use
+
+- Creating **a single element** (most common case).
+- Adding elements inside drop-in slots.
+- Building elements in event handlers or callbacks.
+- Creating elements conditionally.
+
+#### Why this approach
+
+- More explicit and type-safe than template literals.
+- Cleaner for single elements (no unnecessary parsing).
+- Easier to set properties programmatically.
+
+#### Boilerplate examples
+- https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-cart/commerce-cart.js#L221-L232 - Creating wishlist container
+- https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-cart/commerce-cart.js#L206-L217 - Creating edit link container
+
+## Common customization patterns
+
+### Adding block configuration
+
+Enable merchants to configure blocks through document authoring by reading configuration values:
+
+```javascript
+
+export default async function decorate(block) {
+  const {
+    'custom-option': customOption = 'default',
+    'max-items': maxItems = '10',
+    'enable-feature': enableFeature = 'false',
+  } = readBlockConfig(block);
+  
+  // Use configuration values
+  if (enableFeature === 'true') {
+    // Enable the feature
+  }
+}
+```
+
+Merchants can then configure the block in their documents:
+
+| Commerce Cart |
+|---------------|
+| custom-option | premium |
+| max-items | 5 |
+| enable-feature | true |
+
+### Customizing empty states
+
+Customize what users see when a block has no content:
+
+```javascript
+// Inside the decorate function for your block
+const $emptyCart = document.querySelector('.cart__empty-cart');
+
+// Create custom empty state
+const emptyState = document.createElement('div');
+emptyState.className = 'cart__empty-message';
+emptyState.innerHTML = `
+  
+
+### Your cart is empty
+
+  
+
+Start shopping to add items to your cart.
+
+  [Browse Products](/products)
+`;
+
+$emptyCart.appendChild(emptyState);
+```
+
+### Adding custom analytics
+
+Track custom events for analytics:
+
+```javascript
+// Add to your block file or scripts/analytics.js
+
+events.on('cart/data', (cartData) => {
+  // Custom analytics tracking
+  if (window.dataLayer) {
+    window.dataLayer.push({
+      event: 'cart_updated',
+      cart_total: cartData.totalQuantity,
+      cart_value: cartData.total.includingTax.value,
+      currency: cartData.total.includingTax.currency,
+    });
+  }
+});
+```
+
+### Using multiple drop-ins
+
+Combine multiple drop-ins for complex functionality:
+
+```javascript
+
+export default async function decorate(block) {
+  // Create container element
+  const $list = document.createElement('div');
+  $list.className = 'cart__list';
+  block.appendChild($list);
+  
+  // Render cart with wishlist integration
+  await provider.render(CartSummaryList, {
+    slots: {
+      Footer: (ctx) => {
+        // Add wishlist toggle to each cart item
+        const wishlistContainer = document.createElement('div');
+        wishlistContainer.className = 'cart__action--wishlist-toggle';
+        
+        wishlistRender.render(WishlistToggle, {
+          product: ctx.item,
+          size: 'medium',
+        })(wishlistContainer);
+        
+        ctx.appendChild(wishlistContainer);
+      },
+    },
+  })($list);
+}
+```
+
+## Block-specific configuration
+
+Some blocks accept configuration options that change their behavior. These are defined in the block README and can be set through document authoring.
+
+### Commerce Cart
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `hide-heading` | string | `false` | Controls whether the cart heading is hidden |
+| `max-items` | string | — | Maximum number of items to display in cart |
+| `hide-attributes` | string | `''` | Comma-separated list of product attributes to hide |
+| `enable-item-quantity-update` | string | `false` | Enables quantity update controls for cart items |
+| `enable-item-remove` | string | `true` | Enables remove item functionality |
+| `enable-estimate-shipping` | string | `false` | Enables shipping estimation functionality |
+| `start-shopping-url` | string | `''` | URL for "Start Shopping" button when cart is empty |
+| `checkout-url` | string | `''` | URL for checkout button |
+| `enable-updating-product` | string | `false` | Enables product editing via mini-PDP modal |
+| `undo-remove-item` | string | `false` | Enables undo functionality when removing items |
+
+### Commerce Checkout
+
+The Checkout block uses events for customization rather than configuration options.
+
+#### Example: Add custom validation before checkout
+
+```javascript
+// Add to the decorate function for your checkout block
+
+events.on('checkout/values', (values) => {
+  // Custom validation logic
+  if (values.email && !values.email.includes('@')) {
+    console.error('Invalid email format');
+  }
+  
+  // Log when payment method is selected
+  if (values.selectedPaymentMethod) {
+    console.log('Payment method:', values.selectedPaymentMethod.code);
+  }
+});
+```
+
+### Simple blocks
+
+Many blocks (Login, Create Account, Forgot Password, and other account management blocks) are thin wrappers around drop-ins with no document-based configuration options. These blocks do not use `readBlockConfig()` and cannot be configured through document authoring. Customize these blocks by modifying their JavaScript to change drop-in options, or by using CSS and drop-in slots.
+
+## Real-world examples
+
+### Add promotional banner to cart
+
+```javascript
+// blocks/commerce-cart/commerce-cart.js
+
+export default async function decorate(block) {
+  // Read block configuration
+  const {
+    'hide-heading': hideHeading = 'false',
+    'max-items': maxItems,
+    'enable-item-quantity-update': enableUpdateItemQuantity = 'false',
+    'enable-item-remove': enableRemoveItem = 'true',
+  } = readBlockConfig(block);
+  
+  // Create cart layout with promotional banner
+  const fragment = document.createRange().createContextualFragment(`
+    
+      
+
+🎉 Free shipping on orders over $50!
+
+    
+    
+  `);
+  
+  const $list = fragment.querySelector('.cart__list');
+  
+  // Clear block and append new layout
+  block.innerHTML = '';
+  block.appendChild(fragment);
+  
+  // Helper to create product links
+  const createProductLink = (product) => getProductLink(product.url.urlKey, product.topLevelSku);
+  
+  // Render cart with full configuration
+  await provider.render(CartSummaryList, {
+    hideHeading: hideHeading === 'true',
+    routeProduct: createProductLink,
+    maxItems: parseInt(maxItems, 10) || undefined,
+    enableUpdateItemQuantity: enableUpdateItemQuantity === 'true',
+    enableRemoveItem: enableRemoveItem === 'true',
+  })($list);
+}
+```
+
+```css
+/* blocks/commerce-cart/commerce-cart.css */
+.cart__promo-banner {
+  background: var(--color-positive-200);
+  padding: var(--spacing-medium);
+  text-align: center;
+  border-radius: 4px;
+  margin-bottom: var(--spacing-medium);
+}
+```
+
+### Custom checkout success tracking
+
+```javascript
+// Add to blocks/commerce-checkout/commerce-checkout.js
+// Place this event listener in your decorate function
+
+// Listen for order placement
+events.on('order/placed', (orderData) => {
+  // Send purchase event to Google Analytics
+  if (window.dataLayer) {
+    window.dataLayer.push({
+      event: 'purchase',
+      transaction_id: orderData.number,
+      value: orderData.grandTotal.value,
+      currency: orderData.grandTotal.currency,
+      items: orderData.items.map(item => ({
+        item_id: item.productSku,
+        item_name: item.productName,
+        quantity: item.quantityOrdered,
+        price: item.price.value,
+      })),
+    });
+  }
+  
+  // Update page title
+  document.title = 'Order Confirmation';
+});
+```
+
+### Customize product gallery images
+
+```javascript
+// blocks/product-details/product-details.js
+// Imports (these should already exist at the top of the file)
+
+// Inside your decorate function
+export default async function decorate(block) {
+  // Create container element
+  const $gallery = document.createElement('div');
+  $gallery.className = 'product-details__gallery';
+  block.appendChild($gallery);
+  
+  // Define custom image slot with AEM Assets
+  const gallerySlots = {
+    CarouselMainImage: (ctx) => {
+      // Customize main carousel images
+      tryRenderAemAssetsImage(ctx, {
+        alias: ctx.data.sku,
+        imageProps: ctx.defaultImageProps,
+        params: {
+          width: ctx.defaultImageProps.width,
+          height: ctx.defaultImageProps.height,
+        },
+      });
+    },
+  };
+  
+  // Render gallery with custom slots
+  await pdpRendered.render(ProductGallery, {
+    controls: 'thumbnailsColumn',
+    arrows: true,
+    imageParams: {
+      width: 960,
+      height: 1191,
+    },
+    slots: gallerySlots,
+  })($gallery);
+}
+```
+
+## Next steps
+
+1. Browse the https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks to see implementation patterns.
+
+1. Review the [drop-in documentation](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/quick-start/) for slots, events, and API functions.
+
+1. Check individual https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks for configuration options and behavior details.
+
+1. Test customizations locally before deploying to production.
+
+> Start with CSS customization for visual changes, then move to JavaScript behavior modification only when necessary. This keeps your customizations maintainable and easier to upgrade when new boilerplate versions are released.
+
+---
+
+# Getting started
+
+This page helps you run, examine, and customize a storefront that already uses the Commerce boilerplate (Pre-configured storefront with the components and services you need to get started.). By the end, you'll know where the main files live and which files are safest to customize.
+
+> **Boilerplate overview** For conceptual information about what the boilerplate is and why to use it, see the [Boilerplate overview](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/).
+
+## Key terms
+
+The boilerplate uses Drop-in components (NPM packages that provide core Commerce storefront features such as cart, checkout, product details, and account flows.) for shopping features such as cart, checkout, product details, and requisition lists when you serve business buyers. It connects those features to document-authored pages with Commerce blocks (JavaScript blocks that integrate drop-in components into Edge Delivery Services pages to power storefront commerce experiences.). For general content and layout, it uses Content blocks (Edge Delivery Services blocks used for non-commerce page content and layout, such as cards, columns, headers, and footers.) such as cards, columns, headers, and footers.
+
+For more information about standard Edge Delivery blocks, see the Adobe Experience Manager https://www.aem.live/developer/block-collection.
+
+## Running locally
+
+If you still need to create the GitHub repository, connect Commerce, and initialize Document Author content, follow [Create a storefront](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/create-storefront/) first.
+
+Run the storefront locally so you can preview changes before you push them. If you already ran `git clone` while following [Create a storefront](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/create-storefront/), start with the `npm install` step below. The create-a-storefront topic links here for `npm install` and `npm start` so those instructions stay in one place.
+
+1. Install the project dependencies.
+
+   ```bash
+   npm install
+   ```
+
+1. Start the local development server.
+
+   ```bash
+   npm start
+   ```
+
+1. Open `http://localhost:3000` in your browser.
+
+Your storefront appears in the browser at `http://localhost:3000`.
+
+> If `npm install` fails, confirm that Node.js and npm are installed on your machine. If `npm start` fails, check whether another local server is already using port `3000`.
+
+**Optional: **install the `aem` command globally with `npm install -g @adobe/aem-cli` if you want to run the CLI from any directory. The boilerplate already lists `@adobe/aem-cli` as a dev dependency, so after `npm install` the `npm start` script can run without a global install.
+
+### Key runtime packages
+
+After `npm install`, `package.json` resolves many dependencies. You do not need to memorize them on day one. Use this table when you trace dependencies or debug install issues.
+
+| Package | Purpose |
+|---------|---------|
+| https://www.npmjs.com/package/@dropins/tools | Shared utilities for all drop-ins (GraphQL client, event bus, initializers, UI components) |
+| https://github.com/adobe/adobe-client-data-layer | Standardized data layer for event collection and analytics |
+| https://www.npmjs.com/package/@adobe/magento-storefront-event-collector | Collects Commerce-specific user interaction events |
+| https://www.npmjs.com/package/@adobe/magento-storefront-events-sdk | SDK for sending events to Adobe Commerce for Live Search and Product Recommendations |
+
+## Exploring the code
+
+The tree below shows the main folders plus important files at the repository root. The table links each folder to GitHub so you can open the matching source tree.
+
+```text
+aem-boilerplate-commerce/
+├── blocks/                 # Commerce blocks, content blocks, and standard AEM blocks
+├── scripts/
+│   ├── scripts.js           # page load orchestration (eager, lazy, delayed)
+│   ├── commerce.js        # Commerce loading, templates, storefront configuration
+│   └── initializers/      # one initializer file per drop-in (endpoints, labels, and related settings)
+├── styles/                 # global CSS, tokens, fonts, deferred styles
+├── tools/                  # dev helpers (for example, PDP metadata tooling)
+├── config.json             # storefront endpoints, locale, and related settings
+└── package.json            # dependencies, scripts, and drop-in install hooks
+```
+
+| Directory | Purpose |
+|-----------|---------|
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/ | Contains Commerce blocks, content blocks, and standard AEM blocks such as header, footer, and cards. |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/scripts/ | Contains drop-in initializers, Commerce utilities, and the Edge Delivery Services runtime. |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/styles/ | Contains global styles, design tokens, fonts, and deferred styles for performance. |
+| https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/tools/ | Contains development tools such as the product detail page (PDP) metadata tool. |
+
+## Understanding the flow
+
+To understand how documents become rendered commerce experiences at runtime, see [How a page loads](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/how-a-page-loads/) in [Storefront architecture](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/). This overview helps you decide where to customize and where to leave boilerplate files unchanged.
+
+## Customizing your storefront
+
+- Brand styling: edit `styles/styles.css` for design tokens.
+- Block behavior: modify block decorators in `blocks/`.
+- Commerce configuration: update initializers in `scripts/initializers/`.
+- Commerce blocks: use only the blocks your storefront needs.
+
+### Customization strategy
+
+Most files in the boilerplate can be modified. The guidance below helps keep your storefront project easy to maintain as the original boilerplate repository evolves.
+
+### Files to keep unchanged
+
+- `scripts/aem.js`: The core AEM runtime. This file comes from the original https://github.com/adobe/aem-boilerplate. Local edits can conflict with future boilerplate updates.
+- `package.json` lifecycle scripts (`postinstall`, `postupdate`, `install:dropins`): These scripts run during `npm install` to install and configure drop-ins. Changing them can break drop-in installation.
+
+The table below lists the usual layers you change for branding, blocks, Commerce wiring, page scripts, and build-time queries. Order follows a common path: global styles and blocks first, then initializer and script layers, then `build.mjs` for query shaping.
+
+| Layer | Strategy |
+|-------|----------|
+| `styles/` | Change colors, fonts, spacing, and layout here. Tokens in `styles/styles.css` apply across the whole site. |
+| `blocks/` | Edit block appearance and behavior. Keep block folder names unchanged because authors reference them by name in documents. |
+| `scripts/initializers/` | Configure the API endpoint and UI labels for each drop-in. Each drop-in has one initializer file, such as `cart.js` or `checkout.js`. If you remove a drop-in, also remove its initializer file and all imports of it in the codebase. See [Using drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/quick-start/). |
+| `scripts/commerce.js` | Edit this file to add Commerce-specific logic such as consent handling (`getConsent`) or custom page type detection. It reads your [storefront configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/) and sets up Commerce API connections on every page. |
+| `scripts/scripts.js` | Add automatically generated blocks to `buildAutoBlocks` (the boilerplate uses this for the hero block). Load third-party scripts, tag managers, or analytics tools in `scripts/delayed.js`. That file runs 3 seconds after page load so these scripts do not affect the initial page render. |
+| `build.mjs` | Edit this file to customize what data drop-ins fetch from Commerce. For example, you can add a custom product field to the PDP query or skip query fragments your project doesn't need. Use the existing entries as patterns. Changes take effect after running `npm install`. |
+
+### When to customize
+
+When you customize blocks or initializers, put project-specific code in new files when possible. For example, you can add slot customizations to a new `blocks/commerce-cart/slots.js` file and import it at the top of `commerce-cart.js`. Your customizations stay in a file you own. When a boilerplate update arrives, your changes to the original file stay small.
+
+## Deploying your storefront
+
+Edge Delivery Services creates preview and production URLs when you push changes:
+
+- Preview: `https://<branch>--<repo>--<owner>.aem.page`
+- Production: `https://<branch>--<repo>--<owner>.aem.live`
+
+You do not run a separate deployment build command for Edge Delivery. The Edge Delivery pipeline handles page delivery and optimization after you push.
+
+## Keeping your storefront current
+
+Track boilerplate changes in the https://github.com/hlxsites/aem-boilerplate-commerce/issues?q=label%3Achangelog+is%3Aclosed and [Release notes](https://experienceleague.adobe.com/developer/commerce/storefront/releases/). For guidance on upgrading drop-in components, applying updates, and handling breaking changes, see the [Updates](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/updates/) page.
+
+## Related resources
+
+| Resource | Description |
+|----------|-------------|
+| [Boilerplate reference](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/) | Technical documentation for blocks, configuration options, and file structure. |
+| [Drop-in components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/introduction/) | API reference for each drop-in component. |
+| [Commerce blocks page](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/) | Business user page for using blocks. |
+
+---
+
+# Overview
+
+This overview describes the Commerce boilerplate repository and how it fits Edge Delivery Services and drop-ins. Start with the definition below, then follow First steps when you are ready to clone, run locally, or dig into architecture.
+
+## What is the Commerce boilerplate?
+
+The Commerce boilerplate is Adobe's supported starter/reference codebase for storefronts on Edge Delivery Services (Adobe's hosting and delivery infrastructure that turns authored documents into fast HTML pages served from servers close to the shopper. You push code to GitHub; Edge Delivery Services builds and publishes automatically.) (EDS). You clone it from GitHub, connect your Commerce backend, and customize blocks, scripts, and styles in that repository instead of tying together every Commerce integration yourself. 
+
+The boilerplate repository lives at https://github.com/hlxsites/aem-boilerplate-commerce. EDS hosts and publishes your site from that repo. The boilerplate also bundles Drop-in components (NPM packages that provide core Commerce storefront features such as cart, checkout, product details, and account flows.) for cart, checkout, product listings, and related Commerce flows so you theme and configure shipped UI rather than building those screens from scratch.
+
+> **One supported boilerplate** https://github.com/hlxsites/aem-boilerplate-commerce is the only Adobe-supported Commerce starter/reference storefront. Demo storefronts (for example Citisignal) are forks for events or showcases. They often lag behind this repository and are not a safe starting point for your own project.
+
+## First steps
+
+1. If you still need a site, follow [Create a storefront](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/create-storefront/). When you already have a repo, open [Boilerplate getting started](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/getting-started/) to run `npm install` and `npm start`, and explore `blocks/`, `scripts/`, and `styles/`.
+
+1. Read [Storefront Architecture](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/) when you need the full picture of how authoring, blocks, drop-ins, and Commerce APIs connect.
+
+## Other topics in this section
+
+Use these when you already have a project open on disk:
+
+- [Configuration](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/configuration/) — Commerce backend endpoints, headers, and storefront settings.
+- [Blocks reference](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/blocks-reference/) and [Blocks customization](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/customizing-blocks/) — Block behavior and layout.
+- [Universal Editor](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/universal-editor/) — Optional authoring path alongside Document Authoring.
+- [Boilerplate updates](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/updates/) — Staying current (npm drop-ins first; suite tags are tested snapshots, not fork upgrade targets).
+- [AI agent skills](https://experienceleague.adobe.com/developer/commerce/storefront/ai/ai-agent-skills/) — Optional skills for coding agents.
+
+## Related areas outside this section
+
+- [Commerce configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/) — Wire the storefront to your Commerce backend after the boilerplate runs.
+- [Commerce blocks (merchants)](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/) — How merchants work with blocks in authoring tools.
+- [Drop-ins introduction](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/introduction/) — Technical reference for each drop-in.
+
+## Packages and block wiring
+
+When you trace `npm` dependencies or debug install issues, open [Getting started](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/getting-started/) for the key runtime packages the boilerplate adds. When you need each Commerce block’s drop-ins, GitHub source folder, and merchant-facing topic in one place, open [Blocks reference](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/blocks-reference/).
+
+---
+
+# Universal Editor for developers
+
+The Adobe Commerce boilerplate supports the Universal Editor (UE) for content and Commerce blocks. For setup, instrumentation syntax, and custom block workflow, see the DA.live documentation below.
+
+> **Document Authoring content source** This page covers Universal Editor setup for the **Commerce boilerplate**, which uses **Document Authoring (DA.live)** as the content source. If your project uses **AEM Sites** as the content source, the instrumentation approach differs — follow the https://www.aem.live/developer/universal-editor-blocks on aem.live instead.
+
+## Commerce boilerplate structure
+
+Commerce differs from the standard DA.live approach (centralized `ue/models/blocks/` in https://github.com/aemsites/da-block-collection): **UE instrumentation JSON files live next to each block** at `blocks/{block-name}/_{block-name}.json`. A pre-commit hook composes these into the root-level `component-*.json` files the UE consumes.
+
+```text
+aem-boilerplate-commerce/
+├── component-definition.json    ← generated (UE consumes)
+├── component-filters.json       ← generated (UE consumes)
+├── component-models.json        ← generated (UE consumes)
+├── models/
+│   └── _section.json           ← add new blocks to component list
+└── blocks/
+    ├── accordion/
+    │   └── _accordion.json      ← UE instrumentation
+    ├── hero/
+    │   └── _hero.json
+    ├── product-recommendations/
+    │   └── _product-recommendations.json
+    ├── commerce-cart/
+    │   └── _commerce-cart.json
+    └── ...                      ← and other blocks with _*.json
+```
+
+:::tip
+While you are developing, open a page in the Universal Editor. Blocks without instrumentation appear as **(no definition)** in the content tree, which is a quick visual signal that a definition file is needed.
+:::
+
+## Documentation
+
+- https://docs.da.live/developers/guides/setup-universal-editor — **First-time setup:** `editor.path` config, requirements, and behavior
+- https://docs.da.live/developers/reference/universal-editor — full instrumentation reference
+- https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/models/_section.json#L130-L168 — add new blocks to this component list
+- [Using the Universal Editor](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/quick-start/universal-editor/) — for content authors; workflow and authoring docs
+
+---
+
+# Boilerplate updates
+
+Upgrade your Adobe Commerce Storefront to get the latest features, security updates, and performance improvements from the Commerce Boilerplate.
+
+> **Two distinct update paths** You can keep your storefront current in two ways:
+
+- **Updating drop-in npm packages** (`@dropins/*`, `@adobe/*`) — This is the primary update path for every Commerce boilerplate storefront. Drop-in packages follow semantic versioning: minor and patch releases stay non-breaking by contract. Run `npm outdated` to see available updates, or enable the `update-dropins.yml` GitHub Actions workflow included in the boilerplate to receive automatic weekly pull requests when newer stable versions are available.
+
+- **Merging the upstream Commerce boilerplate into your repository** — This path is optional and advanced. Most teams start from a new GitHub repository generated from the Commerce boilerplate template, then clone that repository locally. You are under no obligation to pull upstream boilerplate changes into your project. Merging upstream can bring in new integration patterns or bug fixes, but expect manual conflict resolution and a careful review of your customizations. Reserve this path when a specific upstream improvement is worth the effort.
+
+Suite releases are tagged snapshots that validate a specific combination of drop-in versions and boilerplate code. They work best as starting points for new implementations, not as recurring upgrade targets for existing storefronts.
+
+## Overview
+
+When you initially scaffold your Commerce storefront from the Commerce Boilerplate, you create a snapshot of the boilerplate at that point in time. As Adobe continues to improve the boilerplate with new features, bug fixes, and performance optimizations, your existing project won't automatically receive these updates.
+
+This page shows you how to upgrade your storefront while preserving your customizations.
+
+## Understanding the upgrade landscape
+
+Upgrading is ongoing, not a one-time task. Regular, small updates are generally safer and easier to manage than infrequent, large upgrades.
+
+### What gets updated
+
+Most of your storefront's critical Commerce logic is now delivered through npm packages, making upgrades significantly easier and more reliable. Upgrades typically involve these main areas:
+
+**Drop-in components (NPM packages that provide core Commerce storefront features such as cart, checkout, product details, and account flows.):** npm packages containing the core Commerce functionality, including the following:
+
+- `@dropins/storefront-account`
+- `@dropins/storefront-auth`
+- `@dropins/storefront-cart`
+- `@dropins/storefront-checkout`
+- `@dropins/storefront-order`
+- `@dropins/storefront-payment-services`
+- `@dropins/storefront-pdp`
+- `@dropins/storefront-personalization`
+- `@dropins/storefront-product-discovery`
+- `@dropins/storefront-recommendations`
+- `@dropins/storefront-wishlist`
+- `@dropins/tools`
+
+If your project serves business buyers, install and upgrade these business-to-business (B2B) packages too:
+
+- `@dropins/storefront-company-management`
+- `@dropins/storefront-company-switcher`
+- `@dropins/storefront-purchase-order`
+- `@dropins/storefront-quote-management`
+- `@dropins/storefront-quick-order`
+- `@dropins/storefront-requisition-list`
+
+The `*` in `npm list @dropins/storefront-*` and `npm update @dropins/storefront-*` is a wildcard: npm matches every installed package whose name starts with `@dropins/storefront-`, including these B2B packages when they are in your project. For what each drop-in does and how to connect it in your storefront, see [B2B drop-ins overview](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/).
+
+On Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer, Adobe manages Storefront Compatibility packages on Commerce for you, so upgrades on this page are mainly npm packages and boilerplate changes—not a separate compatibility install checklist.
+
+> **Commerce PaaS or on-premises** If you deploy Adobe Commerce on cloud infrastructure or on-premises—Commerce PaaS—and your team installs or upgrades Storefront Compatibility packages on Commerce, align those backend upgrades with storefront work. For B2B GraphQL on Commerce PaaS, see [Storefront Compatibility B2B Package](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/storefront-compatibility-b2b/).
+
+**Boilerplate integration layer (Storefront-level files that connect drop-ins to your site, including block implementations and initialization scripts.):** storefront-level files that integrate drop-ins
+
+| File | Purpose | Update Frequency | Typical Changes |
+|------|---------|------------------|-----------------|
+| `blocks/*` | Block integration folders | Frequent | Drop-in integration JS and CSS. Rare updates to non-drop-in block examples (cards, accordion, and so on) sourced from other boilerplates |
+| `scripts/aem.js` | Core AEM functionality | Very Rare | Core platform improvements |
+| `scripts/commerce.js` | Commerce-specific integration and utilities | Rare | Integration improvements, new utility functions |
+| `scripts/initializers/*` | Drop-in initialization scripts | Moderate | New drop-in integrations, configuration updates |
+| `scripts/scripts.js` | Page loading, block decoration, and global site functionality | Very Rare | Performance optimizations, new global features |
+
+### Why upgrades are now easier
+
+The Commerce Boilerplate team moved most of the complex Commerce logic into npm-distributed drop-in packages, providing key advantages:
+
+- **Most logic is packaged**: Core Commerce functionality, business rules, and complex state management are delivered through npm packages
+- **Simplified storefront code**: Your project primarily contains integration code, styling, and configuration
+- **Standard npm upgrades**: Most updates can be applied using standard `npm install` commands
+- **Reduced conflicts**: Fewer files in your project means fewer merge conflicts when updating
+- **Consistent behavior**: All storefronts benefit from the same tested, optimized Commerce logic
+
+## Upgrade strategies
+
+### npm package updates
+
+> **Recommended for most cases** Most Commerce logic lives in npm packages, so this approach handles upgrades with minimal risk.
+
+1. Update drop-in components
+
+   Most of your Commerce functionality improvements come through these package updates:
+
+   Check your current versions:
+
+   ```bash
+   npm list @dropins/storefront-*
+   ```
+
+   Update individual components:
+
+   ```bash
+   npm install @dropins/storefront-cart@latest
+   npm install @dropins/storefront-checkout@latest
+   # Repeat for other components as needed
+   ```
+
+   Or update all drop-in components at once:
+
+   ```bash
+   npm update @dropins/storefront-*
+   ```
+
+1. Test your storefront
+
+   Since most logic changes are packaged, testing focuses on integration points:
+
+   Start your local development environment:
+
+   ```bash
+   npm start
+   ```
+
+Test all Commerce functionality:
+
+- Product detail pages
+- Shopping cart operations
+- Checkout flow
+- User account features
+- Search and navigation
+- B2B flows you ship (for example, company profiles and roles, negotiable quotes, purchase orders, requisition lists, quick order, or company switching), when those packages are in your project
+
+Review the release notes for any integration changes that may affect your implementation.
+
+> **For Major Version Updates** When upgrading drop-in packages across major versions (for example, from 1.x to 2.x), perform more thorough testing as these updates may include breaking changes (Updates that require code or configuration changes in your project before everything works correctly again.). Pay particular attention to:
+
+- Any custom integrations you've built around the drop-in components
+- API interfaces you're using
+- Configuration settings that may have changed
+- Custom styling or event handlers you've added
+
+Test edge cases and error scenarios in addition to the standard user flows.
+
+To help automate this testing process, consider implementing end-to-end testing in your project using tools like Cypress. These tools can simulate real user interactions across your Commerce flows, automatically catching regressions that manual testing might miss. Focus your automated tests on critical user journeys like product browsing, cart management, and checkout completion.
+
+### Selective boilerplate updates
+
+When you need integration layer improvements or new features that require changes to your storefront's integration code, use selective updates (A workflow where you review upstream changes and merge only the files or commits that are relevant to your project.) to merge changes from the upstream (The original source repository your project forks from, used as the canonical source when reviewing and pulling updates.) boilerplate repository.
+
+1. **Set up upstream remote**
+
+   Add the boilerplate repository as an upstream remote:
+
+   ```bash
+   git remote add upstream https://github.com/hlxsites/aem-boilerplate-commerce.git
+   git fetch upstream
+   ```
+
+1. **Review available updates**
+
+   Compare your current branch with the latest boilerplate to understand what changes are available.
+
+   For detailed instructions on reviewing upstream changes, see https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork and https://docs.github.com/en/pull-requests/committing-changes-to-your-project/viewing-and-comparing-commits/comparing-commits.
+
+   A storefront repo created from the Commerce boilerplate template is not a GitHub fork of the boilerplate, but you can still add an `upstream` remote and merge or cherry-pick using the same Git operations.
+
+   Focus your review on key files like `scripts/commerce.js` and the `scripts/initializers/` directory where most Commerce-specific updates occur.
+
+1. **Identify changes to include**
+
+   Focus on these integration layer improvements:
+
+   **Commerce Integration Layer (`scripts/commerce.js`)**
+   - Enhanced drop-in initialization patterns
+   - New configuration utilities
+   - Performance optimizations
+   - Bug fixes in integration logic
+
+   **Initializers (`scripts/initializers/`)**
+   - Updated drop-in initialization patterns
+   - New feature integrations
+   - Improved error handling
+
+   **Block Integration Updates (`blocks/` directory)**
+   - Enhanced drop-in integration patterns
+   - Accessibility improvements
+   - Bug fixes in block-level integration
+
+   
+
+> Each Commerce block now includes a README file that describes the block's purpose and functionality. These README files are particularly helpful when diffing changes, as they provide a summary of what has changed in the block before you examine the code.
+
+   If you use B2B Commerce blocks and patterns from the Commerce Boilerplate, compare your branch with the upstream repository's `b2b` branch as well as `main`. The `b2b` branch holds B2B-oriented block and integration updates. Adopt the same selective merge or cherry-pick approach so you do not overwrite your customizations.
+
+1. **Apply selected changes**
+
+   Create a branch for your upgrade work to isolate changes and test before merging to main. Use a descriptive name indicating the upgrade with a timeframe or version (for example, `upgrade-august-2025` or `upgrade-cart-v2.1.0`).
+
+   Once you're on your upgrade branch, you have several options for applying changes from the upstream boilerplate:
+
+   - **Selectively merge** individual files or directories that have updates you want to incorporate. This approach works well when you want to adopt specific improvements without bringing in changes that might conflict with your customizations.
+   - **Cherry-pick** specific commits from the upstream repository if you want to apply only particular features or fixes. This gives you granular control over what changes to include and helps avoid introducing unwanted modifications.
+
+   For each change you apply, commit it with a clear message describing what upstream improvement you're incorporating. This creates a clean history that makes it easy to understand what was updated and why, which will be valuable for future upgrades and troubleshooting.
+
+1. **Resolve integration points and test**
+
+   - Resolve any conflicts in integration code, preserving your customizations
+   - Test thoroughly in your development environment
+   - Run your test suite if available
+   - Deploy to a staging environment for comprehensive testing
+
+## Special considerations for early-adopter projects
+
+If you scaffolded your project before mid-2025, you may have encountered a major architectural change: Commerce logic moved from `scripts.js` to `scripts/commerce.js`. This shift affects your update scope but uses the same methods above.
+
+### Understanding the architectural change
+
+The major refactoring (PR #567) reorganized the boilerplate architecture with two significant improvements:
+
+1. Separation of AEM and Commerce logic:
+   - `scripts/scripts.js` - Core AEM functionality, aligned with the upstream AEM Boilerplate
+   - `scripts/commerce.js` - Commerce-specific integration and utility logic
+
+1. Core Commerce logic migration to npm packages:
+
+   - Complex Commerce functionality moved to `@dropins/tools` and other drop-in packages
+   - Functions previously embedded in your integration code are now abstracted to reusable, versioned, and upgradable libraries
+   - The Commerce Boilerplate is now focused on pure integration code that you own
+
+**Before the refactoring:** In early versions of the Commerce Boilerplate, all logic lived in `scripts/scripts.js` where Commerce business logic was mixed with integration code. Core Commerce functions were embedded directly in your project files, making it difficult to upgrade Commerce functionality without encountering code conflicts during merges.
+
+**After the refactoring:** The architecture now separates concerns more effectively. Core Commerce logic lives in npm packages that are easily upgradable, while the boilerplate contains minimal integration code that results in fewer merge conflicts. This creates clear boundaries between platform logic and your customizations, allowing future updates to focus on integration patterns rather than business logic.
+
+This architectural shift means that complex Commerce operations, utility functions, and business rules that you may have seen in your early boilerplate files are now delivered through npm packages, making them upgradable without touching your project code.
+
+### Adapting your update approach
+
+If you have an early-adopter project, your updates will need a broader scope to account for architectural changes.
+
+When reviewing updates, pay attention to the main scripts file (`scripts/scripts.js`) and 
+the Commerce integration layer (`scripts/commerce.js`). Both have changed significantly. Be sure to preserve your custom business logic while adopting the improved structural foundation 
+that the upstream changes provide.
+
+The migration process requires more careful consideration than typical updates since you're not just incorporating new features, but potentially restructuring how your existing customizations integrate with the boilerplate's core functionality.
+
+During Step 4 (apply selective changes), you may need to migrate your customizations:
+
+**Custom functions in the "old" `scripts/scripts.js`**
+
+- Commerce-related customizations should move to `scripts/commerce.js`
+- General AEM functionality should remain in `scripts/scripts.js`
+- Many custom functions may now be available as utilities in `@dropins/tools`
+
+**Block import updates**
+
+- Update imports from `../../scripts/scripts.js` to `../../scripts/commerce.js` for Commerce utilities
+- Verify that custom utilities are still available or replace with package utilities
+
+**Integration pattern updates**
+
+- Review if custom functions can be replaced with utilities from `@dropins/tools` package
+- Update integrations to use new patterns for Commerce-specific functionality
+
+During Step 5 (testing), pay special attention to:
+
+- Custom blocks that import Commerce utilities
+- Third-party integrations that depend on Commerce functions
+- Custom analytics implementations that hook into Commerce events
+- Any custom business logic that was mixed with platform code
+
+### Benefits of architectural alignment
+
+While early-adopter projects require more comprehensive selective updates, aligning with the new architecture provides significant long-term benefits:
+
+- **Future updates simplified**: Once aligned, future updates will be much easier due to reduced code surface area
+- **Better separation of concerns**: Clear boundaries between platform logic and your customizations
+- **Reduced merge conflicts**: Commerce functionality updates through npm packages instead of file merges
+- **Access to latest features**: Full compatibility with new drop-in components and features
+- **Enhanced PDP flexibility**: Container-based PDP architecture provides unprecedented customization control
+
+## Product details page architectural evolution
+
+### Previous architecture (slot-based customization)
+
+Older `@dropins/storefront-pdp` releases used the monolithic `ProductDetails` container (deprecated) with predefined slots. That pattern is deprecated and not a part of the Commerce boilerplate. It should not be used for new work. In that legacy model, teams could only:
+
+- Create custom slot implementations for different sections of the page
+- Work within the constraints of a single-container structure
+- Rearrange or replace PDP sections with limited flexibility
+- Rely on complex styling workarounds to reach custom layouts
+
+### New architecture (container-based composition)
+
+The latest version breaks down the PDP into independent containers you can compose, style, and replace:
+
+- **ProductHeader** - Product title, SKU, and basic information
+- **ProductPrice** - Pricing display and special price handling
+- **ProductGallery** - Image carousel with flexible configuration
+- **ProductOptions** - Product variants and configuration
+- **ProductQuantity** - Quantity selector
+- **ProductDescription** - Product descriptions and content
+- **ProductAttributes** - Product specifications and metadata
+
+For detailed information about the container-based architecture and implementation patterns, see the [Product Details Drop-in Documentation](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/). You can also reference the current product-details block implementation in the Commerce Boilerplate for practical examples of the container-based approach.
+
+### Migration benefits for PDP blocks
+
+- **Complete layout control**: Arrange containers in any order within your block structure
+- **Individual container replacement**: Replace entire sections (like gallery or pricing) with custom implementations
+- **Simplified styling**: Style containers independently without complex CSS overrides
+- **Enhanced functionality**: Each container can be configured independently with specific features
+- **Eliminated slot workarounds**: UI customizations that required appending, prepending, or replacing slot content can now be handled directly in the layout structure or by completely replacing containers
+- **Direct data access**: Product data previously available through slot context is now accessible via the event bus (`pdp/data` and `pdp/values`)
+- **Future-proof architecture**: New PDP features delivered as new containers rather than slot modifications
+
+### PDP block migration process
+
+When updating your PDP block from slot-based to container-based:
+
+1. Update dependencies
+
+   ```javascript
+   import { render as pdpRendered } from '@dropins/storefront-pdp/render.js';
+
+   // Before: Single container with slots
+   import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js'; // (deprecated)
+
+   // After: multiple independent containers
+   import ProductHeader from '@dropins/storefront-pdp/containers/ProductHeader.js';
+   import ProductPrice from '@dropins/storefront-pdp/containers/ProductPrice.js';
+   import ProductGallery from '@dropins/storefront-pdp/containers/ProductGallery.js';
+   // ... other containers
+   ```
+
+1. Replace slot implementations
+
+   You can often remove custom slot implementations entirely. The new containers provide better configuration.
+
+1. Update block structure
+
+   Replace the single container render with multiple container renders:
+
+   ```javascript
+   // Before: Single render with slot configuration
+   await pdpRendered.render(
+     ProductDetails, // (deprecated)
+     {
+       slots: {
+         /* custom slot implementations */
+       },
+     },
+   )($pdpRoot);
+
+   // After: multiple container renders to layout regions
+   await pdpRendered.render(ProductHeader, {})($header);
+   await pdpRendered.render(ProductPrice, {})($price);
+   await pdpRendered.render(ProductGallery, { controls: 'thumbnailsColumn' })($gallery);
+   // ... other containers
+   ```
+
+1. Layout restructuring
+
+   Create HTML structure that positions containers where you need them:
+
+   ```html
+   
+   
+   
+   
+   <!-- Full control over container placement -->
+   
+   ```
+
+1. Styling migration
+
+   - Remove complex CSS overrides targeting internal slot structures
+   - Style containers directly with cleaner, more maintainable CSS
+   - Review any potential class name changes between architectures
+   - Handle breakpoints and responsive layout at the block level, as this is now the block's responsibility
+
+## Tracking updates
+
+### Monitor boilerplate changes
+
+Stay informed about boilerplate updates:
+
+- **GitHub watch**: Watch the https://github.com/hlxsites/aem-boilerplate-commerce for releases and important changes
+- **Changelog tracking**: Follow issues tagged with the changelog label
+- **Release notes**: Review drop-in component release notes at the [Release Information](https://experienceleague.adobe.com/developer/commerce/storefront/releases/) page
+
+### Version management best practices
+
+**Document your customizations**
+
+- Document all customizations
+- Write clear commit messages
+- Tag storefront releases
+
+**Establish update cadence**
+
+- Review updates monthly or quarterly
+- Schedule major upgrades for low-traffic periods
+- Test in staging
+
+## Troubleshooting common issues
+
+### Post-install scripts (Scripts that run automatically after package installation to copy and prepare required Commerce integration files.) failures
+
+If post-install fails:
+
+- Check Node.js and npm version compatibility
+- Clear the npm cache: `npm cache clean --force`
+- Remove and reinstall: `rm -rf node_modules package-lock.json && npm install`
+- Check file permissions
+
+### Merge conflicts
+
+When merging updates:
+
+- **Understand the context**: Review both versions
+- **Preserve functionality**: Keep your customizations working
+- **Test thoroughly**: Conflicts signal significant changes
+- **Be selective**: Only merge valuable updates; avoid bringing in features you won't use
+
+### Breaking changes
+
+When drop-in updates introduce breaking changes:
+
+- **Review migration pages in release notes**: Check package release notes for migration instructions
+- **Update integrations**: Modify custom code that depends on changed APIs
+- **Test edge cases**: Breaking changes often affect less common use cases
+- **Plan rollback**: Have a rollback plan ready before applying breaking changes
+
+## Best practices
+
+### Development workflow
+
+**Branch strategy**
+
+- Create upgrade branches with descriptive names (for example, `upgrade-cart-v2.1.0`)
+- Merge upgrades through pull requests with thorough reviews
+
+**Testing approach**
+
+- Cover custom functionality with tests
+- Automate testing where possible
+- Test across devices and browsers
+- Use real product data
+
+**Deployment process**
+
+- Use staging environments that mirror production
+- Deploy during low-traffic periods
+- Monitor key metrics post-deployment
+- Have rollback procedures ready
+
+### Long-term maintenance
+
+**Stay current**
+
+- Update regularly, don't let them pile up
+- Apply security patches promptly
+- Plan major upgrades ahead well in advance
+
+**Customize thoughtfully**
+
+- Minimize modifications to core boilerplate files
+- Use configuration and theming approaches when possible
+- Document the business justification for customizations
+
+## Resources
+
+- [Storefront Developer Tutorial](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/create-storefront/): Comprehensive storefront setup page
+- [Storefront Architecture](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/): Understanding the technical foundation
+- [Drop-in Components Documentation](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/introduction/): Detailed component reference pages
+- [B2B drop-ins overview](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/): B2B packages, containers, and initialization
+- https://www.aem.live/docs/: Core platform documentation
+- https://github.com/hlxsites/aem-boilerplate-commerce: Source code and latest updates
+- [Release Notes](https://experienceleague.adobe.com/developer/commerce/storefront/releases/): Track major changes and updates
+- https://github.com/hlxsites/aem-boilerplate-commerce/releases: GitHub releases and version history

@@ -1,0 +1,2792 @@
+<SYSTEM>This is the Commerce blocks reference bundle for Adobe Commerce Storefront on Edge Delivery Services</SYSTEM>
+
+# Commerce blocks reference
+
+> EDS block configurations for B2C and B2B commerce (cart, checkout, account, order, quotes, and purchasing)
+> Generated: 2026-06-26T22:40:20.158Z
+> Source: https://experienceleague.adobe.com/developer/commerce/storefront
+
+
+---
+
+# Author and developer tasks
+
+Labels, block settings, spacing, and scheduling are all author tasks done in Document Authoring without code. Visual design and behavior inside a drop-in (colors, layout, how buttons work) belongs to a developer.
+
+## What you can change without code
+
+Use tables and sheets in Document Authoring (The tooling for creating storefront pages as documents in Google Docs, SharePoint, or DA.live without writing code. Tables in documents define the blocks that appear on each page.):
+
+| Task | Where to do it | Reference |
+| --- | --- | --- |
+| Choose which Commerce block appears on a page | The block table on the page | [Block table structure](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/block-tables/) |
+| Set the few settings a Commerce block accepts | The block table on the page | The Commerce block's reference page in [B2C Commerce blocks](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/b2c/) or [B2B Commerce blocks](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/b2b/) |
+| Change the words shoppers see (button labels, headings, messages) | The placeholders sheet for the matching drop-in | [Labels and placeholders](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/labels-and-placeholders/) |
+| Set the page title, description, and indexing | The metadata table on the page | [Page metadata](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) |
+| Adjust spacing, background, and column widths around a Commerce block | A section-metadata table after the Commerce block | [Section metadata](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) |
+| Translate labels into other locales | The locale-specific placeholders sheets | [Commerce localization tasks](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/quick-start/content-localization-commerce-tasks/) |
+| Add related blocks on the same page (for example, breadcrumbs or Product Recommendations) | Add another block table on the page | [Using Content and Commerce blocks](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/content-commerce-blocks/) |
+| Schedule when a page goes live | Snapshot scheduling in Document Authoring | [Scheduling options](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/edge-delivery-services/scheduling/) |
+
+## What needs a developer
+
+These changes require code or configuration outside the author tools:
+
+| Task | Why it is not an author task |
+| --- | --- |
+| Add or remove an element inside a drop-in (for example, a wishlist button on the product page) | That element is part of the drop-in layout code, not your block table. A developer adds or removes it there. |
+| Change the visual design of a drop-in (colors, fonts, button shapes beyond section metadata) | Visual design lives in your storefront's CSS and shared style settings. A developer edits those files. |
+| Track a new event in analytics or A/B testing | Drop-ins send events that other code can listen for. A developer connects those events to your analytics tool (for example, Google Analytics or Adobe Target). |
+| Connect or change your storefront's connection to Adobe Commerce (endpoints, store view headers, services) | These settings live in your [storefront configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/). The integrator owns this work, often with a developer. |
+| Add a drop-in that is not on your storefront yet | A developer installs the package and adds the Commerce block that loads it. |
+| Change how a Commerce block behaves, not just how it looks (for example, how Add to Cart works) | The behavior comes from the drop-in code, not from the block table. A developer customizes the drop-in. |
+
+If the change is not in either table, file a ticket with the page URL, the block name (for example, `product-details`), and a short description of what you want that you cannot do from the author tools.
+
+<TaskSection label="Reference">
+
+## How a Commerce Storefront page is built
+
+Every Commerce Storefront page stacks three layers:
+
+- Drop-in components (NPM packages that provide core Commerce storefront features such as cart, checkout, product details, and account flows.) — Adobe-shipped UI for Commerce features such as Product Details, Cart, Checkout, and Account. A drop-in powers the interactive Commerce parts of a page (gallery, price, cart) and loads live catalog data from Adobe Commerce. Content blocks handle other page sections, such as marketing copy or images.
+- Commerce block (JavaScript blocks that integrate drop-in components into Edge Delivery Services pages to power storefront commerce experiences.) — A Block table (A table in a document that begins with a block name row, followed by configuration rows. Edge Delivery uses the name row to map the table to a storefront block implementation.) in your document with the block name (for example, `product-details` or `commerce-cart`) and any settings that block needs. See [Block table structure](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/block-tables/) for the table shape.
+- Page — The document that holds your Commerce blocks and any content blocks (marketing copy, images, breadcrumbs, Product Recommendations).
+
+Most Commerce blocks live on a page you author yourself, such as your cart or sign-in page. The product page (PDP) is the exception. One document at `/products/default` is the template layout for every product URL, so a change there updates all product pages at once. Names, prices, and images still come from your catalog, not from that document. See [Product Details](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/product-details/) for how this template works.
+
+#### Roles at a glance
+
+- **Author** — Edits pages in Document Authoring or the Universal Editor. Owns shopper-facing copy, block settings, placeholders sheets, section and page metadata, publishing, and scheduling.
+- **Integrator** — Connects the storefront to Adobe Commerce. Edits [storefront configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/), store view headers, and similar settings, often with a developer when code is required.
+- **Developer** — Owns code in your storefront repository: drop-in customization, CSS, shared style settings, new drop-ins, and analytics integrations.
+
+On a small team, one person may cover two roles. Name the role you need on a ticket so the request reaches the right person faster.
+
+For developer-facing vocabulary (containers, slots, events), see [Introduction to drop-in components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/introduction/).
+
+</TaskSection>
+
+---
+
+# B2B Blocks
+
+This reference provides a complete list of all B2B commerce blocks available for creating your storefront pages. These blocks power B2B storefronts and provide company management, purchase order workflows, quote negotiation, and requisition list features for business-to-business commerce.
+
+If you are new to Commerce blocks, read [Author and developer tasks](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/author-and-developer-tasks/) first. It explains drop-ins, blocks, and pages as three layers, what you can change without code, and when to hand off to a developer.
+
+## B2B commerce blocks
+
+| Commerce Block | Purpose | Common Usage |
+|----------------|---------|--------------|
+| **Company Management** | | |
+| [Create Company](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-company-create/) | Customers register new companies to access B2B purchasing features | Company registration pages |
+| [Accept Company Invitation](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-company-accept-invitation/) | Invited users join companies | Invitation acceptance pages |
+| [Company Profile](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-company-profile/) | Company administrators update business details and contact information | Company profile pages |
+| [Company Structure](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-company-structure/) | Company administrators organize teams and departments | Company structure pages |
+| [Company Users](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-company-users/) | Company administrators add team members and manage user access | Company user management pages |
+| [Company Roles and Permissions](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-company-roles-permissions/) | Company administrators control who can approve orders and access features | Roles and permissions pages |
+| [Company Credit](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-company-credit/) | Company buyers view credit balances and transaction history | Company credit pages |
+| [Customer Company](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-customer-company/) | Company users view their company affiliation and job title | Account information pages |
+| **Purchase Orders** | | |
+| [Purchase Order Status](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-b2b-po-status/) | Users view order status and take actions like approve, reject, or cancel | Purchase order detail pages |
+| [Purchase Orders Requiring Approval](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-b2b-po-require-approval-purchase-orders/) | Approvers see orders awaiting their review and prioritize approval processing | Orders for approval pages |
+| [Purchase Order History Log](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-b2b-po-history-log/) | Users view audit trails showing who approved orders and when actions occurred | Purchase order detail pages |
+| [Purchase Order Header](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-b2b-po-header/) | Users navigate purchase order details with contextual page headers | Top of purchase order pages |
+| [Customer Purchase Orders](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-b2b-po-customer-purchase-orders/) | Buyers track their own purchase orders and monitor approval status | My purchase orders pages |
+| [Company Purchase Orders](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-b2b-po-company-purchase-orders/) | Managers monitor all company spending and track pending approvals | Company purchase orders pages |
+| [Purchase Order Comments List](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-b2b-po-comments-list/) | Team members view order discussions and approval reasons | Purchase order detail pages |
+| [Purchase Order Comment Form](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-b2b-po-comment-form/) | Team members communicate about orders and document decisions | Purchase order detail pages |
+| [Purchase Order Checkout Success](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-b2b-po-checkout-success/) | Buyers receive purchase order confirmation and order numbers | Purchase order confirmation pages |
+| [Purchase Order Approval Rules List](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-b2b-po-approval-rules-list/) | Administrators view all approval rules and which orders they affect | Approval rules pages |
+| [Purchase Order Approval Rule Form](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-b2b-po-approval-rule-form/) | Administrators create spending limits and set approval hierarchies | Create approval rule pages |
+| [Purchase Order Approval Rule Details](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-b2b-po-approval-rule-details/) | Administrators review rule conditions and approval requirements | Approval rule detail pages |
+| [Purchase Order Approval Flow](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-b2b-po-approval-flow/) | Users view workflow status and who approved or rejected orders | Purchase order detail pages |
+| **Quotes** | | |
+| [Negotiable Quote](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-b2b-negotiable-quote/) | Buyers request custom pricing and negotiate terms with your sales team | Quote pages |
+| [Negotiable Quote Template](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-b2b-negotiable-quote-template/) | Buyers create reusable quote templates for recurring orders | Quote template pages |
+| [Quote Checkout](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-b2b-quote-checkout/) | Buyers complete negotiated quote purchases with approved pricing | Quote checkout pages |
+| **Requisition Lists** | | |
+| [Requisition Lists](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-b2b-requisition-list/) | Buyers create shopping lists for recurring orders | Requisition list pages |
+| [Requisition List View](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-b2b-requisition-list-view/) | Buyers review and add items to cart from saved requisition lists | Requisition list detail pages |
+| **Shared Blocks** | | |
+| [Account Nav](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-account-nav/) | Provides account navigation menu for B2B accounts | Account section navigation |
+| [Checkout Success](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-checkout-success/) | Displays order confirmation after checkout | Order confirmation pages |
+
+## Setup guides
+
+Some blocks require additional setup and configuration beyond the basic block reference:
+
+- [Personalization setup](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/content-customizations/personalization/) - Add personalized content to your storefront.
+- [Product Recommendations setup](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/content-customizations/product-recommendations/) - Set up intelligent product recommendations.
+
+## Using commerce blocks
+
+### Adding a block to your page
+
+1. In the Document Authoring tool, create a table with the block name.
+1. Add configuration options as key-value pairs in the table.
+1. The block will automatically render when the page is published.
+
+If the table parts (block name row, key-value rows, and merged full-width content rows) are new to you, read [Block table structure](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/block-tables/) and then come back to this reference.
+
+**Examples:**
+
+**Simple block with configuration:**
+
+| commerce-company-credit |  |
+| --- | --- |
+| showHistory | true |
+
+**Multiple blocks on one page (purchase order detail):**
+
+| commerce-b2b-po-header |  |
+| --- | --- |
+|  |  |
+
+| commerce-b2b-po-status |  |
+| --- | --- |
+|  |  |
+
+| commerce-b2b-po-approval-flow |  |
+| --- | --- |
+|  |  |
+
+| commerce-b2b-po-comments-list |  |
+| --- | --- |
+|  |  |
+
+| commerce-b2b-po-comment-form |  |
+| --- | --- |
+|  |  |
+
+### Block naming conventions
+
+- All B2B commerce blocks start with "Commerce".
+- Block names are case-sensitive.
+- Use the exact spelling shown in this reference.
+- Hyphens in the reference should be spaces in tables.
+
+### Configuration options
+
+Each block has its own set of configuration options. For detailed configuration information:
+
+- View the [individual block documentation](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-company-create/) for specific configuration options.
+- Most blocks have optional configuration (they work with defaults).
+- Configuration keys are case-sensitive.
+
+## Blocks by page type
+
+For B2B storefronts, add these specialized pages:
+
+### Company management pages
+
+- **Company registration** - Use the Create Company block.
+- **Company profile** - Use the Company Profile block.
+- **Company administration** - Combine Company Structure, Company Users, and Company Roles and Permissions blocks on separate sections or pages.
+- **Company credit** - Use the Company Credit block.
+
+### Purchase order pages
+
+- **Purchase order list** - Use Customer Purchase Orders (for buyers) or Company Purchase Orders (for managers).
+- **Purchase order detail** - Combine Purchase Order Header, Purchase Order Status, Purchase Order Approval Flow, Purchase Order Comments List, and Purchase Order Comment Form blocks.
+- **Orders for approval** - Use Purchase Orders Requiring Approval block.
+- **Approval rules management** - Use Purchase Order Approval Rules List, Purchase Order Approval Rule Form, and Purchase Order Approval Rule Details blocks.
+
+### Quote pages
+
+- **Quote management** - Use Negotiable Quote block.
+- **Quote templates** - Use Negotiable Quote Template block.
+- **Quote checkout** - Use Quote Checkout block.
+
+### Requisition list pages
+
+- **Requisition list management** - Use Requisition Lists block.
+- **Requisition list detail** - Use Requisition List View block.
+
+## Related resources
+
+- [Your first page](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/quick-start/your-first-page/) - Step-by-step tutorial for creating a page.
+- [Page metadata](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) - Configure page-level settings.
+- [Section metadata](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) - Style your page sections.
+- [B2C Commerce blocks](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/b2c/) - If you're building a B2C storefront, see the B2C blocks reference.
+
+## Need help?
+
+- **Missing a block?** All available B2B blocks are listed in the table above.
+- **Configuration not working?** Review the [individual block documentation](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-company-create/) for exact option names.
+- **Block not appearing?** Verify the block name is spelled exactly as shown in this reference.
+
+---
+
+# B2C Blocks
+
+This reference provides a complete list of all B2C commerce blocks available for creating your storefront pages. These blocks power standard B2C storefronts and provide essential shopping, account, and order management features for direct-to-consumer commerce.
+
+If you are new to Commerce blocks, read [Author and developer tasks](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/author-and-developer-tasks/) first. It explains drop-ins, blocks, and pages as three layers, what you can change without code, and when to hand off to a developer.
+
+## B2C commerce blocks
+
+| Commerce Block | Purpose | Common Usage |
+|----------------|---------|--------------|
+| **Shopping Experience** | | |
+| [Product List Page](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/product-list-page/) | Displays product listings with filtering, sorting, and pagination | Category pages, search results pages |
+| [Product Details](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/product-details/) | Shows detailed product information with images, pricing, and options | Individual product pages (PDP) |
+| [Product Recommendations](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/content-customizations/product-recommendations/) | Displays AI-powered product recommendations | Product pages, cart page, homepage |
+| [Commerce Cart](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-cart/) | Shows shopping cart with items, pricing, and cart management | Cart page |
+| [Commerce Mini Cart](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-mini-cart/) | Displays cart summary in a dropdown or overlay | Site header, global navigation |
+| **Customer Account** | | |
+| [Commerce Login](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-login/) | Provides customer login form | Login page, account access page |
+| [Commerce Forgot Password](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-forgot-password/) | Initiates password reset process | Password recovery page |
+| [Commerce Create Password](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-create-password/) | Sets new password after reset | Password reset landing page |
+| [Commerce Addresses](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-addresses/) | Manages shipping and billing addresses | Account address book page |
+| [Commerce Customer Information](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-customer-information/) | Displays and edits customer profile details | Account profile page |
+| [Commerce Customer Details](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-customer-details/) | Shows customer information in order context | Order details page |
+| [Commerce Account Header](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-account-header/) | Displays account navigation and user information | Account section header |
+| [Commerce Account Sidebar](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-account-sidebar/) | Provides account navigation menu | Account section sidebar |
+| [Seller-Assisted Buying](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/seller-assisted-buying/) | Lets administrators shop on a customer's behalf; includes customer preference control and activity log blocks | Customer account settings page, customer account activity page |
+| **Order Management** | | |
+| [Commerce Orders List](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-orders-list/) | Lists all customer orders with status and details | Order history page |
+| [Commerce Search Order](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-search-order/) | Allows guest order lookup by order number and email | Guest order tracking page |
+| [Commerce Order Header](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-order-header/) | Displays order number, date, and status | Order details page header |
+| [Commerce Order Status](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-order-status/) | Shows detailed order status and tracking information | Order details page |
+| [Commerce Order Product List](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-order-product-list/) | Lists products in the order with images and details | Order details page |
+| [Commerce Order Cost Summary](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-order-cost-summary/) | Shows order totals, taxes, shipping, and discounts | Order details page, order confirmation |
+| [Commerce Shipping Status](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-shipping-status/) | Displays shipment tracking and delivery information | Order details page, tracking page |
+| **Returns & Exchanges** | | |
+| [Commerce Returns List](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-returns-list/) | Lists all return requests with status | Account returns page |
+| [Commerce Create Return](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-create-return/) | Initiates return request with item selection and reasons | Return request page |
+| [Commerce Order Returns](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-order-returns/) | Shows return details for a specific order | Order details page |
+| [Commerce Return Header](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-return-header/) | Displays return request number and status | Return details page |
+| **Gift Options** | | |
+| [Commerce Gift Options](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-gift-options/) | Allows adding gift messages and gift wrapping | Cart page, checkout page |
+| **Wishlist** | | |
+| [Commerce Wishlist](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-wishlist/) | Displays saved items for later purchase | Wishlist page, account section |
+
+## Setup guides
+
+Some blocks require additional setup and configuration beyond the basic block reference:
+
+- [Personalization setup](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/content-customizations/personalization/) - Add personalized content to your storefront.
+- [Product Recommendations setup](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/content-customizations/product-recommendations/) - Set up intelligent product recommendations.
+
+## Using commerce blocks
+
+### Adding a block to your page
+
+1. In the Document Authoring tool, create a table with the block name.
+1. Add configuration options as key-value pairs in the table.
+1. The block will automatically render when the page is published.
+
+If the table parts (block name row, key-value rows, and occasional merged full-width content rows) are new to you, read [Block table structure](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/block-tables/) and then come back to this reference.
+
+**Example:**
+
+| Commerce Cart |  |
+|---------------|---|
+| Hide Heading | false |
+| Max Items | 10 |
+
+### Block naming conventions
+
+- All commerce blocks start with "Commerce" (except Product blocks).
+- Block names are case-sensitive.
+- Use the exact spelling shown in this reference.
+- Hyphens in the reference (for example, "Mini Cart") should be spaces in tables.
+
+### Configuration options
+
+Each block has its own set of configuration options. For detailed configuration information:
+
+- View the [individual block documentation](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-cart/) for specific configuration options.
+- Most blocks have optional configuration (they work with defaults).
+- Configuration keys are case-sensitive.
+
+## Blocks by page type
+
+### Essential pages
+
+Every B2C storefront needs these core pages:
+
+- **Homepage**: Product Recommendations, Product List Page
+- **Product Page**: Product Details, Product Recommendations
+- **Cart**: Commerce Cart, Product Recommendations
+- **Checkout**: Commerce Checkout
+- **Account Dashboard**: Commerce Account Header, Commerce Account Sidebar
+
+### Optional pages
+
+Enhance your B2C storefront with these additional pages:
+
+- **Wishlist**: Commerce Wishlist
+- **Order Tracking**: Commerce Search Order, Commerce Order Status
+- **Returns**: Commerce Create Return, Commerce Returns List
+- **Address Management**: Commerce Addresses
+
+## Related resources
+
+- [Your first page](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/quick-start/your-first-page/) - Step-by-step tutorial for creating a cart page.
+- [Page metadata](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) - Configure page-level settings.
+- [Section metadata](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) - Style your page sections.
+- [B2B Commerce blocks](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/b2b/) - If you're building a B2B storefront, see the B2B blocks reference.
+
+## Need help?
+
+- **Missing a block?** All available B2C blocks are listed in the table above.
+- **Configuration not working?** Review the [individual block documentation](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/commerce-cart/) for exact option names.
+- **Block not appearing?** Verify the block name is spelled exactly as shown in this reference.
+
+---
+
+# Block table structure
+
+A block table (A table in a document that begins with a block name row, followed by configuration rows. Edge Delivery uses the name row to map the table to a storefront block implementation.) in your document is how you add any Commerce block or Content block to a page. You create it in Document Authoring as a simple table: the block name goes in the first row, and settings go in the rows below it.
+
+## Example: a block table in your document
+
+This example uses the `commerce-cart` block and includes all three row types.
+
+| commerce-cart |  |
+| --- | --- |
+| Enable Item Quantity Update | true |
+| Hide Heading | false |
+| Checkout URL | /checkout |
+| Optional: in some blocks, a merged full-width row is where the visible page content goes when it does not fit in a small value cell. Not every block uses this row. |  |
+
+Read the table from top to bottom:
+
+- The first row (full width, shaded) is the block name (The first row in a block table. It usually contains a single `kebab-case` block identifier (for example, `commerce-cart` or `targeted-block`) that tells the system which block to render.) row. It contains a single `kebab-case` name such as `commerce-cart`. The storefront uses this name to find and load the right block.
+- Rows with two cells are key-value (A two-column table row in a block table. The first cell is a setting name (a key) and the second cell is the value, such as `true`, `10`, or a text label.) settings: a setting name in the left column and its value in the right. Most settings are optional and fall back to safe defaults. Each block's [reference page](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/) lists the available keys and which are required.
+- A row with one cell spanning the full width is a merged full-width row (A table row where one cell spans the full table width, so you can add rich page content in one large cell. Some blocks (like `targeted-block`) use this for inline content or layout when a separate fragment document is not used.). Some blocks use it to hold page content that doesn't fit in a setting value. The italic row in the example shows this option.
+
+> **Where is my block?** If a block does not appear on the page when previewed, the most common cause is a block name that does not match the spelling on that block's [reference page](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/). If the block appears but looks wrong or empty, check the content rules on that block's [reference page](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/), or use [Personalization setup](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/content-customizations/personalization/) for `targeted-block`.
+
+<TaskSection>
+
+## Add a block to your document
+
+To add any Commerce block to a page, create a block table in Document Authoring (the web-based editor where you create and update storefront pages).
+
+1. Add a new table to the page.
+
+1. Set the first row to the block name in `kebab-case`, for example, `commerce-cart`.
+
+1. Add the key-value rows that the block's [reference page](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/) requires or recommends.
+
+1. Preview the page. The block should appear in the section where you placed the table.
+
+1. Publish when the page looks right.
+
+</TaskSection>
+
+For an end-to-end example that covers metadata, a cart block, and section styling, work through [Your first page](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/quick-start/your-first-page/).
+
+---
+
+# Commerce Account Header
+
+Customers see consistent page headers across account pages through this block. Place it at the top of account-related pages.
+
+## Configuration
+
+Add this table to your document to configure the block:
+
+| commerce-account-header |  |
+| --- | --- |
+| title | My account |
+
+### Property descriptions
+
+**title**: The header title text displayed to users. Default: `My account`.
+
+The block uses default configuration values if custom settings are missing or invalid.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Account Navigation
+
+Customers navigate between account sections through this block. Place it on account dashboard pages.
+
+## Requirements
+
+Customers must log in to access this block.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Account Sidebar
+
+Customers navigate account sections through this sidebar. Place it on account pages for easy navigation.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Addresses
+
+Customers add, edit, and delete saved addresses through this block. Place it on account address management pages.
+
+## Configuration
+
+Add this table to your document to configure the block:
+
+| commerce-addresses |  |
+| --- | --- |
+| minifiedView | false |
+
+### Property descriptions
+
+**minifiedView**: Controls whether addresses are displayed in minified or full view mode. Use `true` for space-constrained layouts like checkout flows. Default: `false`.
+
+### Important notes
+
+- Requires user authentication. Unauthenticated users are automatically redirected to the login page.
+
+## Page metadata
+
+Configure page-level metadata in the document authoring table below:
+
+| metadata |  |
+| --- | --- |
+| Title | Addresses |
+| Template | Addresses, Columns |
+| Robots | noindex, nofollow |
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Negotiable Quote
+
+Buyers request custom pricing and negotiate terms with your sales team through this block. Place it on quote pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features and negotiable quotes in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company** and **Stores** > **Configuration** > **General** > **B2B Features** > **Enable B2B Quote**.
+
+## Configuration
+
+No configurations available for this block.
+
+## Page metadata
+
+Configure page-level metadata in the document authoring table below:
+
+| metadata |  |
+| --- | --- |
+| Title | Quotes |
+| Robots | noindex, nofollow |
+| Cache Control | no-store |
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | highlight (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Negotiable Quote Template
+
+Buyers save frequently ordered items as templates for faster reordering through this block. Place it on quote template pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features and negotiable quotes in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company** and **Stores** > **Configuration** > **General** > **B2B Features** > **Enable B2B Quote**.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | highlight (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Purchase Order Approval Flow
+
+Users view workflow status and who approved or rejected orders through this block. Place it on purchase order detail pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company**. Purchase orders are then configured per company.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | highlight (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Purchase Order Approval Rule Details
+
+Administrators review rule conditions and approval requirements through this block. Place it on approval rule detail pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company**. Purchase orders are then configured per company.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | highlight (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Purchase Order Approval Rule Form
+
+Administrators create spending limits and set approval hierarchies through this block. Place it on create approval rule pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company**. Purchase orders are then configured per company.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | highlight (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Purchase Order Approval Rules List
+
+Administrators view all approval rules and which orders they affect through this block. Place it on approval rules pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company**. Purchase orders are then configured per company.
+
+## Configuration
+
+No configurations available for this block.
+
+## Page metadata
+
+Configure page-level metadata in the document authoring table below:
+
+| metadata |  |
+| --- | --- |
+| Title | Approval Rules |
+| Robots | noindex, nofollow |
+| Cache Control | no-store |
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | highlight (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Purchase Order Checkout Success
+
+Buyers receive purchase order confirmation and order numbers through this block. Place it on purchase order confirmation pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company**. Purchase orders are then configured per company.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | highlight (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Purchase Order Comment Form
+
+Team members communicate about orders and document decisions through this block. Place it on purchase order detail pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company**. Purchase orders are then configured per company.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | highlight (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Purchase Order Comments List
+
+Team members view order discussions and approval reasons through this block. Place it on purchase order detail pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company**. Purchase orders are then configured per company.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | highlight (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Company Purchase Orders
+
+Managers monitor all company spending and track pending approvals through this block. Place it on company purchase orders pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company**. Purchase orders are then configured per company.
+
+## Configuration
+
+No configurations available for this block.
+
+## Page metadata
+
+Configure page-level metadata in the document authoring table below:
+
+| metadata |  |
+| --- | --- |
+| Title | Purchase Orders |
+| Robots | noindex, nofollow |
+| Cache Control | no-store |
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | highlight (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Customer Purchase Orders
+
+Buyers track their own purchase orders and monitor approval status through this block. Place it on my purchase orders pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company**. Purchase orders are then configured per company.
+
+## Configuration
+
+No configurations available for this block.
+
+## Page metadata
+
+Configure page-level metadata in the document authoring table below:
+
+| metadata |  |
+| --- | --- |
+| Title | My Purchase Orders |
+| Robots | noindex, nofollow |
+| Cache Control | no-store |
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | highlight (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Purchase Order Header
+
+Users navigate purchase order details with contextual page headers through this block. Place it at the top of purchase order pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company**. Purchase orders are then configured per company.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | highlight (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Purchase Order History Log
+
+Users view audit trails showing who approved orders and when actions occurred through this block. Place it on purchase order detail pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company**. Purchase orders are then configured per company.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | highlight (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Purchase Orders Requiring Approval
+
+Approvers see orders awaiting their review and prioritize approval processing through this block. Place it on orders for approval pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company**. Purchase orders are then configured per company.
+
+## Configuration
+
+No configurations available for this block.
+
+## Page metadata
+
+Configure page-level metadata in the document authoring table below:
+
+| metadata |  |
+| --- | --- |
+| Title | Requires My Approval |
+| Robots | noindex, nofollow |
+| Cache Control | no-store |
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | highlight (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Purchase Order Status
+
+Users view order status and take actions like approve, reject, or cancel through this block. Place it on purchase order detail pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company**. Purchase orders are then configured per company.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | highlight (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Quote checkout
+
+Buyers complete negotiated quote purchases with approved pricing through this block. Place it on quote checkout pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features and negotiable quotes in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company** and **Stores** > **Configuration** > **General** > **B2B Features** > **Enable B2B Quote**.
+
+## Configuration
+
+No configurations available for this block.
+
+## Page metadata
+
+Configure page-level metadata in the document authoring table below:
+
+| metadata |  |
+| --- | --- |
+| Title | Checkout |
+| Robots | noindex, nofollow |
+| Cache Control | no-store |
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | highlight (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Requisition Lists
+
+Buyers create shopping lists for recurring orders through this block. Place it on requisition list pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features and requisition lists in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company** and **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Requisition List**.
+
+## Configuration
+
+No configurations available for this block.
+
+## Page metadata
+
+Configure page-level metadata in the document authoring table below:
+
+| metadata |  |
+| --- | --- |
+| Title | Requisition Lists |
+| Robots | noindex, nofollow |
+| Cache Control | no-store |
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | highlight (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Requisition List View
+
+Buyers review and add items to cart from saved requisition lists through this block. Place it on requisition list detail pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features and requisition lists in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company** and **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Requisition List**.
+
+## Configuration
+
+No configurations available for this block.
+
+## Page metadata
+
+Configure page-level metadata in the document authoring table below:
+
+| metadata |  |
+| --- | --- |
+| Title | Requisition List |
+| Robots | noindex, nofollow |
+| Cache Control | no-store |
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | highlight (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Cart
+
+Customers review items, update quantities, apply coupons, and proceed to checkout through this block. Place it on your cart page.
+
+## Configuration
+
+Add this table to your document to configure the block:
+
+| commerce-cart |  |
+| --- | --- |
+| hideHeading | false |
+| maxItems | 10 (example) |
+| hideAttributes | color, size (example) |
+| enableItemQuantityUpdate | false |
+| enableItemRemove | true |
+| enableEstimateShipping | false |
+| startShoppingUrl | /path/to/page (example) |
+| checkoutUrl | /path/to/page (example) |
+| enableUpdatingProduct | false |
+| undoRemoveItem | false |
+
+### Property descriptions
+
+**hideHeading**: Controls whether the cart heading is hidden. Set to `true` to hide this feature. Default: `false`.
+
+**maxItems**: Maximum number of items to display in cart. Leave empty to show all items.
+
+**hideAttributes**: Comma-separated list of product attributes to hide.
+
+**enableItemQuantityUpdate**: Enables quantity update controls for cart items. Set to `true` to enable this feature. Default: `false`.
+
+**enableItemRemove**: Enables remove item functionality. Set to `true` to enable this feature. Default: `true`.
+
+**enableEstimateShipping**: Enables shipping estimation functionality. Set to `true` to enable this feature. Default: `false`.
+
+**startShoppingUrl**: URL for "Start Shopping" button when cart is empty.
+
+**checkoutUrl**: URL for checkout button.
+
+**enableUpdatingProduct**: Enables product editing via mini-PDP modal. Set to `true` to enable this feature. Default: `false`.
+
+**undoRemoveItem**: Enables undo functionality when removing items. Allows customers to restore accidentally removed items. Default: `false`.
+
+### Common configurations
+
+**Quick checkout** (streamlined cart):
+- Set `enableItemQuantityUpdate` to `false`
+- Set `enableEstimateShipping` to `false`
+- Set `checkoutUrl` to `/checkout`
+- Minimizes steps before checkout
+
+**Full-featured cart** (maximum customer control):
+- Set `enableItemQuantityUpdate` to `true`
+- Set `enableEstimateShipping` to `true`
+- Set `enableUpdatingProduct` to `true`
+- Set `startShoppingUrl` to `/` for empty cart
+- Gives customers flexibility to modify before checkout
+
+### Important notes
+
+- Uses default configuration values if custom settings are missing or invalid.
+- All URL paths must point to valid pages on your site for navigation to work correctly.
+
+## Page metadata
+
+Configure page-level metadata in the document authoring table below:
+
+| metadata |  |
+| --- | --- |
+| Title | Cart |
+| Robots | noindex, nofollow |
+| Cache Control | no-store |
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light, highlight (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Checkout
+
+Customers enter shipping details, select payment methods, and complete purchases through this block. Place it on your checkout page.
+
+## Configuration
+
+No configurations available for this block.
+
+## Page metadata
+
+Configure page-level metadata in the document authoring table below:
+
+| metadata |  |
+| --- | --- |
+| Title | Checkout |
+| Robots | noindex, nofollow |
+| Cache Control | no-store |
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light, highlight (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Checkout Success
+
+Customers see order confirmation and order numbers after completing checkout through this block. Place it on your order confirmation page.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company**. Purchase orders are then configured per company.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light, highlight (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Accept Company Invitation
+
+Invited users join companies through this block. Place it on invitation acceptance pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company**.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Create Company
+
+Customers register new companies to access B2B purchasing features through this block. Place it on company registration pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company**.
+
+## Configuration
+
+No configurations available for this block.
+
+## Page metadata
+
+Configure page-level metadata in the document authoring table below:
+
+| metadata |  |
+| --- | --- |
+| Title | Company Registration |
+| Robots | noindex, nofollow |
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Company Credit
+
+Company buyers view credit balances and transaction history through this block. Place it on company credit pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features and company credit in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company** and **Stores** > **Configuration** > **Customers** > **Company Configuration** > **Enable Company Credit**.
+
+## Configuration
+
+Add this table to your document to configure the block:
+
+| commerce-company-credit |  |
+| --- | --- |
+| showHistory | true |
+
+### Property descriptions
+
+**showHistory**: Controls whether to show company credit transaction history ('true') or only credit summary information ('false'). Set to `true` to enable this feature. Default: `true`.
+
+### Important notes
+
+- Requires user authentication. Unauthenticated users are automatically redirected to the login page.
+
+## Page metadata
+
+Configure page-level metadata in the document authoring table below:
+
+| metadata |  |
+| --- | --- |
+| Title | Company Credit |
+| Robots | noindex, nofollow |
+| Cache Control | no-store |
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Company Profile
+
+Company administrators update business details and contact information through this block. Place it on company profile pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company**.
+
+## Configuration
+
+No configurations available for this block.
+
+## Page metadata
+
+Configure page-level metadata in the document authoring table below:
+
+| metadata |  |
+| --- | --- |
+| Title | Company Profile |
+| Robots | noindex, nofollow |
+| Cache Control | no-store |
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Company Roles and Permissions
+
+Company administrators control who can access B2B features (such as company credit, negotiable quotes, purchase orders, and requisition lists) through this block. Place it on roles and permissions pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company**.
+
+## Configuration
+
+No configurations available for this block.
+
+## Page metadata
+
+Configure page-level metadata in the document authoring table below:
+
+| metadata |  |
+| --- | --- |
+| Title | Roles & Permissions |
+| Robots | noindex, nofollow |
+| Cache Control | no-store |
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Company Structure
+
+Company administrators organize teams and departments through this block. Place it on company structure pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company**.
+
+## Configuration
+
+No configurations available for this block.
+
+## Page metadata
+
+Configure page-level metadata in the document authoring table below:
+
+| metadata |  |
+| --- | --- |
+| Title | Company Structure |
+| Robots | noindex, nofollow |
+| Cache Control | no-store |
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Company Users
+
+Company administrators add team members and manage user access through this block. Place it on company user management pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company**.
+
+## Configuration
+
+No configurations available for this block.
+
+## Page metadata
+
+Configure page-level metadata in the document authoring table below:
+
+| metadata |  |
+| --- | --- |
+| Title | Company Users |
+| Robots | noindex, nofollow |
+| Cache Control | no-store |
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Confirm Account
+
+Customers verify their email addresses and sign in through this block. Place it on your account confirmation page.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Create Account
+
+Customers create new accounts to save addresses and track orders through this block. Place it on your registration page.
+
+## Configuration
+
+No configurations available for this block.
+
+## Page metadata
+
+Configure page-level metadata in the document authoring table below:
+
+| metadata |  |
+| --- | --- |
+| Title | Create Account |
+| Robots | noindex, nofollow |
+| Cache Control | no-store |
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Create Password
+
+Customers change their account passwords through this block. Place it on account settings pages.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Create Return
+
+Customers request returns for purchased items through this block. Place it on return request pages.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Customer Company
+
+Company users view their company affiliation and job title through this block. Place it on account information pages.
+
+## Requirements
+
+Customers must log in to access this block. Enable company features in **Stores** > **Configuration** > **General** > **B2B Features** > **Enable Company**.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Customer Details
+
+Customers view their contact information on order pages through this block. Place it on order detail pages.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Customer Information
+
+Customers edit their profile details and update contact information through this block. Place it on account information pages.
+
+## Requirements
+
+This block requires user authentication and redirects unauthenticated users to the login page.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Forgot Password
+
+Customers reset forgotten passwords through this block. Place it on your password reset page.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Gift Options
+
+Customers view gift wrapping, gift messages, and gift receipt options through this block. Place it on order detail pages.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Login
+
+Customers sign in to access their accounts and personalized features through this block. Place it on your login page.
+
+## Configuration
+
+No configurations available for this block.
+
+## Page metadata
+
+Configure page-level metadata in the document authoring table below:
+
+| metadata |  |
+| --- | --- |
+| Title | Login |
+| Robots | noindex, nofollow |
+| Cache Control | no-store |
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Mini Cart
+
+Customers view cart contents and proceed to checkout through this dropdown. Place it in your site header for quick access.
+
+## Configuration
+
+Add this table to your document to configure the block:
+
+| commerce-mini-cart |  |
+| --- | --- |
+| startShoppingUrl | /path/to/page (example) |
+| cartUrl | /path/to/page (example) |
+| checkoutUrl | /path/to/page (example) |
+| enableUpdatingProduct | false |
+| undoRemoveItem | false |
+
+### Property descriptions
+
+**startShoppingUrl**: URL for "Start Shopping" button when cart is empty.
+
+**cartUrl**: URL for cart page navigation.
+
+**checkoutUrl**: URL for checkout navigation.
+
+**enableUpdatingProduct**: Enables product editing via mini-PDP modal. Set to `true` to enable this feature. Default: `false`.
+
+**undoRemoveItem**: Enables undo functionality when removing items. Allows customers to restore accidentally removed items. Default: `false`.
+
+### Common configurations
+
+**Basic mini cart** (view and checkout only):
+- Set `enableUpdatingProduct` to `false`
+- Set `undoRemoveItem` to `false`
+- Set `checkoutUrl` to `/checkout`
+- Simple, streamlined experience
+
+**Enhanced mini cart** (full product control):
+- Set `enableUpdatingProduct` to `true`
+- Set `undoRemoveItem` to `true`
+- Set `cartUrl` to `/cart`
+- Set `startShoppingUrl` to `/` for empty cart
+- Customers can edit products and undo removals
+
+### Important notes
+
+- Uses default configuration values if custom settings are missing or invalid.
+- All URL paths must point to valid pages on your site for navigation to work correctly.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light, highlight (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Order Comments
+
+Customers view order comments through this block. Place it on order detail pages.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+<strong>Learn more:</strong> See the [Section Metadata guide](/merchants/storefront-builder/section-metadata/) for all available values and the [Page Metadata guide](/merchants/storefront-builder/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Order Cost Summary
+
+Customers view order totals including tax, shipping, and discounts through this block. Place it on order detail pages.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Order Header
+
+Customers see order numbers and navigate back to order lists through this block. Place it at the top of order detail pages.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Order Product List
+
+Customers see products included in orders through this block. Place it on order detail pages.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Order Returns
+
+Customers view return information and track return shipments through this block. Place it on order detail pages with returns.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Order Status
+
+Customers view order status and create returns through this block. Place it on order detail pages.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Orders List
+
+Customers view past orders and track shipments through this block. Place it on order history pages.
+
+## Configuration
+
+Add this table to your document to configure the block:
+
+| commerce-orders-list |  |
+| --- | --- |
+| minifiedView | false |
+
+### Property descriptions
+
+**minifiedView**: Controls whether orders are displayed in minified or full view mode. Use `true` for space-constrained layouts like checkout flows. Default: `false`.
+
+### Important notes
+
+- Requires user authentication. Unauthenticated users are automatically redirected to the login page.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Return Header
+
+Customers see return numbers and navigate back to return lists through this block. Place it at the top of return detail pages.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Returns List
+
+Customers view return requests and track return status through this block. Place it on return history pages.
+
+## Configuration
+
+Add this table to your document to configure the block:
+
+| commerce-returns-list |  |
+| --- | --- |
+| minifiedView | false |
+
+### Property descriptions
+
+**minifiedView**: Controls whether returns are displayed in minified or full view mode. Use `true` for space-constrained layouts like checkout flows. Default: `false`.
+
+### Important notes
+
+- Requires user authentication. Unauthenticated users are automatically redirected to the login page.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Search Order
+
+Customers find orders by order number and email through this block. Place it on guest order lookup pages.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Shipping Status
+
+Customers track shipments and view delivery status through this block. Place it on order detail pages.
+
+## Configuration
+
+No configurations available for this block.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Commerce Wishlist
+
+Customers save products for later and move items to cart through this block. Place it on wishlist pages.
+
+## Configuration
+
+Add this table to your document to configure the block:
+
+| commerce-wishlist |  |
+| --- | --- |
+| startShoppingUrl | /path/to/page (example) |
+
+### Property descriptions
+
+**startShoppingUrl**: URL for "Start Shopping" button when wishlist is empty.
+
+### Important notes
+
+- Uses default configuration values if custom settings are missing or invalid.
+- URL paths must point to valid pages on your site for navigation to work correctly.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Content and Commerce blocks
+
+Content blocks and Commerce blocks are the two types of building blocks on every storefront page. Understanding what each one does helps you know which to use and where.
+
+## Content blocks
+
+Content blocks are pre-built UI components for static page content — buttons, images, galleries, navigation, and text layouts. They come from Edge Delivery Services and the AEM block collection. You add a content block to a page with the same document table pattern you use for Commerce blocks.
+
+For the full list and how to author them, see the https://www.aem.live/developer/block-collection and the https://www.aem.live/docs/authoring.
+
+## Commerce blocks
+
+Commerce blocks are content blocks that load a drop-in. A drop-in is an Adobe-built UI component that handles a specific Commerce job — product details, cart, checkout, account pages, and so on. When the page loads, the Commerce block hands off to the drop-in, which fetches live catalog and commerce data and renders the interactive experience.
+
+> You can add commerce features to any content block by including a drop-in. A Commerce block is simply a content block that is wired to a specific drop-in.
+
+## How they work together on a page
+
+A storefront page is a document that mixes both types. Commerce blocks handle the transactional areas — the product gallery, the cart, the checkout form. Content blocks handle everything else — hero images, marketing copy, breadcrumbs, and Product Recommendations widgets. You can add both to the same page using block tables in Document Authoring.
+
+---
+
+# Commerce Blocks
+
+Commerce blocks are the tables you add in [Document Authoring](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/quick-start/document-authoring/) when you edit a page. Each table tells your storefront to show one shopping feature, such as cart, checkout, a product page, or account management.
+
+| Topic | Description |
+|-------|-------------|
+| **Get oriented** | |
+| [Content and Commerce blocks](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/content-commerce-blocks/) | What content blocks and Commerce blocks are and how they work together on a page |
+| [Author and developer tasks](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/author-and-developer-tasks/) | Which changes you can make without code and which need a developer |
+| [Block table structure](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/block-tables/) | How the rows in a block table map to the block on the page |
+| **Change labels and layout** | |
+| [Labels and placeholders](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/labels-and-placeholders/) | Change the words shoppers see in Commerce blocks |
+| [Placeholder sheets](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/placeholder-sheets/) | Which sheet controls which block and what labels each sheet contains |
+| [Page Metadata](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) | Page title, description, search settings, caching, and catalog fields such as SKU |
+| [Section Metadata](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) | Spacing, background, and column widths around a block |
+| **Block reference** | |
+| [B2C Commerce Blocks](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/b2c/) | Blocks for business-to-consumer storefronts, including cart, checkout, account, and orders |
+| [B2B Commerce Blocks](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/b2b/) | Blocks for business-to-business storefronts, including company management, purchase orders, and quotes |
+
+---
+
+# Labels and placeholders
+
+Changing a label on a Commerce block means editing a value in a placeholders sheet in Document Authoring (The tooling for creating storefront pages as documents in Google Docs, SharePoint, or DA.live without writing code. Tables in documents define the blocks that appear on each page.) and then publishing the sheet to the live site. The edit itself is quick. The step most people miss is **Publish**. Without it, the live storefront keeps serving the previous label.
+
+1. Find the placeholders sheet for your block.
+
+1. Edit the value of the label you want to change.
+
+1. Preview the sheet to push your change to the preview site.
+
+1. Publish the sheet to push your change to the live site.
+
+1. Hard-refresh the storefront page (press Cmd+Shift+R or Ctrl+Shift+R) to see the new label.
+
+## How labels work in Commerce blocks
+
+A placeholder is a named text value that the storefront looks up at page load and displays on the page. The text for every button, heading, and message in a Commerce block comes from a placeholders sheet stored in your content folder. Each drop-in (NPM packages that provide core Commerce storefront features such as cart, checkout, product details, and account flows.) has its own sheet.
+
+Each sheet has two columns: Key and Value. The Key is a fixed label name such as `Cart.MiniCart.heading` that the drop-in uses to find the right text. The Value is the text shoppers see. You change the values, but the drop-in code defines the keys. Do not rename them.
+
+Most sheets are named after the block they serve, so `cart`, `checkout`, and `wishlist` hold the labels for their matching blocks. A few sheets group related blocks: `auth` covers login and account-creation blocks, `account` covers signed-in customer pages, `order` covers orders and returns, and `search` covers product listing and search. `pdp` (the product detail page sheet) is the one name that doesn't match its block (`product-details`). `global` holds labels reused across blocks, such as header buttons.
+
+If your storefront uses business-to-business (B2B) drop-ins, you'll also see B2B-specific sheets such as `company`, `purchase-order`, and `quick-order`. The workflow for editing B2B sheets is identical. Only the sheet names differ. For the full list and what each sheet controls, see [Placeholder sheets](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/placeholder-sheets/).
+
+Your storefront already has placeholders sheets set up and connected, so you do not add the sheet or change any code to start using it.
+
+## Change a label step by step
+
+### 1. Open the right placeholders sheet
+
+In Document Authoring (da.live), navigate to the `placeholders` folder. Open the sheet for the drop-in that owns the label you want to change. If you're not sure which sheet to pick, [Placeholder sheets](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/placeholder-sheets/) lists every sheet and what it controls.
+
+The sheet opens in a spreadsheet view. If your site supports multiple languages, edit the sheet in the locale folder that matches the storefront URL you preview — for example, `/fr/placeholders/cart` for a French storefront.
+
+### 2. Edit the value, not the key
+
+Find the row whose key matches the label you want to change. Edit only the Value cell. Keep the Key spelled exactly as it is, because the drop-in uses the key to look the value up. Renaming a key disconnects the value from the drop-in and the label disappears.
+
+{/* SCREENSHOT: A placeholders sheet open in Document Authoring, with the Key and Value columns clearly visible and one row about to be edited. Anchors steps 2 and 3 of the procedure. Ideally also shows the data and dnt tabs at the top so the next paragraph is actionable. */}
+
+If the sheet shows more than one tab at the top (for example, `data` and `dnt`), edit the `data` tab. The `dnt` tab is for do-not-translate values and does not control the shopper-visible label.
+
+### 3. Preview and publish the sheet
+
+With the sheet open in Document Authoring, select **Preview** to save your changes and push them to the preview site. Confirm the new label looks right. When you're satisfied, select **Publish** to push the change to the live site.
+
+{/* SCREENSHOT: Close-up of the Preview and Publish buttons in the Document Authoring toolbar for a sheet. This is the most-skipped step, so a screenshot makes the buttons concrete. */}
+
+> **Preview is not enough** Until you publish the sheet, the live storefront keeps serving the previous version of the labels, and your change does not appear for shoppers. This is the most common reason a label change looks like it did nothing: you previewed the storefront page but did not publish the placeholders sheet.
+
+### 4. See your change on the storefront
+
+Open the storefront page that uses the block (for example, your product detail page or cart page). Press Cmd+Shift+R on macOS, or Ctrl+Shift+R on Windows or Linux, to bypass the browser cache. The new label appears on the next load.
+
+The drop-in reads the placeholders sheet once when the page loads, so there is no live update when you edit the sheet. A regular reload may not clear the browser's cached copy of the sheet, so use a hard-refresh to be sure.
+
+## Troubleshooting
+
+If your label change isn't showing up, a missing publish step on the sheet is the most common cause.
+
+### My change doesn't appear on the storefront
+
+[Check what the sheet actually saved](#how-to-check-what-the-sheet-actually-saved) to narrow down the cause, then look for your key in the JSON output:
+
+- If you see the old value: you did not preview or publish the sheet. Return to the sheet in Document Authoring and select **Preview** or **Publish**.
+- If you see the new value but the storefront page still shows the old one: hard-refresh the page, and confirm the page URL is in the same locale folder as the sheet you edited.
+
+### My change shows in preview but not on the live site
+
+**Preview** and **Publish** are separate actions. **Preview** updates the preview site only. After you confirm the label looks right in preview, select **Publish** to push the change to the live site.
+
+### One language is right, another is wrong
+
+You may be editing one locale sheet while previewing a different locale page. Edit the sheet whose folder matches the URL you preview. For the multi-locale workflow, see [Commerce localization tasks](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/quick-start/content-localization-commerce-tasks/).
+
+### The key I need isn't in the sheet
+
+If a key isn't in the sheet, the drop-in uses its built-in default text. To change that text, add a new row with the exact key (for example, `Cart.MiniCart.heading`) and the value you want. A wrong key fails silently — the drop-in shows its default with no error — so copy the key exactly from the JSON source. [Placeholder sheets](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/placeholder-sheets/) links to each sheet's live JSON so you can find the keys each drop-in supports.
+
+### How to check what the sheet actually saved
+
+Each placeholders sheet is available as a JSON file (a text file your browser can open). Opening this file shows the saved value directly, without going through the storefront page. If the URL was already cached in your browser from an earlier check, hard-refresh the tab (Cmd+Shift+R or Ctrl+Shift+R) to fetch the latest version.
+
+{/* SCREENSHOT: A placeholders JSON file open in a browser tab, showing one key and value highlighted. Helps the reader recognize success when they see it. */}
+
+The URL pattern is:
+
+```text
+https://<branch>--<repo>--<org>.aem.page/placeholders/<sheet>.json
+https://<your-site>/placeholders/<sheet>.json
+```
+
+A real preview URL looks like `https://main--my-storefront--acme.aem.page/placeholders/cart.json`, where `main` is your branch, `my-storefront` is your repository, `acme` is your organization, and `cart` is the sheet name. You can find your organization and repository in the Document Authoring URL, where they appear after `da.live/#/` as `org/repo`. The branch is `main` unless your team uses a different default. The live URL uses `.aem.live` instead of `.aem.page`, or your custom storefront domain if one is configured.
+
+Use the preview URL right after **Preview**, or the live URL after **Publish**. Search the JSON for your key and check that the value matches what you typed.
+
+If the URL returns nothing or a 404, you haven't previewed or published the sheet yet. Go back to the sheet and run **Preview** or **Publish** first.
+
+## Related authoring tools
+
+Labels and placeholders work alongside two other authoring tools that control how a Commerce block appears on a page:
+
+- [Page metadata](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) — page-level settings (title, description, caching, social sharing).
+- [Section metadata](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) — visual styling for the section around a block.
+
+Page metadata and section metadata change how the page looks around a block. Labels and placeholders change the words inside the block.
+
+For multi-locale translation, see [Commerce localization tasks](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/quick-start/content-localization-commerce-tasks/). For developer-side details on how drop-ins use placeholders, see [Labeling and localizing drop-in components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/labeling/).
+
+---
+
+# Page Metadata
+
+Page metadata controls page-level settings. Add a metadata table to your document to configure SEO, caching, social sharing, and structured data — and to pass commerce properties like `sku` to blocks that need them.
+
+## What is page metadata?
+
+Page metadata is a special table that controls page-level properties. Unlike [section metadata](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/), which styles sections, page metadata affects the entire page — its SEO, caching behavior, social sharing appearance, and commerce-specific settings such as which product to display.
+
+### Page vs. Section metadata
+
+- **Page metadata** — Controls SEO, caching, and page structure (added to the `metadata` table)
+- **Section metadata** — Controls section styling and visual presentation (added to the `section-metadata` table)
+
+Both can be used on the same page but serve different purposes.
+
+## How to use page metadata
+
+### 1. Create or open your document
+
+Open the document in the [Universal Editor](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/quick-start/universal-editor/) or the [Document Authoring tool](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/quick-start/document-authoring/).
+
+### 2. Add the metadata table
+
+At the top of your document (typically before any [commerce blocks](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/)), add a new table with exactly two columns.
+
+### 3. Set the table header
+
+In the first row, merge both cells and enter: `metadata`
+
+### 4. Add metadata properties
+
+In subsequent rows, add your desired properties:
+- First column: Property name (e.g., `Title`)
+- Second column: Property value (e.g., `My Product Name`)
+
+### 5. Save and publish
+
+Save your document. The metadata applies when you publish the page.
+
+## Examples
+
+These examples show common page metadata configurations for different types of commerce pages. Each example demonstrates how the metadata table appears in your document and explains why specific properties are used.
+
+### Basic page metadata
+
+For a standard product page:
+
+| metadata |  |
+| --- | --- |
+| Title | Premium Running Shoes |
+| Description | Lightweight running shoes with advanced cushioning for maximum comfort and performance. |
+| Keywords | running shoes, athletic footwear, sports shoes |
+
+### Cart or checkout page metadata
+
+For pages with sensitive content that should not be cached or indexed:
+
+| metadata |  |
+| --- | --- |
+| Title | Shopping Cart |
+| Robots | noindex, nofollow |
+| Cache Control | no-store |
+
+### Page with social sharing
+
+For pages optimized for social media sharing:
+
+| metadata |  |
+| --- | --- |
+| Title | Premium Running Shoes |
+| Description | Lightweight running shoes with advanced cushioning. |
+| og:type | product |
+| og:title | Premium Running Shoes - Best Athletic Footwear |
+| og:description | Experience ultimate comfort with our premium running shoes. |
+| og:image | https://example.com/images/shoes-hero.jpg |
+
+### Product on a marketing page
+
+For a campaign or landing page that features one specific product, add a `sku` row so the `product-details` block knows which product to render. Without this row the block has no SKU to work with and the page will not display a product.
+
+| metadata |  |
+| --- | --- |
+| Title | New Arrivals |
+| sku | HOODIE-001 |
+
+### Page with custom template
+
+For account pages using the Columns layout template:
+
+| metadata |  |
+| --- | --- |
+| Title | My Addresses |
+| Template | Addresses, Columns |
+| Robots | noindex, nofollow |
+
+## Available metadata properties
+
+The metadata table accepts two kinds of properties: commerce properties that blocks read directly, and standard page properties for SEO, caching, and social sharing.
+
+### Commerce properties
+
+| Property | Purpose | Example value |
+|----------|---------|---------------|
+| `sku` | Tells the `product-details` block which product to display on pages where the SKU is not in the URL, for example a campaign or landing page | `HOODIE-001` |
+
+### Page properties
+
+| Property | Purpose | Common values |
+|----------|---------|---------------|
+| `Title` | Page title in browser tab and search results | `Cart`, `Checkout`, `Product Name` |
+| `Description` | Page description for search results | Product or page description (150-160 characters) |
+| `Keywords` | SEO keywords (optional) | `shoes, running, athletic` |
+| `Robots` | Search engine indexing | `noindex, nofollow`, `index, follow` |
+| `Cache Control` | Page caching behavior | `no-store`, `max-age=3600` |
+| `Template` | Page layout template | `Columns`, `Addresses, Columns` |
+| `Theme` | Visual theme | `dark`, `light` |
+| `og:type` | Social media content type | `product`, `website` |
+| `og:title` | Social sharing title | Product or page name |
+| `og:description` | Social sharing description | Product or page description |
+| `og:image` | Social sharing image URL | Full URL to product or page image |
+| `json-ld` | Structured data for search engines | JSON-LD string for products, breadcrumbs |
+
+> **Quick tips** - Use `noindex, nofollow` for checkout, cart, and account pages
+- Use `no-store` for pages with sensitive or personalized content
+- Keep titles under 60 characters and descriptions under 160 characters
+
+---
+
+# Placeholder sheets
+
+Each Commerce block reads the words shoppers see — button text, headings, and messages — from a placeholders sheet stored in Document Authoring. Each sheet has two columns: Key (the fixed identifier the drop-in looks up) and Value (the text shoppers see). This page lists every sheet and what part of the storefront it controls so you can find the right one quickly. To change a value, see [Labels and placeholders](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/labels-and-placeholders/).
+
+## Standard storefront sheets
+
+The following placeholder sheets ship with the Adobe Commerce boilerplate and are present on every storefront. Each name links to the live JSON on the boilerplate so you can see the current keys and values.
+
+| Sheet | What it controls |
+| --- | --- |
+| https://main--boilerplate--adobe-commerce.aem.page/placeholders/global.json | Labels reused across the storefront, such as the quantity selector, the shared "Add to Cart" text, and back-navigation links used by multiple drop-ins. |
+| https://main--boilerplate--adobe-commerce.aem.page/placeholders/pdp.json | Product detail page — price labels, add-to-cart button, quantity controls, and the out-of-stock message. |
+| https://main--boilerplate--adobe-commerce.aem.page/placeholders/cart.json | Mini cart and full cart page — headings, line items, edit and view actions, and totals. |
+| https://main--boilerplate--adobe-commerce.aem.page/placeholders/checkout.json | Checkout flow — shipping and billing addresses, address validation, payment, and order placement. |
+| https://main--boilerplate--adobe-commerce.aem.page/placeholders/payment-services.json | Payment Services credit card form — field labels, placeholders, and validation messages. |
+| https://main--boilerplate--adobe-commerce.aem.page/placeholders/order.json | Order list, order detail, and the create-return and returns flows. |
+| https://main--boilerplate--adobe-commerce.aem.page/placeholders/auth.json | Sign-in, account creation, password reset, and account-confirmation labels and validation messages. |
+| https://main--boilerplate--adobe-commerce.aem.page/placeholders/account.json | Signed-in customer pages — profile, addresses, change-password, and notification preferences. |
+| https://main--boilerplate--adobe-commerce.aem.page/placeholders/search.json | Product listing and search results — empty-results message, sort options, and search errors. |
+| https://main--boilerplate--adobe-commerce.aem.page/placeholders/wishlist.json | Wishlist actions — empty state, add and move alerts, and the sign-in prompt. |
+| https://main--boilerplate--adobe-commerce.aem.page/placeholders/recommendations.json | Product recommendation cards — add-to-cart, select-options, and view-product labels. |
+
+## B2B drop-in sheets
+
+The sheets below ship with the matching B2B drop-ins and appear in your `placeholders/` folder only when those drop-ins are installed on your storefront. Each name links to the live JSON on the B2B boilerplate so you can see the default keys and values.
+
+| Sheet | What it controls |
+| --- | --- |
+| https://main--boilerplate-b2b--adobe-commerce.aem.page/placeholders/company.json | Company Management drop-in — company structure, roles, users, and team-administration labels. |
+| https://main--boilerplate-b2b--adobe-commerce.aem.page/placeholders/purchase-order.json | Purchase Order drop-in — creating a purchase order, the approval flow, and confirmation. |
+| https://main--boilerplate-b2b--adobe-commerce.aem.page/placeholders/quote-management.json | Quote Management drop-in — the request-a-quote button and negotiable-quote messages. |
+| https://main--boilerplate-b2b--adobe-commerce.aem.page/placeholders/quick-order.json | Quick Order drop-in — bulk add by SKU, CSV upload, and variant search. |
+| https://main--boilerplate-b2b--adobe-commerce.aem.page/placeholders/requisition-list.json | Requisition List drop-in — saved item lists for fast reordering. |
+
+---
+
+# Product Details
+
+The Product Details block renders the page that shoppers see when they view a single product: the image gallery, price, options, add-to-cart button, and more. Most shopper sessions go through the product page before a purchase, so it is one of the most important Commerce blocks on your site. Your storefront already includes this block, so you do not need to add it from scratch.
+
+## What shoppers see
+
+Product names, prices, images, and descriptions all come from your catalog, so you do not create or edit them here. Code controls the layout and what appears in each region, not the block table in Document Authoring.
+
+![A product detail page showing an image gallery on the left and product name, price, quantity selector, and add-to-cart button on the right.](https://experienceleague.adobe.com/developer/commerce/storefront/images/merchants/blocks/product-details-screenshot-authors.png)
+
+*A typical product page on a Commerce storefront.*
+
+<TaskSection>
+
+## Preview a product
+
+This is the task you'll use most often. The document at `/products/default` is a template for every product page on your storefront, so changes you make there apply to all product URLs. Sample pages already include a `defaultSku` row. Set it to a SKU in your catalog and open the inline live-preview pane to see real product data while you edit.
+
+> **Confirm the document at /products/default exists** Open `/products/default` in your content folder in Document Authoring. If the document is missing or empty, you cannot preview the product page.
+
+1. In Document Authoring (The tooling for creating storefront pages as documents in Google Docs, SharePoint, or DA.live without writing code. Tables in documents define the blocks that appear on each page.), open the document at `/products/default`.
+
+1. Add or update the `product-details` table with a `defaultSku` row that points to a SKU in your catalog.
+
+   To find a SKU, go to **Catalog → Products** in Admin, or ask your integrator.
+
+   
+
+| product-details |  |
+| --- | --- |
+| defaultSku | HOODIE-001 |
+
+1. Click the split-screen icon on the right sidebar to open the inline live-preview pane.
+
+   The PDP renders using the SKU in the `defaultSku` row.
+
+> **Use the inline live-preview pane, not the paper-plane button** The paper-plane (Publish or Preview) button does not work at `/products/default`. It opens the page without a product SKU, so the block redirects to `/notfound`. This is expected for a template path. Use the inline live-preview pane instead, which reads the `defaultSku` row from the block table.
+
+The `defaultSku` row applies only at `/products/default` in the inline live-preview pane. On real product URLs, the SKU comes from the URL, so you do not need to keep `defaultSku` in sync with catalog changes.
+
+</TaskSection>
+
+<TaskSection>
+
+## View a real product page
+
+To confirm that a real product page renders (not just the preview at `/products/default`):
+
+1. Find a product's URL key and SKU in **Catalog → Products** in Admin, or open a category or search results page on your storefront and click any product.
+
+1. Open the product URL, which follows the pattern `/products/<url-key>/<sku>` (for example, `/products/cool-hoodie/HOODIE-001`).
+
+1. Confirm the product page loads with live catalog data.
+
+> A real product URL works in a normal browser tab and through the Publish to Preview button, because the SKU comes from the URL. The `/products/default` document is the exception: it needs the inline live-preview pane instead, as described in [Preview a product](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/product-details/#preview-a-product).
+
+</TaskSection>
+
+<TaskSection>
+
+## Feature a product on a marketing page
+
+To highlight one product on a custom page (for example, a landing page for a campaign):
+
+1. Create your marketing page in Document Authoring at the path you want, for example, `/campaigns/new-arrivals`.
+
+1. Add the `product-details` block to the page. The block renders the product UI (gallery, price, options, and so on). You do not need any rows inside the block table. A header-only table is enough:
+
+   
+
+| product-details |  |
+| --- | --- |
+
+1. Add a `sku` row to your metadata table, or create one as shown here:
+
+   
+
+| metadata |  |
+| --- | --- |
+| sku | HOODIE-001 |
+
+   If your page already has a metadata table, add a new `sku` row to it. You do not need a second table. For page metadata and its other properties, see [Page metadata](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/).
+
+1. Click the paper plane button, then click the Preview button to preview the page
+
+   The block reads the `sku` from page metadata and renders that product in a new tab.
+
+> Use this pattern sparingly. Every product already has its own page at `/products/<url-key>/<sku>`. Adding a second hand-built page for the same product means you have to keep both in sync when the catalog changes. Prefer linking from your campaign page to the product's existing URL whenever you can.
+
+</TaskSection>
+
+<TaskSection>
+
+## Add companion blocks to a product page
+
+Your storefront comes with several blocks already set up at `/products/default`. Each block is a separate table in the document, and the page renders them in the order they appear. That means you can add a banner, a carousel, or a [Product Recommendations](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/content-customizations/product-recommendations/) block by inserting a new table at the right spot.
+
+1. In Document Authoring, open the document at `/products/default`.
+
+1. Click above the `product-details` table and insert a new table for the carousel. Each row below the header is one slide. Add your campaign image in the left cell and a caption in the right:
+
+   
+
+| carousel |  |
+| --- | --- |
+| image | Slide 1 |
+| image | Slide 2 |
+
+1. Open the inline live-preview pane to confirm the carousel appears above the product details.
+
+When you save, the carousel table sits above your `product-details` table. Shoppers see the carousel first, then scroll down to the product details. The same principle applies to any other companion block: add it where you want it to appear, and the page renders it there.
+
+</TaskSection>
+
+---
+
+# Product List Page
+
+Customers browse products, filter selections, and sort results through this block. Place it on category and search results pages.
+
+## Configuration
+
+Add this table to your document to configure the block:
+
+| product-list-page |  |
+| --- | --- |
+| urlPath | /path/to/page (example) |
+
+### Property descriptions
+
+#### urlPath
+
+Specifies the category URL path as defined in your commerce catalog, distinct from the CMS page path. Use this to create category-specific product listing pages. For example, `/women/dresses` shows products from the dresses category. Set this when creating a dedicated category page. Leave empty for search result pages.
+
+The [enrichment block](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/content-customizations/enrichment/) reads this configuration for category-based content enrichment.
+
+## Section metadata
+
+Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light (optional) |
+| Padding | medium (optional) |
+| Margin | small (optional) |
+| Column Width | 30% (optional) |
+| Gap | small (optional) |
+
+> **Learn more** See the [Section Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/) for SEO and caching options.
+
+---
+
+# Section Metadata
+
+Section metadata controls the styling and layout of sections containing your commerce blocks. Add a Section Metadata table to your document to apply visual styling to an entire section.
+
+## What is section metadata?
+
+Section metadata is a special table that styles the section wrapping your content. Block configuration controls the behavior of individual blocks, while section metadata controls the visual presentation of the section container.
+
+### Section vs. Block
+
+- Section — The container that wraps one or more blocks on your page
+- Block — The individual commerce functionality (cart, checkout, product details)
+  See [Commerce blocks](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/).
+- Section Metadata — Styling applied to the section container
+- Block Configuration — Settings specific to the block's functionality
+
+### Section vs. Page metadata
+
+Both can be used on the same page but serve different purposes.
+
+- Section metadata — Controls section styling and visual presentation (covered on this page)
+- Page metadata — Controls SEO, caching, social sharing, and page structure. See the [Page metadata guide](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/blocks/page-metadata/).
+
+## How to use section metadata
+
+### 1. Create or open your document
+
+Open the document containing your commerce block in the [Document Authoring tool](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/quick-start/document-authoring/) or the [Universal Editor](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/quick-start/universal-editor/).
+
+### 2. Add the Section Metadata table
+
+Below your commerce block, add a new table with exactly two columns.
+
+### 3. Set the table header
+
+In the first row, merge both cells and enter: `section-metadata`
+
+### 4. Add style properties
+
+In subsequent rows, add your desired properties:
+- First column: Property name (e.g., `Style`)
+- Second column: Property value (e.g., `highlight`)
+
+### 5. Save and publish
+
+Save your document. The metadata applies when you publish the page.
+
+## Example
+
+Apply a light background to highlight a section:
+
+| section-metadata |  |
+| --- | --- |
+| Style | light |
+
+## Available section metadata properties
+
+### Style property
+
+Use the `Style` property to apply a light gray background to your sections:
+
+- `light` — Applies light gray background
+- `highlight` — Applies light gray background
+
+Both values produce the same visual effect and help distinguish sections from the rest of the page.
+
+### Custom properties
+
+You can add custom properties if your developer has configured them for your site. Common examples include `Theme`, `Background Color`, or `Analytics Section`.
+
+> **Custom properties** Use Title Case with spaces for property names (e.g., `Background Color`, `Analytics Section`). Check with your developer to confirm which custom properties are available before using them.
+
+---
+
+# Seller-Assisted Buying
+
+Seller-assisted buying lets a store administrator sign in as a customer and act on their behalf — browsing products, adding items to a cart, and placing orders. A banner at the top of every page tells the administrator they are browsing as that customer. Afterward, the customer can see every administrator action in their account activity log.
+
+Two blocks support this feature on the customer account pages:
+
+- `commerce-seller-assisted-buying-settings` — lets the customer allow or revoke administrator access to their account.
+- `commerce-seller-assisted-buying-activity` — shows the customer a history of administrator actions taken during assisted sessions.
+
+Before using this feature, complete the prerequisite setup in the https://experienceleague.adobe.com/en/docs/commerce-admin/customers/customer-accounts/manage/login-as-customer guide on Experience League: enable the feature in store configuration, grant the Admin user role permission, and ensure the customer has allowed remote shopping assistance either from their account or from the customer's edit page in the Admin. This feature requires Storefront Compatibility Package v4.7.13 or later (v4.8.25+ for Adobe Commerce 2.4.8, or v4.9.0+ for Adobe Commerce 2.4.9).
+
+## What shoppers see
+
+![Remote shopping assistance consent checkbox](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/SAB-Settings.png)
+
+*Customer preference control — the customer uses this to allow or revoke administrator access*
+
+![Administrator activity log showing actions from a seller-assisted buying session](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/SAB-log.png)
+
+*Administrator activity log — the customer reviews actions taken by an administrator during assisted sessions*
+
+The session banner appears at the top of every page while an administrator is browsing as a customer.
+
+![Session banner showing administrator connection status and Close Session button](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/SAB-Boilerplate.png)
+
+*Session banner displayed during an administrator-assisted buying session*
+
+<TaskSection>
+
+## Sign in as a customer
+
+Once you have generated a one-time password (OTP) from the customer's edit page in the Admin:
+
+1. Go to your storefront sign-in page.
+
+1. Enter the customer's email address and paste the OTP as the password, then sign in.
+
+   The session banner appears at the top of every page. You are now browsing as the customer.
+
+> Every action you take during the session — adding items to the cart, updating addresses, placing orders — is applied to the actual customer's account and recorded in their activity log.
+
+</TaskSection>
+
+<TaskSection>
+
+## End a session
+
+1. Click **Close Session** in the banner at the top of the page.
+
+   The session ends and you are redirected to the home page.
+
+The customer can also revoke administrator access at any time from their account settings page using the `commerce-seller-assisted-buying-settings` block.
+
+</TaskSection>
+
+## Block tables
+
+Neither block requires any configuration rows. A header-only table is enough to place the block on a page.
+
+Place `commerce-seller-assisted-buying-settings` on your customer account settings page:
+
+| commerce-seller-assisted-buying-settings |  |
+| --- | --- |
+
+Place `commerce-seller-assisted-buying-activity` on your customer account activity page:
+
+| commerce-seller-assisted-buying-activity |  |
+| --- | --- |
+
+## Related resources
+
+- https://experienceleague.adobe.com/en/docs/commerce-admin/customers/customer-accounts/manage/login-as-customer — full Admin setup and OTP generation steps on Experience League

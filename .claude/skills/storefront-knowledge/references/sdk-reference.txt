@@ -1,0 +1,2218 @@
+<SYSTEM>This is the Storefront SDK bundle for Adobe Commerce Storefront on Edge Delivery Services</SYSTEM>
+
+# Storefront SDK
+
+> UI components, design system, reference APIs (Event Bus, GraphQL, slots), CLI, and utilities
+> Generated: 2026-06-26T22:40:20.158Z
+> Source: https://experienceleague.adobe.com/developer/commerce/storefront
+
+
+---
+
+# Accordion
+
+Use Accordions to display and select an accordion.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-accordion--overview&viewMode=docs)
+
+---
+
+# ActionButton
+
+Use Action Buttons to trigger actions or navigation.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-actionbutton--overview&viewMode=docs)
+
+---
+
+# ActionButtonGroup
+
+Use Action Button Groups to organize related actions together.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-actionbuttongroup--overview&viewMode=docs)
+
+---
+
+# AlertBanner
+
+Surface dismissible banners for errors, warnings, or success messages that map to the Storefront SDK AlertBanner Storybook examples.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-alertbanner--overview&viewMode=docs)
+
+---
+
+# Breadcrumbs
+
+Render hierarchical breadcrumbs with customizable separators and links so shoppers always know where they are in catalog navigation.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-breadcrumbs--overview&viewMode=docs)
+
+---
+
+# Button
+
+Use the SDK Button for primary and secondary actions with loading indicators and variants that match drop-in interaction patterns.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-button--overview&viewMode=docs)
+
+---
+
+# Card
+
+Group related commerce content, media, and actions inside a Card shell with flexible slots for drop-in summaries and panels.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-card--overview&viewMode=docs)
+
+---
+
+# CartItem
+
+Use CartItems to display a single item in the cart.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-cartitem--overview&viewMode=docs)
+
+---
+
+# CartList
+
+Use a CartList to display a list of items in the cart.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-cartlist--overview&viewMode=docs)
+
+---
+
+# Checkbox
+
+Use Checkboxes to let users select multiple options from a list.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-checkbox--overview&viewMode=docs)
+
+---
+
+# Color Swatch
+
+Use Color Swatches to display and select color options.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-colorswatch--overview&viewMode=docs)
+
+---
+
+# ContentGrid
+
+Use a ContentGrid to display a list of items in a grid.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-contentgrid--overview&viewMode=docs)
+
+---
+
+# Divider
+
+Use Dividers to separate and group content or build rhythm and structure.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-divider--overview&viewMode=docs)
+
+---
+
+# Field
+
+Use Fields to create consistent form input layouts.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-field--overview&viewMode=docs)
+
+---
+
+# Header
+
+Create page or panel headers with title and supporting actions sized for modal, sheet, and fullscreen cart flows across Commerce drop-ins.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-header--overview&viewMode=docs)
+
+---
+
+# Icon
+
+Use Icons to add visual cues and enhance user interface elements.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-icon--overview&viewMode=docs)
+
+---
+
+# IllustratedMessage
+
+Use an IllustratedMessage to display a message with an illustration.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-illustratedmessage--overview&viewMode=docs)
+
+---
+
+# Image
+
+Use Images to display product photos and visual content.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-image--overview&viewMode=docs)
+
+---
+
+# Image Swatch
+
+Use Image Swatches to display and select image-based options.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-imageswatch--overview&viewMode=docs)
+
+---
+
+# Incrementer
+
+Use Incrementers to adjust numeric values with plus and minus buttons. Set `showButtons` to `false` to hide the increase/decrease buttons for a compact design.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-incrementer--overview&viewMode=docs)
+
+---
+
+# Inline Alert
+
+Use Inline Alerts to display important messages and notifications.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-inlinealert--overview&viewMode=docs)
+
+---
+
+# Input
+
+Use Inputs to collect text-based information from users.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-input--overview&viewMode=docs)
+
+---
+
+# InputDate
+
+Capture dates through the SDK date field component with keyboard, picker, and validation patterns shared across drop-in forms.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-inputdate--overview&viewMode=docs)
+
+---
+
+# InputFile
+
+Upload images or attachments from storefront forms with the SDK file input wired to Dropin validation helpers and Commerce native constraints.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-inputfile--overview&viewMode=docs)
+
+---
+
+# InputPassword
+
+Use InputPasswords to display and select a password.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-inputpassword--overview&viewMode=docs)
+
+---
+
+# Modal
+
+Display blocking dialogs for confirmations, auth, or multi-step tasks with focus management patterns from the SDK Modal stories.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-modal--overview&viewMode=docs)
+
+---
+
+# Overview
+
+A flexible set of interactive building blocks, such as actions, containment,
+navigation, text, and selection elements, thought to create unique tailored
+commerce user interfaces.
+
+## Components
+
+The SDK provides the following collection of reusable UI components:
+
+- [Accordion](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/accordion/) - Expandable content sections
+- [ActionButton](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/actionbutton/) - Button with loading states
+- [ActionButtonGroup](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/actionbuttongroup/) - Group of action buttons
+- [AlertBanner](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/alertbanner/) - Notification banner
+- [Breadcrumbs](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/breadcrumbs/) - Navigation breadcrumbs
+- [Button](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/button/) - Basic button component
+- [Card](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/card/) - Content container
+- [CartItem](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/cartitem/) - Shopping cart item
+- [CartList](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/cartlist/) - Shopping cart list
+- [Checkbox](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/checkbox/) - Checkbox input
+- [ColorSwatch](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/colorswatch/) - Color selection swatch
+- [ContentGrid](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/contentgrid/) - Grid layout for content
+- [Divider](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/divider/) - Horizontal divider
+- [Field](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/field/) - Form field wrapper
+- [Header](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/header/) - Page header
+- [Icon](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/icon/) - SVG icon component
+- [IllustratedMessage](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/illustratedmessage/) - Illustration with text
+- [Image](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/image/) - Image component
+- [ImageSwatch](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/imageswatch/) - Image selection swatch
+- [Incrementer](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/incrementer/) - Incrementer component
+- [InlineAlert](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/inlinealert/) - Inline alert component
+- [Input](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/input/) - Text input field
+- [InputDate](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/inputdate/) - Date input field
+- [InputFile](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/inputfile/) - File upload input
+- [InputPassword](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/inputpassword/) - Password input field
+- [Modal](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/modal/) - Modal component
+- [Pagination](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/pagination/) - Page navigation
+- [Picker](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/picker/) - Selection picker
+- [Price](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/price/) - Price display
+- [PriceRange](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/pricerange/) - Price range display
+- [ProgressSpinner](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/progressspinner/) - Loading indicator
+- [RadioButton](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/radiobutton/) - Radio button input
+- [Skeleton](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/skeleton/) - Loading placeholder
+- [Tag](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/tag/) - Label tag
+- [TextArea](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/textarea/) - Multi-line text input
+- [TextSwatch](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/textswatch/) - Text selection swatch
+- [ToggleButton](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/togglebutton/) - Toggle switch button
+
+By using these components, you can create a consistent and engaging user experience across your application. Each component is designed to be flexible and customizable, allowing you to tailor the UI to your specific needs and brand.
+
+---
+
+# Pagination
+
+Use Pagination to display a list of items in a paginated manner.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-pagination--overview&viewMode=docs)
+
+---
+
+# Picker
+
+Use Pickers to let users select from a list of options.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-picker--overview&viewMode=docs)
+
+---
+
+# Portal
+
+Mount UI into a separate DOM node outside the parent tree so overlays, tooltips, and popovers escape layout constraints safely.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-portal--overview&viewMode=docs)
+
+---
+
+# Price
+
+Use Price to display monetary values consistently.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-price--overview&viewMode=docs)
+
+---
+
+# PriceRange
+
+Use PriceRanges to display and select a price range.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-pricerange--overview&viewMode=docs)
+
+---
+
+# Product Item Card
+
+Use Product Item Cards to display product information.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-productitemcard--overview&viewMode=docs)
+
+---
+
+# Progress Spinner
+
+Use Progress Spinners to indicate loading or processing states.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-progressspinner--overview&viewMode=docs)
+
+---
+
+# Radio Button
+
+Use Radio Buttons to let users select a single option from a list.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-radiobutton--overview&viewMode=docs)
+
+---
+
+# Skeleton
+
+Show shimmer placeholders while GraphQL data resolves so carts, lists, and PDP slots feel fast between loading states.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-skeleton--overview&viewMode=docs)
+
+---
+
+# Tag
+
+Display compact status or filter tags with removable or static styles for cart labels, promos, account chips, and other Commerce drop-in metadata.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-tag--overview&viewMode=docs)
+
+---
+
+# TextArea
+
+Collect long-form shopper notes such as gift messages or delivery instructions with the SDK multiline input behaviors.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-textarea--overview&viewMode=docs)
+
+---
+
+# Text Swatch
+
+Use Text Swatches to display and select text-based options.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-textswatch--overview&viewMode=docs)
+
+---
+
+# ToggleButton
+
+Use ToggleButtons to display and select a toggle button.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=components-togglebutton--overview&viewMode=docs)
+
+---
+
+# Base Design System
+
+With the base design system, you can use system and reference tokens to ensure color, typography, spacing, and shape values are consistent across your site.
+
+## What are design tokens?
+
+Design tokens are design decisions that ensure a unified and cohesive product experience. The tokens represent a consistent use of design data that provides specific values for spacing, color, typography, and shapes—without hard-coding those values.
+
+Our Base design tokens are directly integrated into our shared components. They cover the various options for platforms, component states, and more.
+
+## Extending the baseline design tokens
+
+Base includes a set of baseline design tokens and default values for you to
+customize, collaborate on, and use in your own designs and product
+implementation.
+
+It's important to keep in mind that not every component is going to be
+captured in the foundational and baseline design tokens. If they're limited
+for what you're trying to design or build, just add in the tokens you may
+need within each category.
+
+## How to use design tokens
+
+To apply design tokens on your project, make use of the UIProvider, which grants components access to the design tokens as CSS variables. Simply specify the desired design token using the var() CSS function to apply its corresponding value.
+
+```css
+.myComponent {
+  background-color: var(--color-brand-500);
+}
+```
+
+---
+
+# Colors
+
+Colors are used to create meaningful experiences while also expressing hierarchy, state, and brand identity.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=design-colors--overview&viewMode=docs)
+
+---
+
+# Grids
+
+Apply the Base grid breakpoints, gutters, and column counts from Storybook so SDK layouts align to responsive page shells.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=design-grid-system--overview&viewMode=docs)
+
+---
+
+# Overview
+
+The Base design system provides a comprehensive set of design tokens and guidelines that form the foundation of our component library. It defines core visual elements like colors, typography, spacing, and shapes to ensure consistency across your application. By leveraging these design tokens through our components, you can create cohesive user experiences while maintaining flexibility to customize the look and feel to match your brand.
+
+## Topics
+
+- [Colors](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/design/colors/) - Color tokens and usage
+- [Typography](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/design/typography/) - Font families, sizes and styles
+- [Spacing](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/design/spacing/) - Spacing scale and tokens
+- [Shapes](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/design/shapes/) - Border radius and other shape tokens
+- [Grids](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/design/grid/) - Layout grid system
+
+By following these design guidelines and utilizing the provided tokens, you can create consistent, accessible, and visually appealing interfaces that align with modern design principles. The Base design system serves as a solid foundation that can be extended and customized to meet your specific needs while maintaining cohesion across your application.
+
+---
+
+# Shapes
+
+Shapes are used to grab user attention by using shadows or other visual cues, such as strokes, surface fills, or opacities.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=design-shape-styles--overview&viewMode=docs)
+
+---
+
+# Spacing
+
+Spacing is the distance between elements on the page. It is used to create a harmonious arrangement with consistent visual balance and predictable rhythm to make the user interface easier for users to scan and identify relevant groups.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=design-spacing--overview&viewMode=docs)
+
+---
+
+# Typography
+
+Typography scale set to present your design and content as clearly and efficiently as possible.
+
+[View interactive component in Storybook](https://experienceleague.adobe.com/developer/commerce/storefront/storybook-static/iframe.html?id=design-typography--overview&viewMode=docs)
+
+---
+
+# CLI usage
+
+To see all the available CLI commands in the terminal, use the `--help` flag:
+
+```bash
+npx elsie --help
+```
+
+## `gql`
+
+The `gql` command can generate types and mocks for your GraphQL API. Files will
+be generated in `<domain package root>/src/__generated__/`.
+
+To use it, you must first configure your `.elsie.js` with the necessary values:
+
+```js
+// For Adobe Commerce Catalog Service
+schema: {
+    endpoint: "https://catalog-service-sandbox.adobe.io/graphql",
+    headers: {
+        "MAGENTO-ENVIRONMENT-ID": "..."
+        "MAGENTO-STORE-VIEW-CODE": "..."
+        "MAGENTO-WEBSITE-CODE": "..."
+        "MAGENTO-STORE-CODE": "..."
+        "MAGENTO-CUSTOMER-GROUP": "..."
+        "API-KEY": "..."
+    }
+}
+```
+
+```js
+// For Adobe Mesh API
+schema: {
+    endpoint: "https://graph.adobe.io/api/.../graphql?api_key=...",
+    headers: {
+        "some-mesh-specific-header": "mesh-header-value"
+    }
+}
+```
+
+```js
+// For Adobe Commerce (non-Mesh)
+schema: {
+    endpoint: "https://commerce-backend-url.test.graphql",
+    headers: {}
+}
+```
+
+Then the following commands will generate to
+
+```bash
+npx elsie gql types
+```
+
+```bash
+npx elsie gql mocks
+```
+
+## `generate`
+
+Summary list of commands for quick copy/paste.
+
+```bash
+npx elsie generate config --name <Domain>
+```
+
+```bash
+npx elsie generate component --pathname <MyUIComponent>
+```
+
+```bash
+npx elsie generate container --pathname <MyContainer>
+```
+
+```bash
+npx elsie generate api --pathname <myApiFunction>
+```
+
+## Add Config
+
+Generate a new `.elsie.js` configuration file for the project.
+
+```bash
+npx elsie generate config --name <Domain>
+```
+
+```javascript
+module.exports = {
+  name: '<Domain>',
+  api: {
+    root: './src/api',
+    importAliasRoot: '@/<Domain>/api',
+  },
+  components: [
+    {
+      id: 'Components',
+      root: './src/components',
+      importAliasRoot: '@/<Domain>/components',
+      cssPrefix: 'elsie',
+      default: true,
+    },
+  ],
+  containers: {
+    root: './src/containers',
+    importAliasRoot: '@/<Domain>/containers',
+  },
+  schema: {
+    endpoint: process.env.ENDPOINT,
+    // Add necessary headers
+    headers: {},
+  },
+};
+```
+
+## Add Component
+
+Generate a new UI Component for the project.
+
+```bash
+npx elsie generate component --pathname <MyUIComponent>
+```
+
+```bash
+🆕 src/components/LoginForm/LoginForm.css created
+🆕 src/components/LoginForm/LoginForm.stories.tsx created
+🆕 src/components/LoginForm/LoginForm.test.tsx created
+🆕 src/components/LoginForm/LoginForm.tsx created
+🆕 src/components/LoginForm/index.ts created
+✍️ src/components/index.ts updated
+```
+
+## Add Container
+
+Generate a new Frontend Container for the project.
+
+```bash
+npx elsie generate container --pathname <MyContainer>
+```
+
+```bash
+🆕 src/containers/Login/Login.stories.tsx created
+🆕 src/containers/Login/Login.test.tsx created
+🆕 src/containers/Login/Login.tsx created
+🆕 src/containers/Login/index.ts created
+✍️ src/containers/index.ts updated
+```
+
+## Add Function
+
+Generate a new API function for the project.
+
+```bash
+npx elsie generate api --pathname <myApiFunction>
+```
+
+```console
+🆕 src/api/login/login.mdx created
+🆕 src/api/login/login.test.ts created
+🆕 src/api/login/login.ts created
+🆕 src/api/login/index.ts created
+✍️ src/api/index.ts updated
+```
+
+---
+
+# Introduction to the Drop-in SDK
+
+<strong>Version: 1.7.0</strong> (`@dropins/tools`)
+
+Welcome to the Drop-in SDK Documentation! This SDK provides the tools and resources to help you build and customize your storefront. Whether you're new to drop-in components or looking to optimize your store, this SDK should provide the resources you need. If it doesn't, please reach out to the Commerce team.
+
+## Big picture
+
+For the frontend, the drop-in SDK includes our design system, which provides the components and design tokens that make merchant rebranding quick and easy.
+
+For everything else, the drop-in SDK provides a complete framework for mounting, rendering, eventing, testing, and hydrating drop-ins with data from the Commerce backend.
+
+## Get started
+
+Get started with the Drop-in SDK:
+
+- [CLI usage](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/get-started/cli/)
+
+The Drop-in SDK aims to streamline your development process while maintaining flexibility for customization. By providing a robust set of components, utilities, and design tokens, along with comprehensive documentation and examples, we hope to empower you to create exceptional commerce experiences. Explore the documentation to learn more about the SDK's capabilities and how to leverage them effectively in your projects.
+
+---
+
+# Event Bus
+
+The Event Bus enables different parts of your application to communicate and stay synchronized through message passing. It supports event-driven architecture for drop-ins, allowing containers to react to changes from other containers and communicate data changes to the storefront.
+
+> **New to event-driven architecture?** Learn about the [event system architecture and patterns](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/events/) including the publish-subscribe pattern, event declarations, and best practices before diving into the API.
+
+## Import
+
+**From drop-in project using the SDK:**
+
+```ts
+```
+
+**From integration project (storefront):**
+
+```js
+```
+
+## Core Methods
+
+### Subscribe to Events
+
+Subscribe to events and receive notifications when they occur.
+
+```ts
+const eventListener = events.on('<event>', (payload) => {
+  // Handle the event payload
+  console.log('Event received:', payload);
+});
+
+// Stop listening to the event
+eventListener.off();
+```
+
+**Example:**
+```ts
+// Listen for cart updates
+const cartListener = events.on('cart/data', (cartData) => {
+  if (cartData) {
+    console.log(`Cart has ${cartData.totalQuantity} items`);
+    updateCartUI(cartData);
+  } else {
+    console.log('Cart is empty');
+    showEmptyCart();
+  }
+});
+
+// Later, when you want to stop listening
+cartListener.off();
+```
+
+### Emit Events
+
+Broadcast events to all listeners across your application.
+
+```ts
+events.emit('<event>', payload);
+```
+
+**Examples:**
+```ts
+// Emit cart data
+const cartData = {
+  id: 'cart-123',
+  totalQuantity: 2,
+  items: [
+    { uid: 'item-1', quantity: 1, sku: 'PROD-001', name: 'Product Name' }
+  ]
+};
+
+events.emit('cart/data', cartData);
+```
+
+### Get Last Event Payload
+
+Retrieve the most recent payload for a specific event.
+
+```ts
+const lastPayload = events.lastPayload('<event>');
+```
+
+**Example:**
+```ts
+// Get the current cart state without waiting for an event
+const currentCart = events.lastPayload('cart/data');
+
+if (currentCart) {
+  console.log('Current cart total:', currentCart.totalQuantity);
+}
+```
+
+### Enable Debug Logging
+
+Enable console logging to debug event flow.
+
+```ts
+// Enable logging to see all events in console
+events.enableLogger(true);
+```
+
+## Advanced Features
+
+### Eager Loading
+
+When subscribing to events, you can execute the event handler immediately with the last known payload. This is useful for getting the current state without waiting for the next event.
+
+```ts
+// Handler will execute immediately if there's a previous payload
+const listener = events.on('cart/data', (cartData) => {
+  console.log('Cart data received:', cartData);
+}, { eager: true });
+```
+
+**Use cases:**
+- Initialize UI components with current state
+- Avoid waiting for the first event emission
+- Ensure components have the latest data on mount
+
+### Event Scoping
+
+Create namespaced events to avoid conflicts between different parts of your application.
+
+```ts
+// Subscribe to a scoped event
+const scopedListener = events.on('data/update', (data) => {
+  console.log('Scoped data received:', data);
+}, { scope: 'feature-a' });
+
+// Emit a scoped event
+events.emit('data/update', payload, { scope: 'feature-a' });
+
+// Get last payload for a scoped event
+const lastScopedData = events.lastPayload('data/update', { scope: 'feature-a' });
+```
+
+**Scoped event names:**
+When using scopes, the actual event name becomes `scope/event`. For example:
+- `'feature-a/data/update'` instead of `'data/update'`
+- `'module-b/user/action'` instead of `'user/action'`
+
+**Use cases:**
+- Separate different features or modules
+- Different contexts within the same application
+- Component-specific event handling
+
+### Combining Options
+
+Use both eager loading and scoping together for powerful event handling.
+
+```ts
+// Subscribe to a scoped event with eager loading
+const listener = events.on('locale', (locale) => {
+  console.log('Current locale:', locale);
+}, { 
+  eager: true, 
+  scope: 'user-preferences' 
+});
+```
+
+## Event-Driven Drop-ins
+
+The Event Bus enables drop-ins to be truly event-driven, allowing for loose coupling between components and seamless communication across the application.
+
+### Container-to-Container Communication
+
+Containers can react to changes from other Containers, enabling complex interactions without direct dependencies.
+
+```ts
+// Product Container: Emits when a product is added to cart
+function ProductContainer() {
+  const handleAddToCart = (product) => {
+    // Add to cart logic...
+    
+    // Notify other containers about the cart change
+    events.emit('cart/data', updatedCartData);
+  };
+  
+  return (
+    <button onClick={() => handleAddToCart(product)}>
+      Add to Cart
+    </button>
+  );
+}
+
+// Cart Container: Reacts to cart changes from any source
+function CartContainer() {
+  useEffect(() => {
+    const cartListener = events.on('cart/data', (cartData) => {
+      updateCartDisplay(cartData);
+      updateCartBadge(cartData.totalQuantity);
+    }, { eager: true });
+    
+    return () => cartListener.off();
+  }, []);
+  
+  return <CartDisplay />;
+}
+
+// Mini Cart Container: Also reacts to the same cart changes
+function MiniCartContainer() {
+  useEffect(() => {
+    const cartListener = events.on('cart/data', (cartData) => {
+      updateMiniCart(cartData);
+    }, { eager: true });
+    
+    return () => cartListener.off();
+  }, []);
+  
+  return <MiniCart />;
+}
+```
+
+### Storefront Communication
+
+Drop-ins can communicate data changes to the storefront, enabling seamless integration with the host application.
+
+```ts
+// Authentication Container: Notifies storefront of login/logout
+function AuthContainer() {
+  const handleLogin = (userData) => {
+    // Login logic...
+    
+    // Notify storefront of authentication change
+    events.emit('authenticated', true);
+  };
+  
+  const handleLogout = () => {
+    // Logout logic...
+    
+    // Notify storefront of authentication change
+    events.emit('authenticated', false);
+  };
+  
+  return <AuthForm onLogin={handleLogin} onLogout={handleLogout} />;
+}
+
+// Storefront can listen for authentication changes
+// This would be in the host application
+const authListener = events.on('authenticated', (isAuthenticated) => {
+  if (isAuthenticated) {
+    showUserMenu();
+    enableCheckout();
+  } else {
+    hideUserMenu();
+    disableCheckout();
+  }
+}, { eager: true });
+```
+
+## Best Practices
+
+1. **Always unsubscribe** from events when components unmount to prevent memory leaks
+2. **Use scopes** to organize events by feature or component
+3. **Enable eager loading** when you need immediate access to current state
+4. **Use descriptive event names** that clearly indicate what data they contain
+5. **Handle null/undefined payloads** gracefully in your event handlers
+6. **Enable logging during development** to debug event flow
+7. **Keep event payloads lightweight** to avoid performance issues
+8. **Document your event contracts** so other developers know what to expect
+
+---
+
+# GraphQL Extensibility API
+
+The GraphQL Extensibility API allows developers to extend existing GraphQL operations used by a Drop-in to meet additional data requirements without increasing code complexity or negatively impacting performance. 
+This API provides a flexible and efficient way to customize GraphQL Fragments by integrating build-time modifications into the storefront's development pipeline.
+
+## Extend your Drop-in GraphQL Fragments
+
+To enable GraphQL Fragments to be extensible in your Drop-in, follow these steps:
+
+### 1. Define Your Fragments
+
+Create the content for the fragments you are exporting.
+
+```ts
+// ./src/api/fragments/MyFragment.ts
+
+export const MY_FRAGMENT = `
+  fragment MY_FRAGMENT on FragmentInterface {
+    firstname
+    lastname
+    
+    favorites {
+      uid
+      name
+    }
+  }
+`;
+```
+
+### 2. Create Fragments Manifest File
+
+Next, create a new file for your project to list all the fragments you want to expose.
+
+```ts
+// ./src/api/fragments.ts
+
+export { MY_FRAGMENT } from '@/my-dropin/api/graphql/MyFragment';
+```
+
+### 3. Update the API Configuration
+
+Finally, add the new file reference to the API configuration in `./.elsie.js`.
+
+```js
+// ./.elsie.js
+
+module.exports = {
+  name: 'MyDropin',
+  api: {
+    root: './src/api',
+    importAliasRoot: '@/my-dropin/api',
+    fragments: './fragments.ts', // 👈 add this line
+  },
+  components: [
+    {
+      id: 'Components',
+      root: './src/components',
+      importAliasRoot: '@/my-dropin/components',
+      cssPrefix: 'my-dropin',
+      default: true,
+    },
+  ],
+  containers: {
+    root: './src/containers',
+    importAliasRoot: '@/my-dropin/containers',
+  },
+  schema: {
+    endpoint: process.env.ENDPOINT,
+    headers: {}
+  }
+};
+```
+
+## Extend the Data module
+
+Now that we have made our fragments extensible, we must extend the data model used in our Drop-ins.
+
+### 1. Define Typing to the Initializer API
+
+First, add the typing to your initializer API in `./src/api/initialize/initialize.ts`.
+
+```ts
+// ./src/api/initialize/initialize.ts
+
+type ConfigProps = {
+  langDefinitions?: Lang;
+
+  // 👇 add your models configuration
+  models?: {
+    MyModel?: Model<MyModel>;
+  },
+};
+
+export const initialize = new Initializer<ConfigProps>({
+  init: async (config) => {
+    const defaultConfig = {};
+    initialize.config.setConfig({ ...defaultConfig, ...config });
+  },
+
+  listeners: () => [],
+});
+
+export const config = initialize.config;
+```
+
+### 2. Extend the Data Transformer
+
+Then, use the configuration to extend the data transformer the model uses by deep merging the existing data transformation with the new configuration.
+
+```ts
+// ./src/data/transforms/transform-my-model.ts
+
+export function transformMyModel(data: any): MyModel {
+  const model = {
+    name: `${data.firstname} ${data.lastname}`,
+    favorites: data.favorites,
+  };
+
+  // Merge custom transformer, if provided
+  return merge(
+    model, // default transformer
+    config.getConfig().models?.MyModel?.transformer?.(data) // custom transformer
+  );
+}
+```
+
+## Using the GraphQL Extensibility Feature in Your Storefront
+
+By extending the GraphQL Fragments and Models of drop-ins, you can leverage the drop-in's existing GraphQL operations and add extra fields needed to meet your specific business requirements. 
+This approach enhances the user experience while maintaining code simplicity and performance efficiency since all modifications are integrated into the storefront's development build-time pipeline.
+
+## Extend Drop-in's Fragments and Models
+
+Follow these steps to extend the GraphQL Fragment and Model in your Drop-in:
+
+### 1. Extend the GraphQL Fragment
+
+Use the `overrideGQLOperations` function to extend the existing GraphQL Fragment, allowing you to add fields to the fragment as needed.
+
+The `overrideGQLOperations` functions accept an array of configuration objects where you must specify:
+
+#### npm: string
+
+The node module name of the drop-in. i.e. "@dropins/my-dropin".
+
+#### operations: string[] 
+
+An array of string or template literal with operations. 
+
+- Only one definition can be provided in the operation.
+- These must match the operation name as provided by the drop-in. i.e. `MY_FRAGMENT`.
+- The operations must be valid GraphQL operations, such as Fragment. i.e. `fragment MY_FRAGMENT on FragmentInterface { ... }`.
+- In the case of a Fragment, the fragment name must match the same interface as the drop-in. i.e. `FragmentInterface`.
+- If an existing field that has variables is used:
+    - If not variables are provided, the existing variables will be used. i.e. `favorites(page: 1) { ... }`.
+    - If new variables are provided, the new variable will be added. i.e. `favorites(page: 1, offset: 5) { ... }`.
+    - If the existing variables are changed, the new variables will be used. i.e. `favorites(page: 2) { ... }`.
+
+```js
+
+overrideGQLOperations([
+  {
+    npm: '@dropins/my-dropin',
+    operations: [`
+      fragment MY_FRAGMENT on FragmentInterface {
+        age
+        
+        favorites {
+          quantity
+        }
+      }
+    `],
+  },
+]);
+```
+
+### 2. Extend the Data Model
+
+Next, update the data models to include the new fields added to the fragment, ensuring that the additional data is correctly processed and available for use in the drop-in. i.e., Slots, Event Bus, etc.
+
+```js
+
+initializers.register(api.initialize, {
+  models: {
+    MyModel: {
+      transformer: (data) => ({
+        age: data?.age,
+        favorites: data.favorites.map((favorite) => ({ 
+          quantity: favorite.quantity,
+        })),
+      }),
+    },
+  },
+});
+```
+
+---
+
+# Overview
+
+The reference section provides documentation for core SDK functionality like event handling, initialization, rendering, and integration with external services like reCAPTCHA. These APIs form the foundation for building and customizing drop-in components.
+
+## Topics
+
+- [Events](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/events/)
+- [GraphQL](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/graphql/)
+- [Initializer](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/initializer/) 
+- [Links](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/links/) 
+- [reCAPTCHA](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/recaptcha/)
+- [Render](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/render/)
+- [Slots](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/slots/)
+- [VComponent](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/vcomponent/)
+
+By understanding and utilizing these core APIs effectively, you can take full advantage of the SDK's capabilities while maintaining control over the implementation details. The reference documentation provides the technical foundation needed to integrate and customize the SDK's functionality within your application.
+
+---
+
+# Initializer
+
+```typescript
+// my-domain-package/initializer.ts
+
+// import { events } from '@adobe/event-bus';
+
+type ConfigProps = {};
+
+export const initialize = new Initializer<ConfigProps>({
+  init: async (config) => {
+    const defaultConfig = {};
+    initialize.config.setConfig({ ...defaultConfig, ...config });
+  },
+
+  listeners: () => [
+    // events.on('authenticated', (authenticated) => {
+    //   console.log('authenticated', authenticated);
+    // }),
+  ],
+});
+
+export const config = initialize.config;
+```
+
+```typescript
+// Host Site
+
+// Register Packages
+initializers.register(pkg, { ...config });
+
+// Mount Initializers
+window.addEventListener('load', initializers.mount);
+```
+
+## `setImageParamKeys(params)`
+
+The `setImageParamKeys` method is part of the initializers module in the `@dropins/tools` package. It allows you to set image parameters globally for all drop-in components that use the [Image](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/components/image/) component. CDN-based image optimization services, such as Fastly and Cloudflare, rely on these parameters to optimize images.
+
+### Default behavior
+
+Since Fastly is the default CDN for Adobe Commerce on Cloud, drop-in components add the following Fastly-style parameters to all image URLs by default:
+
+- `width`
+- `height`
+- `auto`
+- `quality`
+- `crop`
+- `fit`
+
+Example:
+
+```text
+/media/catalog/product/adobestoredata/ADB150.jpg?auto=webp&quality=80&crop=false&fit=cover&width=960&height=1191`
+```
+
+Technical details about CDN-based image optimization differ depending on your backend Adobe Commerce solution:
+
+- PaaS only (Applies to Adobe Commerce on Cloud projects (Adobe-managed PaaS infrastructure) and on-premises projects only.) Fastly is the default CDN-based image optimization service for Adobe Commerce on Cloud projects. Fastly-style parameters are used by default unless overridden via `setImageParamKeys`.
+  
+- SaaS only (Applies to Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer projects only (Adobe-managed SaaS infrastructure).) Cloudflare is the default CDN-based image optimization service for Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer projects. Fastly-style parameters are used but are proxied through a https://developers.cloudflare.com/images/transform-images/transform-via-workers to transform the parameters to Cloudflare-style parameters. Overriding the default parameters using `setImageParamKeys` may interfere with the proxy transformation and lead to unexpected results.
+
+> **Override defaults** If necessary, you can override these parameters with the `setImageParamKeys` method. For example, if you are using a CDN provider that requires different parameters or URL patterns.
+
+### Parameters
+
+- `params` - `{ [key: string]: string | ((data: any) => [string, string]) }`
+  - An object of key-value pairs to map image parameters to their respective keys in the URL.
+  - The value can be a string or a function that takes the parameter value as an argument and returns a tuple of the new key and transformed value.
+
+### Functionality
+
+- If a parameter key is provided via `setImageParamKeys`, it is used in generating image URLs instead of the default Fastly parameters.
+- If a parameter key is not provided via `setImageParamKeys`, it is omitted from the generated image URLs.
+- If a mapped key is a function and it is not specified as a parameter in the Image component, it is called with `null`. It should return a tuple of the key and value.
+- If a mapping callback is provided, the callback is called with the parameter value (if it exists) and should return a tuple of the new key and transformed value.
+- If a mapping callback returns `null`, the parameter is omitted from the generated image URLs.
+
+### Usage
+
+Call the `setImageParamKeys()` function before the `mountImmediately()` function in the application layer.
+
+```javascript
+// Set global image parameters
+initializers.setImageParamKeys({
+  // Re-map the width parameter to imgWidth
+  width: 'imgWidth',
+  // Transform the quality parameter
+  quality: (value) => ['imgQuality', value * 100],
+  // Add an additional parameter to the image URL
+  extraParam: () => ['extraParam', 'extraValue'],
+});
+
+// Register and Mount Initializers immediately
+initializers.mountImmediately(pkg.initialize, {
+  // other configurations...
+});
+```
+
+Now, when a dropin uses the Image component to render an image with a width of 300 pixels and quality value of 0.8:
+
+```jsx
+<Image
+  loading={'lazy'}
+  src={'https://example.com/image.jpg'}
+  alt={'Example Image'}
+  width="300"
+  height="300"
+  params={{ width: 300, quality: 0.8 }}
+/>
+```
+
+It renders the following image element:
+
+```html
+<img
+  loading="lazy"
+  src="https://example.com/image.jpg"
+  srcset="https://example.com/image.jpg?imgWidth=300&imgQuality=80&extraParam=extraValue 768w, https://example.com/image.jpg?imgWidth=300&imgQuality=80&extraParam=extraValue 1024w, https://example.com/image.jpg?imgWidth=300&imgQuality=80&extraParam=extraValue 1366w, https://example.com/image.jpg?imgWidth=300&imgQuality=80&extraParam=extraValue 1920w"
+  alt="Example Image"
+  width="300"
+  height="300"
+/>
+```
+
+In this example, the width parameter is mapped to imgWidth and the value of the quality parameter is modified and mapped to imgQuality.
+
+## `setGlobalLocale(locale)`
+
+The `setGlobalLocale()` method is part of the initializers module in the `@dropins/tools` package.
+It allows you to set a global locale for all drop-ins that use locale-sensitive components like the Price component.
+
+### Default behavior
+
+By default, locale-sensitive components use the browser's locale or fallback to 'en-US' if no global locale is set. Locale-sensitive components follow this fallback hierarchy:
+
+1. Component-specific `locale` prop (highest priority)
+2. Global locale set via `setGlobalLocale()` 
+3. Browser's locale (`navigator.language`)
+4. Default fallback locale (`'en-US'`) (lowest priority)
+
+This ensures that your storefront always displays properly formatted content, even when specific locales are not configured.
+
+### Parameters
+
+- `locale` - `string` - The locale string (e.g., 'en-US', 'es-MX', 'fr-FR', 'de-DE').
+
+### Functionality
+
+- If a global locale is set via `setGlobalLocale()`, it will be used by components that support locale configuration.
+- Component-specific locale props will take precedence over the global locale.
+- If no global locale is set, components will fall back to the browser's locale or a default locale.
+
+### Usage
+
+Call the `setGlobalLocale()` function before the `mountImmediately()` function in the application layer.
+
+```javascript
+// Set global locale for consistent formatting across all drop-ins
+initializers.setGlobalLocale('fr-FR');
+
+// Register and Mount Initializers immediately
+initializers.mountImmediately(pkg.initialize, {
+  // other configurations...
+});
+```
+
+#### Basic Example
+
+When a drop-in uses the Price component without specifying a locale prop:
+
+```jsx
+<Price
+  amount={100}
+  currency="EUR"
+/>
+```
+
+It will render with the global locale (fr-FR) formatting:
+
+```html
+<span class="dropin-price dropin-price--default dropin-price--small dropin-price--bold">
+  100,00 €
+</span>
+```
+
+#### Override Example
+
+If the same component is used with a specific locale prop, that will take precedence over the global setting:
+
+```jsx
+<Price
+  amount={100}
+  currency="EUR"
+  locale="en-US"
+/>
+```
+
+It will render with the specified locale (en-US) formatting:
+
+```html
+<span class="dropin-price dropin-price--default dropin-price--small dropin-price--bold">
+  €100.00
+</span>
+```
+
+---
+
+# Links
+
+## Adding Links using the route pattern
+
+Whenever possible, avoid placing `onClick` handlers directly on anchor elements (`<a>`) in drop-in components, such as product or category pages, as this results in accessibility issues and broken browser behavior. Problems include:
+
+- Right-click > Open in New Tab results in blank pages.
+- Middle-click (open in background tab) won't work as expected.
+- Keyboard navigation and screen readers may not trigger the link correctly.
+
+Instead, follow the route pattern to provide composable and accessible navigation.
+
+## How it works
+
+Components accept a `routeX` function as a prop. The function receives a data model (a product, for example) and returns a URL. Internally, it's used like this:
+
+```tsx
+<a href={routeProduct?.(product) ?? '#'}>...</a>
+```
+
+This lets developers customize routing logic per storefront while preserving link semantics.
+
+## Example — Component-Side
+
+In your component (a PLP item, for example):
+
+The `routeProduct` prop must be optional and default to a # or an non-functional element like a `div` if not provided.
+
+```tsx
+type Props = {
+  routeProduct?: (product: ProductModel) => string;
+};
+
+function ProductCard({ product, routeProduct }: Props) {
+  return (
+    <a href={routeProduct?.(product) ?? '#'}>
+      {product.name}
+    </a>
+  );
+}
+```
+
+## Example — Storefront-Side
+
+In the storefront integration (`commerce-cart.js` or `commerce-plp.js`, for example):
+
+```js
+
+provider.render(ProductList, {
+  routeProduct: (product) => rootLink(`/products/${product.url.urlKey}/${product.topLevelSku}`),
+});
+```
+
+---
+
+# reCAPTCHA Integration
+
+The reCAPTCHA module is implemented as a standalone SDK package. It enables reCAPTCHA protection, which is natively supported by Adobe Commerce. It also provides an API allowing merchants to integrate reCAPTCHA protection into custom implementations. The current version of the module supports only reCAPTCHA v3 Invisible.
+
+## Installation
+
+To install this functionality, run the following command:
+
+```bash
+npm i @adobe/reCAPTCHA
+```
+
+https://experienceleague.adobe.com/en/docs/commerce-admin/systems/security/captcha/security-google-recaptcha in the _Admin Systems Guide_ describes how to configure Adobe Commerce.
+
+## Integrations
+
+To integrate ReCaptcha, follow these steps:
+
+1. Load the app.
+
+   - Call the `setConfig` method to fetch and set reCAPTCHA configuration.
+   - (Optional) Extend the configuration with custom forms if a custom integration not natively supported by Adobe Commerce is planned.
+
+2. Load the page with a protected form. Call the `initReCaptcha` method to add the script and initialize the ReCaptcha badge.
+
+3. Render the form.
+
+   - The user interacts with the page and form, providing the required data.
+   - The user clicks the submit button.
+
+4. Call the `verifyReCaptcha` API to retrieve the reCAPTCHA token via the Google API.
+
+### Flow for forms covered by Adobe Commerce natively
+
+Use the following workflow for standard Adobe Commerce integrations
+
+1. Set the reCAPTCHA token in the X-ReCaptcha header.
+
+1. Send the request to the backend.
+
+1. Commerce validates the token. If it fails, Commerce returns an error.
+
+### Flow for custom integrations
+
+Use one of the following workflows for custom integrations:
+
+- (Recommended) Send the token to Commerce and validate it on the server side. If validation passes, Commerce returns a normal response. Otherwise, it returns an error.
+
+- Validate the token on the client side. If validation passes, send the request.
+
+## reCAPTCHA API
+
+The reCAPTCHA package exposes the following APIs, allowing developers to integrate it with native Adobe Commerce functionality or set up custom integrations:
+
+* `setConfig`
+* `setEndpoint`
+* `initreCAPTCHA`
+* `verifyreCAPTCHA`
+* `enableLogger`
+
+### setConfig
+
+The `setConfig` method fetches and stores the reCAPTCHA configuration from the backend.
+It is essential to call this method before the `initreCAPTCHA` and `verifyreCAPTCHA` methods during app initialization, because other reCAPTCHA functionality will not be fully operational until the configurations are loaded and set up.
+
+#### Usage
+
+The `setConfig` method is intended to be called without parameters, in which case the backend configuration will be used.
+
+```javascript
+
+reCAPTCHA.setConfig();
+```
+
+However, you can pass a configuration object as a parameter to override the backend configurations.
+
+```javascript
+
+reCAPTCHA.setConfig({is_enabled: true});
+```
+
+### setEndpoint
+
+The `setEndpoint` method sets the endpoint that the recaptcha module uses to fetch configurations. Its use is optional. If reCAPTCHA uses the same mesh endpoint as the rest of the application, you do not need to set it explicitly. It will be inherited from the fetch-graphql package.
+
+#### Usage
+
+The following example sets the endpoint:
+
+```javascript
+
+reCAPTCHA.setEndpoint('https://www.example.com/graphql');
+```
+
+### initreCAPTCHA
+
+The `initreCAPTCHA` method initializes reCAPTCHA scripts and badges. Call this method after the `setConfig` method and before rendering forms with reCAPTCHA protection.
+
+The `initreCAPTCHA` method should be called before each form rendering. Do not call it at the top level of the application, immediately after the `setConfig` API, because this would load reCAPTCHA scripts on all pages, not just those with forms protected by reCAPTCHA.
+
+Additionally, you must call `initreCAPTCHA` for each form render to ensure the script is in place and the reCAPTCHA badge is properly initialized.
+
+#### Usage
+
+The following example initializes reCAPTCHA:
+
+```javascript
+
+reCAPTCHA.initreCAPTCHA();
+```
+
+### verifyreCAPTCHA
+
+The `verifyreCAPTCHA` method retrieves the reCAPTCHA token via the Google API. It should be called after `setConfig` and `initreCAPTCHA`, and before submitting a protected form to retrieve the reCAPTCHA token.
+
+When the reCAPTCHA token is retrieved, for forms covered by native Adobe Commerce functionality, it is required to pass this token as an X-reCAPTCHA header.
+
+For custom implementations, token validation should be implemented on either the server side or client side, and the token should be used according to the custom implementation.
+
+#### Usage
+
+The following example retrieves the reCAPTCHA token:
+
+```javascript
+
+export const setreCAPTCHAToken = async () => {
+ const token = await verifyreCAPTCHA();
+
+ if (token) {
+   setFetchGraphQlHeader('X-reCAPTCHA', token);
+ }
+};
+```
+
+### enableLogger
+
+The `enableLogger` method enables extensive logging to the console for each step and error during reCAPTCHA operations. It is intended for development and debugging purposes.
+
+#### Usage
+
+The following example enables the logger:
+
+```javascript 
+
+reCAPTCHA.enableLogger(true);
+```
+
+---
+
+# Render
+
+## Implementing a new render in your dropin
+
+To implement a new render in your dropin, you must create an instance of the `Render` class from the `@adobe-commerce/elsie/lib` library, passing in a `Provider` component.
+
+This setup initializes the rendering context with the specified provider, which can manage state, context, or other dependencies required by your components.
+
+By exporting this `render` instance, you enable different parts of your application to render components within the defined context, ensuring consistent behavior and integration across your application.
+
+```ts
+// Dropin
+
+export const render = new Render(<Provider />);
+```
+
+## Rendering a dropin's container in a storefront
+
+The render function mounts a drop-in container or component into the DOM and manages its lifecycle. 
+It returns a Promise that resolves to an object containing methods for updating and removing the component instance.
+
+```js
+// Storefront
+
+const wrapper = document.getElementById('my-container-root');
+
+provider.render(MyContainer, { ...props })(wrapper);
+```
+
+### Using VNode as a property
+
+Some components may require VNodes as properties. If you are using another component from the library, provide the VNode by executing the component as a function.
+
+```js
+// Storefront
+
+const wrapper = document.getElementById('my-container-root');
+
+provider.render(Button, { 
+    children: 'My Button', 
+    icon: Icon({ source: 'Heart' }), 
+})(wrapper);
+```
+
+You may also create your VNode using the `h` function from the Preact library. 
+
+```js
+// Storefront
+
+const wrapper = document.getElementById('my-container-root');
+
+provider.render(Button, { icon: h('div', { id: 'my-vnode' }) })(wrapper);
+```
+
+### Update properties of a rendered component
+
+The `setProps` method is provided by the instance returned from the `render` function. 
+It allows for dynamic updates to the properties of a rendered component. 
+By accepting an updater function, `setProps` lets you modify the component's props based on its previous state. 
+This method is particularly useful for making incremental changes or responding to user interactions 
+without re-rendering the entire component. It ensures that the component's state remains consistent
+and up-to-date with the latest data or user inputs.
+
+#### Example
+
+```js
+// Storefront
+
+const wrapper = document.getElementById('my-container-root');
+const myContainer = await provider.render(MyContainer, { ...props })(wrapper);
+
+const button = document.getElementById('my-button');
+
+button.addEventListener('click', () => {
+    // Update the component's props
+    myContainer.setProps((prevProps) => ({
+    ...prevProps,
+    newProp: 'new value',
+    }));
+});
+```
+
+### Remove a rendered component from the DOM
+
+The `remove` method is provided by the instance returned from the `render` function. 
+It allows for the complete removal of a rendered component from the DOM. 
+When invoked, `remove` ensures that the component and its associated resources are properly cleaned up, 
+preventing memory leaks and maintaining the application's overall performance. 
+This method is essential for managing the lifecycle of dynamic components, 
+especially in applications where components need to be frequently added and removed based 
+on user interactions or other events.
+
+```js
+
+const wrapper = document.getElementById('my-container-root');
+const myContainer = await provider.render(MyContainer, { ...props })(wrapper);
+
+const button = document.getElementById('my-button');
+
+button.addEventListener('click', () => {
+    // Remove the component from the DOM
+    myContainer.remove();
+});
+```
+
+---
+
+# Slots
+
+A Slot is a high-level interface for developers to define and manage dynamic content insertion within drop-in components.
+
+## Context
+
+The context is defined during implementation of a drop-in and can be used to pass data and functions to the slot.
+
+### Pre-built Methods
+
+- **dictionary**: The dictionary of the selected language.
+- **replaceWith**: A function to replace the slot's content with a new HTML element.
+- **appendChild**: A function to append a new HTML element to the slot's content.
+- **prependChild**: A function to prepend a new HTML element to the slot's content.
+- **appendSibling**: A function to append a new HTML element after the slot's content.
+- **prependSibling**: A function to prepend a new HTML element **before** the slot's content.
+- **getSlotElement**: A function to get a slot element.
+- **onChange**: A function to listen to changes in the slot's context.
+
+---
+
+## Implementing a new slot
+
+The `<Slot />` component is used to define a slot in a container. It receives a name and a slot object with the following properties:
+
+### name
+
+The name of the slot in _PascalCase_. `string` (required).
+
+### slotTag
+
+The HTML tag to use for the slot's wrapper element. This allows you to change the wrapper element from the default `div` to any valid HTML tag (e.g., 'span', 'p', 'a', etc.). When using specific tags like 'a', you can also provide their respective HTML attributes (e.g., 'href', 'target', etc.).
+
+Example:
+```tsx
+// Render with a span wrapper
+<Slot name="MySlot" slotTag="span">
+  Inline content
+</Slot>
+
+// Render with an anchor wrapper
+<Slot name="MySlot" slotTag="a" href="https://example.com" target="_blank">
+  Link content
+</Slot>
+```
+
+### contentTag
+
+The HTML tag to use for wrapping dynamically inserted content within the slot. This is separate from the slot's wrapper tag and allows you to control how dynamic content is structured. Defaults to 'div'.
+
+Example:
+```tsx
+<Slot
+  name="MySlot"
+  slotTag="article"    // The outer wrapper will be an article
+  contentTag="section" // Dynamic content will be wrapped in sections
+  slot={(ctx) => {
+    const elem = document.createElement('div');
+    elem.innerHTML = 'Dynamic content';
+    ctx.appendChild(elem); // This will be wrapped in a section tag
+  }}
+/>
+```
+
+### slot (required)
+
+- `ctx`: An object representing the context of the slot, including methods for manipulating the slot's content.
+
+The slot property, which is implemented as a promise function, provides developers with the flexibility to dynamically generate and manipulate content within slots. 
+However, it's important to note that this promise is render-blocking, meaning that the component will not render until the promise is resolved.
+
+### context
+
+The context property in the Slot component lets developers pass extra information or functionality to customize how the slot
+behaves or interacts with the application. This information is accessible within the slot's rendering logic, allowing for
+tailored slot behavior based on specific needs or application states.
+
+### render
+
+The render property in the Slot component lets developers define how the content within the slot should be displayed and should be used when developers
+need fine-grained control over what content appears within the slot.
+It's particularly useful when using custom slot methods (see Privates below) in scenarios where the content to be displayed within the slot is dynamic and may depend on
+properties passed to another component.
+
+### children
+
+The children property in the Slot component represents the content that is passed directly within the opening and closing tags of the Slot component.
+It allows developers to include static content directly within the slot, which will be rendered as part of the slot's contents.
+This property is useful for cases where the content within the slot is static or does not need to be dynamically generated by the slot.
+
+```tsx
+// MyContainer.tsx (Drop-in)
+
+export interface MyContainerProps extends HTMLAttributes<HTMLDivElement> {
+  slots?: {
+    MyOpenSlot?: SlotProps<{
+      // MyOpenSlot Context
+      data: MyContainerData;
+    }>;
+  };
+}
+
+export const MyContainer: Container<MyContainerProps> = ({
+  slots,
+  children,
+  ...props
+}) => {
+  // ...
+
+  return (
+    
+      <Slot name="MyOpenSlot" slot={slots?.MyOpenSlot} context={{ data }} />
+    
+  );
+};
+```
+
+&nbsp;
+
+```js
+// blocks/my-block.js (storefront)
+
+provider.render(MyContainer, {
+  slots: {
+    MyOpenSlot: async (ctx) => {
+      // create a new HTML element
+      const element = document.createElement('div');
+      // set the innerHTML of the new element to the text from the context's data
+      element.innerHTML = ctx.data.text;
+
+      // append the new element to the slot's content
+      ctx.appendChild(element);
+
+      // ...or you could also use any of the other slot methods to manipulate the slot's content
+      // ctx.replaceWith(element);
+      // ctx.prependChild(element);
+      // ctx.appendSibling(element);
+      // ctx.prependSibling(element);
+
+      // to listen and react to changes in the slot's context (lifecycle)
+      ctx.onChange((next) => {
+        // update the innerHTML of the new element to the new text from the context's data
+        element.innerHTML = ctx.data.text;
+      });
+    },
+  },
+});
+```
+
+## Privates
+
+The `<Slot />` component has a private interface that serves as a mechanism for managing internal
+complexity and promoting clean, modular design within the Slot component or related components.
+
+### \_registerMethod
+
+The `_registerMethod` private function is used to register a method in the slot's context which is particularly helpful in scenarios
+where dynamic behavior or interactions need to be incorporated into the Slot component.
+
+Slot Methods also include the ability to modify the slot's state or content based on external interactions or changes in application state.
+
+### \_setProps
+
+The `_setProps` private function within the Slot component is responsible for dynamically updating the properties of the slot.
+It allows developers to modify the slot's state or content based on external interactions or changes in application state,
+triggering re-renders of the slot component with updated properties.
+
+### \_htmlElementToVNode
+
+The `_htmlElementToVNode` private function in the Slot component converts HTML elements into virtual DOM nodes (VNodes),
+enabling their integration into Preact components. This conversion facilitates the dynamic insertion of HTML content
+into slots while benefiting from Preact's virtual DOM reconciliation and rendering.
+
+```tsx
+// MyContainer.tsx (Drop-in)
+
+<Slot
+  name="MyOpenSlot"
+  slot={slots?.MyOpenSlot}
+  context={{
+    // custom slot method
+    appendButton(callback) {
+      // use _registerMethod to register a method in the slot's context
+      this._registerMethod((...attrs) => {
+        // callback return the values provided by the storefront developer
+        const { text, ...buttonProps } = callback(...attrs);
+
+        const button = (
+          <Button type="button" {...buttonProps}>
+            {text}
+          </Button>
+        );
+
+        // use _setProps to update the slot's properties
+        this._setProps((prev: any) => ({
+          children: [...(prev.children || []), button],
+        }));
+      });
+    },
+  }}
+  render={(props) => {
+    // render the slot's content using props mutated by the slot's methods
+    return <Buttons>{props.children}</Buttons>;
+  }}
+/>
+```
+
+&nbsp;
+
+```js
+// blocks/my-block.js (storefront)
+
+provider.render(MyContainer, {
+  slots: {
+    // Available Slots
+    MyOpenSlot: (ctx) => {
+      ctx.appendButton: (next, state) => {
+        // use state to get the current state of the slot
+        const loading = state.get('loading');
+
+        return {
+          text: loading ? 'Loading' : 'Click me!',
+          onClick: async () => {
+            // use state to update the state of the slot
+            state.set('loading', true);
+
+            await doSomething().finally(() => {
+              state.set('loading', false);
+            });
+          },
+        };
+      },
+    },
+  },
+});
+```
+
+---
+
+# VComponent
+
+In modern Preact-based architectures, composability and flexibility are essential for building reusable UI components. `VComponent` is a utility provided by the SDK that enables rendering of virtual nodes (`VNode`) passed as props—empowering consumers to inject arbitrary content while maintaining a clean separation of concerns.
+
+## Why use VComponent?
+
+By default, Preact allows children to be passed as virtual nodes, enabling dynamic rendering:
+
+```tsx
+<MyComponent>
+  <h1>Hello</h1>
+</MyComponent>
+```
+However, flexibility increases when we extend this pattern to named props like `header`, `footer`, or `image`. Instead of hardcoding internal markup, we delegate the responsibility of rendering to the consumer.
+
+## Traditional approach (tightly coupled)
+
+The standard approach to rendering a component is to pass values as props directly to the component.
+
+**Implementation:**
+
+```tsx
+const Card = ({ imageProps }) => {
+  return <img {...imageProps} />;
+};
+```
+
+**Usage:**
+```tsx
+<Card imageProps={{ src: 'logo.png', alt: 'Logo' }} />
+```
+
+This implementation tightly couples the component to a specific HTML element (`<img>`), which limits its flexibility and reuse.
+
+## Composable approach with VComponent
+
+The composable approach with `VComponent` allows consumers to pass arbitrary DOM nodes through props.
+
+**Implementation:**
+
+```tsx
+
+interface Props {
+  image: VNode;
+}
+
+const Card = ({ image }: Props) => {
+  return <VComponent node={image} className="dropin-header-image" />;
+};
+```
+
+**Usage:**
+
+```tsx
+<Card image={<img src="logo.png" alt="Logo" />} />
+// or with a custom slot/component
+<Card image={<Slot name="brand-image" />} />
+```
+
+This decouples the component from a specific element. Instead, it renders whatever VNode is passed in. Consumers now have full control over what gets displayed.
+
+## How it works
+
+`VComponent` is a thin wrapper around a virtual node (`VNode`). It renders the node it receives as-is, while optionally applying extra props like `className`.
+
+This makes it ideal for rendering content passed through slots or injected from a higher-order component.
+
+```tsx
+<VComponent node={header} className="my-header" />
+```
+
+## When to use it
+
+Use `VComponent` when:
+
+- You want to allow injected custom DOM nodes (icons, slots, rich content)
+- You're designing reusable components meant to be extended or implemented by different consumers (Containers, Slots, etc.)
+
+## Benefits
+
+- Promotes reusability and composability
+- Supports custom rendering logic with no assumptions
+- Reduces internal complexity by offloading rendering decisions
+- Ideal for BYO-UI and dynamic layout strategies
+
+---
+
+# classList
+
+This function takes in an array of classes and returns a string of space separated entries that can be used for CSS classname assignments.
+
+## Params
+
+`classList`
+: An array containing strings or `<string,boolean>` arrays
+
+## Returns
+
+Returns a string of space separated entries that can be used for CSS classname assignments.
+
+## Examples
+
+```ts
+
+type ClassList = Array<string | [string, boolean] | undefined>;
+
+const classList: ClassList = ['class-1', 'class-2', 'class-3'];
+
+const result = classes(classList);
+
+console.log(result); // "class-1 class-2 class-3"
+```
+
+You can use a `<string,boolean>` array to control whether a class should be included or omitted from the final classes list.
+
+```ts
+
+type ClassList = Array<string | [string, boolean] | undefined>;
+
+const classList: ClassList = [
+  'class-1',
+  ['class-2', true],
+  ['class-3', false],
+  'class-4',
+];
+
+const result = classes(classList);
+
+console.log(result); // "class-1 class-2 class-4"
+```
+
+---
+
+# debounce
+
+This function provides a way to delay callback execution or prevent overcalling a function until certain conditions are met.
+
+## Params
+
+`fn`
+: The callback function to be executed
+
+`ms`
+: Time(in milliseconds) to delay callback execution
+
+## Returns
+
+A debounce version of the original callback function.
+This function can be treated like the original callback, except when called, the delay timer resets.
+
+## Examples
+
+```ts
+
+const debouncedLog = debounce(console.log, 500);
+
+debouncedLog('Do not log this string');
+
+// Wait 250ms
+
+debouncedLog('Do not log this string'); // Resets delay timer
+
+// Wait 250ms
+
+debouncedLog('Do not log this string'); // Resets delay timer
+
+// Wait 250ms
+
+debouncedLog('Log this string'); // Resets delay timer
+
+// Wait 500ms
+
+// 'Log this string' is logged to the console and no other messages have been logged
+```
+
+---
+
+# deepmerge
+
+Merges the enumerable properties of two or more objects deeply.
+
+See: https://www.npmjs.com/package/deepmerge
+
+---
+
+# getCookie
+
+Takes in a cookie name and returns the value of the cookie.
+
+## Params
+
+Signature: `getCookie(cookieName)`
+
+`cookieName`
+: The name of the cookie to get
+
+## Returns
+
+Returns the value of the cookie.
+
+## Examples
+
+```ts
+
+const result = getCookie('foo');
+
+console.log(result); // "bar"
+```
+
+---
+
+# getFormErrors
+
+Returns every form error in an HTML form element.
+
+## Params
+
+`form`
+: An HTMLFormElement
+
+## Returns
+
+A JavaScript object containing the form errors
+
+## Examples
+
+```html
+<form>
+  <input name="foo" required value="Foo" />
+  <input name="bar" required />
+  <input name="age" type="number" value="uno" />
+  <input name="website" type="url" value="url" />
+  <input name="e-mail" type="email" value="email@" />
+</form>
+```
+
+```ts
+
+const formElement = container.querySelector('form') as HTMLFormElement;
+
+const errors = getFormErrors(formElement);
+
+console.log(errors); // { bar: 'Constraints not satisfied', website: 'Constraints not satisfied', 'e-mail': 'Constraints not satisfied', }
+```
+
+---
+
+# getFormValues
+
+Transforms the data in an HTML form element into a JavaScript object.
+
+## Params
+
+`form`
+: An HTMLFormElement
+
+## Returns
+
+A JavaScript object containing the form data
+
+## Examples
+
+```html
+<form>
+  <input name="foo" required value="Foo" />
+  <input name="bar" required value="Bar" />
+</form>
+```
+
+```ts
+
+const formElement = container.querySelector('form') as HTMLFormElement;
+
+const values = getFormValues(formElement);
+
+console.log(values); // { bar: 'Bar', foo: 'Foo' }
+```
+
+---
+
+# getPathValue
+
+Takes in an object and a key and returns the value of the key.
+
+## Params
+
+Signature: `getPathValue(obj, key)`
+
+`obj`
+: The object to get the value from
+
+`key`
+: The key to get the value from (supports dot notation)
+
+## Returns
+
+Returns the value of the key.
+
+## Examples
+
+```ts
+
+const obj = {
+  foo: {
+    bar: 'baz',
+  },
+};
+
+const result = getPathValue(obj, 'foo.bar');
+
+console.log(result); // "baz"
+```
+
+---
+
+# Overview
+
+The utilities section provides a collection of helper functions to simplify common programming tasks when working with the SDK. These utilities handle everything from DOM manipulation and event handling to data transformation and form management. Each utility is designed to be lightweight, performant, and easy to integrate into your codebase.
+
+## Topics
+
+- [classList](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/utilities/classlist/) - Helper for managing CSS class names
+- [debounce](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/utilities/debounce/) - Limit how often a function can be called
+- [deepmerge](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/utilities/deepmerge/) - Deeply merge multiple objects
+- [getCookie](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/utilities/getcookie/) - Get cookie value from name
+- [getFormErrors](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/utilities/getformerrors/) - Get form validation errors
+- [getFormValues](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/utilities/getformvalues/) - Get form field values
+- [getPathValue](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/utilities/getpathvalue/) - Get value from obj key
+
+By leveraging these utility functions, you can streamline your development workflow and reduce boilerplate code while maintaining clean, maintainable implementations. These utilities are designed to work seamlessly with the SDK's components and core functionality, helping you build robust applications more efficiently. Each utility is thoroughly tested and optimized for performance, making them reliable tools for your development needs.

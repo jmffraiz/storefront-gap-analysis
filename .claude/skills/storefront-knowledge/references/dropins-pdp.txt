@@ -1,0 +1,2110 @@
+<SYSTEM>This is the Product details drop-in bundle for Adobe Commerce Storefront on Edge Delivery Services</SYSTEM>
+
+# Product details drop-in
+
+> Product details page drop-in containers, slots, and APIs
+> Generated: 2026-06-26T22:40:20.158Z
+> Source: https://experienceleague.adobe.com/developer/commerce/storefront
+
+
+---
+
+# Product Details Containers
+
+The Product Details drop-in provides pre-built container components for integrating into your storefront.
+
+<strong>Version: 3.0.2</strong>
+
+## What are Containers?
+
+Containers are pre-built UI components that combine functionality, state management, and presentation. They provide a complete solution for specific features and can be customized through props, slots, and CSS.
+
+## Available Containers
+
+> The monolithic `ProductDetails` container is deprecated. It is not used in the Commerce boilerplate. Do not use it for new work. Compose the smaller containers in this table instead (for example, [ProductHeader](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-header/), [ProductGallery](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-gallery/), [ProductPrice](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-price/), and [ProductOptions](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-options/)), then use [Slots](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/slots/) on each container when you need slot-based customization.
+
+Add to Cart, Add to Wishlist, and similar primary actions are not provided through the Product Details slots in the [Slots](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/slots/) table. The storefront composes them in the product-details block using separate mount points and the Wishlist or cart patterns described in [Add to Cart and Add to Wishlist](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/slots/#add-to-cart-and-add-to-wishlist) on that page.
+
+| Container | Description |
+| --------- | ----------- |
+| [ProductAttributes](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-attributes/) | Configure the `ProductAttributes` container for the product details page drop-in component. |
+| [ProductDownloadableOptions](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-downloadable-options/) | Renders the downloadable link selection UI for downloadable product types. |
+| [ProductDescription](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-description/) | Configure the `ProductDescription` container for the product details page drop-in component. |
+| [ProductDetails container (deprecated)](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-details/) | Deprecated monolithic container. See the caution above and the linked topic for configuration and slots. |
+| [ProductGallery](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-gallery/) | Configure the `ProductGallery` container for the product details page drop-in component. |
+| [ProductGiftCardOptions](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-gift-card-options/) | *Enrichment needed - add description to `_dropin-enrichments/product-details/containers.json`* |
+| [ProductHeader](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-header/) | Configure the `ProductHeader` container for the product details page drop-in component. |
+| [ProductOptions](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-options/) | Configure the `ProductOptions` container for the product details page drop-in component. |
+| [ProductPrice](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-price/) | Configure the `ProductPrice` container for the product details page drop-in component. |
+| [ProductQuantity](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-quantity/) | Configure the `ProductQuantity` container for the product details page drop-in component. |
+| [ProductShortDescription](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-short-description/) | Configure the `ProductShortDescription` container for the product details page drop-in component. |
+
+> Each container is designed to work independently but can be composed together to create comprehensive user experiences.
+
+---
+
+# ProductAttributes
+
+The `ProductAttributes` container displays a list of attributes for a product on the product details page.
+
+The container receives initial product data during [initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/initialization/) to preload the component and, being event-driven, updates with data emitted to `pdp/data` within the event scope.
+
+## ProductAttributes configurations
+
+The `ProductAttributes` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['formatValue', 'function', 'No', 'Custom formatter for attribute values. Receives the formatted value, attribute id, and label; returns the string to display. Use this to override the default rendering of any attribute value.'],
+    ['scope', 'string', 'No', 'Unique identifier for the PDP context. Only containers rendered with this scope will respond to product events.'],
+  ]
+```
+
+## Example
+
+The following example demonstrates how to configure the `ProductAttributes` container:
+
+```js
+return productRenderer.render(ProductAttributes, {
+  scope: 'modal', // optional
+});
+```
+
+---
+
+# ProductDescription
+
+The `ProductDescription` container displays the detailed description of a product on the product details page.
+
+The container receives initial product data during [initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/initialization/) to preload the component and, being event-driven, updates with data emitted to `pdp/data` within the event scope.
+
+## ProductDescription configurations
+
+The `ProductDescription` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['scope', 'string', 'No', 'Unique identifier for the PDP context. Only containers rendered with this scope will respond to product events.'],
+  ]
+```
+
+## Example
+
+The following example demonstrates how to configure the `ProductDescription` container:
+
+```js
+return productRenderer.render(ProductDescription, {
+  scope: 'modal', // optional
+});
+```
+
+---
+
+# ProductDetails container (deprecated)
+
+> **Deprecated** The monolithic `ProductDetails` container is deprecated. It is not used in the Commerce boilerplate. Do not use it for new work. Compose the smaller containers from the [containers overview](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/) instead. For slot-by-slot examples, see [ProductDetails (deprecated) slots](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/slots/#productdetails-deprecated-slots). For migration context, see [Product details page architectural evolution](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/updates/#product-details-page-architectural-evolution).
+
+The legacy `ProductDetails` container (deprecated) renders a full product details experience from one component. This topic lists configuration parameters and slot names for older integrations.
+
+<strong>Version: 3.0.2</strong>
+
+## Configuration
+
+The `ProductDetails` container (deprecated) provides the following configuration options:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `sku` | `string` | Yes | SKU of the product to load. |
+| `productData` | `ProductModel` | No | Optional pre-fetched product data. |
+| `hideSku` | `boolean` | No | Hides the SKU when set to `true`. |
+| `hideQuantity` | `boolean` | No | Hides the quantity selector when set to `true`. |
+| `hideShortDescription` | `boolean` | No | Hides the short description when set to `true`. |
+| `hideDescription` | `boolean` | No | Hides the long description when set to `true`. |
+| `hideAttributes` | `boolean` | No | Hides the attributes block when set to `true`. |
+| `hideSelectedOptionValue` | `boolean` | No | Hides the selected option value display when set to `true`. |
+| `hideURLParams` | `boolean` | No | Stops reading product context from URL parameters when set to `true`. |
+| `carousel` | `CarouselConfig` | No | Carousel configuration for the gallery. |
+| `optionsConfig` | `OptionsConfig` | No | Options UI configuration. |
+| `useACDL` | `boolean` | No | Enables Adobe Client Data Layer integration when set to `true`. |
+| `onAddToCart` | `function` | No | Callback invoked when the shopper adds to cart. |
+| `zoomType` | `'zoom' \| 'overlay'` | No | Image zoom behavior. |
+| `closeButton` | `boolean` | No | Shows or hides a close control where applicable. |
+| `disableDropdownPreselection` | `boolean` | No | Disables preselecting the first dropdown option when set to `true`. |
+
+## Slots
+
+This container exposes the following slots for customization. For examples and TypeScript shapes, see [ProductDetails (deprecated) slots](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/slots/#productdetails-deprecated-slots).
+
+| Slot | Type | Required | Description |
+|------|------|----------|-------------|
+| `Title` | `SlotProps` | No | Title area of the PDP. |
+| `SKU` | `SlotProps` | No | SKU line. |
+| `RegularPrice` | `SlotProps` | No | Regular price display. |
+| `SpecialPrice` | `SlotProps` | No | Special or sale price display. |
+| `Options` | `SlotProps` | No | Configurable options UI. |
+| `Quantity` | `SlotProps` | No | Quantity selector. |
+| `Actions` | `SlotProps` | No | Primary actions region (for example, add to cart). |
+| `ShortDescription` | `SlotProps` | No | Short description block. |
+| `Description` | `SlotProps` | No | Long description block. |
+| `Attributes` | `SlotProps` | No | Attributes list. |
+| `Breadcrumbs` | `SlotProps` | No | Breadcrumb trail. |
+| `GalleryContent` | `SlotProps` | No | Gallery region content. |
+| `InfoContent` | `SlotProps` | No | Secondary info column content. |
+| `Content` | `SlotProps` | No | General content region. |
+
+## Usage
+
+The following example shows how older code rendered the `ProductDetails` container (deprecated):
+
+```js
+
+await provider.render(ProductDetails, {
+  sku: 'PRODUCT-SKU-123',
+  productData: productData,
+  hideSku: true,
+  slots: {
+    // Add custom slot implementations here
+  },
+})(block);
+```
+
+---
+
+# ProductDownloadableOptions Container
+
+<strong>Version: 3.0.2</strong>
+
+The `ProductDownloadableOptions` container renders the downloadable link selection UI for downloadable product types. It allows customers to choose which downloadable files (links) to include in their purchase.
+
+## Configuration
+
+The `ProductDownloadableOptions` container provides the following configuration options:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `scope` | `string` | No | Optional scope identifier used to namespace product data events, allowing multiple PDP instances on the same page. |
+
+## Slots
+
+This container does not expose any customizable slots.
+
+## Usage
+
+The following example demonstrates how to use the `ProductDownloadableOptions` container:
+
+```js
+
+await provider.render(ProductDownloadableOptions, {
+  scope: "example",
+})(block);
+```
+
+---
+
+# ProductGallery
+
+The `ProductGallery` container displays a gallery of product images and videos on the product details page.
+
+The container receives initial product data during [initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/initialization/) to preload the component and, being event-driven, updates with data emitted to `pdp/data` within the event scope.
+
+## ProductGallery configurations
+
+The `ProductGallery` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['arrowsOnMainImage', 'boolean', 'No', 'Displays navigation arrows on the main image even when thumbnails are shown. Applicable when `controls` is set to `thumbnailsRow` or `thumbnailsColumn`.'],
+    ['controls', 'string', 'No', 'Type of controls for navigation. Options are thumbnailsRow, thumbnailsColumn, dots, or null. Defaults to dots.'],
+    ['loop', 'boolean', 'No', 'Whether to loop the images in the carousel. Defaults to true.'],
+    ['peak', 'boolean', 'No', 'Whether to enable the peak feature. Defaults to false.'],
+    ['gap', 'string', 'No', 'Gap size between images. Options are small, medium, large, or null. Defaults to null.'],
+    ['arrows', 'boolean', 'No', 'Whether to display navigation arrows. Defaults to true.'],
+    ['imageParams', 'object', 'No', 'Parameters for resolving image URLs.'],
+    ['thumbnailParams', 'object', 'No', 'Parameters for resolving thumbnail URLs.'],
+    ['zoom', 'boolean or object', 'No', 'Configuration for the zoom feature. If an object, it can have a closeButton property to show a close button. Defaults to false.'],
+    ['videos', 'boolean or object', 'No', 'Configuration for video support in the gallery. Set to true to enable videos (positioned after images) or pass an object with a position property. Defaults to false (disabled).'],
+    ['scope', 'string', 'No', 'Unique identifier for the PDP context. Only containers rendered with this scope will respond to product events.'],
+  ]
+```
+
+## Videos
+
+The `videos` prop enables product video support in the gallery carousel. The following usage example shows the different configuration options: disabled (default), enabled, and placing your videos before or after your static images within the carousel.
+
+### Usage
+
+```js
+// Disabled (default) — backward compatible
+<ProductGallery />
+<ProductGallery videos={false} />
+
+// Enabled — videos appear after images
+<ProductGallery videos />
+<ProductGallery videos={true} />
+
+// Videos appear before images
+<ProductGallery videos={{ position: 'first' }} />
+
+// Videos appear after images (explicit)
+<ProductGallery videos={{ position: 'last' }} />
+```
+
+### Supported video sources
+
+The gallery supports multiple video sources and formats, rendering each based on its URL type.
+
+| Video source | Render method |
+|--------------|---------------|
+| Video file URLs — URLs that resolve directly to a video file (.mp4, .webm, .ogg, .mov, .avi, .mkv) | Native `<video>` element with playback controls |
+| Video platform URLs (YouTube, Vimeo, etc.) | `<iframe>` with embedded player |
+
+## Example
+
+The following example demonstrates how to configure the `ProductGallery` container with video support.
+
+```js {18}
+return productRenderer.render(ProductGallery, {
+  controls: 'thumbnailsRow',
+  loop: true,
+  peak: false,
+  gap: 'medium',
+  arrows: true,
+  imageParams: {
+    width: 800,
+    height: 800,
+  },
+  thumbnailParams: {
+    width: 150,
+    height: 150,
+  },
+  zoom: {
+    closeButton: true,
+  },
+  videos: true,
+});
+```
+
+---
+
+# ProductGiftCardOptions Container
+
+<strong>Version: 3.0.2</strong>
+
+## Configuration
+
+The `ProductGiftCardOptions` container provides the following configuration options:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `scope` | `string` | No |  |
+
+## Slots
+
+This container does not expose any customizable slots.
+
+## Usage
+
+The following example demonstrates how to use the `ProductGiftCardOptions` container:
+
+```js
+
+await provider.render(ProductGiftCardOptions, {
+  scope: "example",
+})(block);
+```
+
+---
+
+# ProductGiftCardOptions
+
+The `ProductGiftCardOptions` container manages and displays gift card-specific options on the product details page.
+
+The container receives initial product data during [initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/initialization/) to preload the component. Once loaded, it operates in an event-driven manner, updating with data emitted to `pdp/data` within the event scope. Additionally, it listens to `pdp/values` to keep its displayed state in sync with the currently selected configuration. As shoppers interact with the gift card fields, the container updates the global PDP configuration values and validity.
+
+:::note
+- Rendering is conditional. The container renders only when the product includes the `ac_giftcard` attribute containing a JSON string with the shape `{ "options": Option[] }` that defines the UI fields.
+- User interactions are tracked. As shoppers edit fields, the container writes selected values to the PDP configuration (`enteredOptions`) and updates validity to enable actions like **Add to Cart**.
+- Additionally, the container passes the currency of the product to the `GiftCardOptions` component so it can format and display the currency correctly.
+:::
+
+## Container rendering
+
+![ProductGiftCardOptions container](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/images/ProductGiftCardOptions.webp)
+
+*ProductGiftCardOptions container*
+
+## ProductGiftCardOptions configurations
+
+The `ProductGiftCardOptions` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['scope', 'string', 'No', 'Unique identifier for the PDP context. Only containers rendered with this scope will respond to product events.'],
+    ['className', 'string', 'No', 'Additional CSS class applied to the container wrapper.'],
+  ]
+```
+
+## Example
+
+The following example demonstrates how to configure and render the `ProductGiftCardOptions` container:
+
+```js
+return productRenderer.render(ProductGiftCardOptions, {
+  scope: 'modal', // optional
+  className: 'pdp-gift-card-options--custom',
+});
+```
+
+---
+
+# ProductHeader
+
+The `ProductHeader` container is designed to display the header information of a product on the product details page.
+
+The header displays the product name with the SKU below it. Set `hideSku` to `true` to hide the SKU.
+
+For **configurable** products, when the shopper has selected a full variant, product data on `pdp/data` can include `variantSku` and `variantName` (see [`getRefinedProduct`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/functions/#getrefinedproduct)). Set `showVariantSku` and/or `showVariantName` to `true` to show those values in the header in addition to the parent product name and SKU.
+
+The container receives initial product data during [initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/initialization/) to preload the component and, being event-driven, updates with data emitted to `pdp/data` within the event scope.
+
+## ProductHeader configurations
+
+The `ProductHeader` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['hideSku', 'boolean', 'No', 'Determines whether the SKU should be hidden in the header. Defaults to false.'],
+    ['scope', 'string', 'No', 'Unique identifier for the PDP context. Only containers rendered with this scope will respond to product events.'],
+    ['showVariantSku', 'boolean', 'No', 'When true, displays the variant SKU when present on product data (configurable product with a resolved simple variant). Defaults to false.'],
+    ['showVariantName', 'boolean', 'No', 'When true, displays the variant name when present on product data (configurable product with a resolved simple variant). Defaults to false.'],
+  ]
+```
+
+## Example
+
+The following example demonstrates how to configure the `ProductHeader` container:
+
+```js
+render(ProductHeader, {
+  hideSku: false,
+  showVariantSku: true,
+  showVariantName: true,
+});
+```
+
+{/* TODO: Add screenshots of the ProductHeader with hideSku: true, and one with hideSku: false. */}
+
+---
+
+# ProductOptions
+
+The `ProductOptions` container manages and displays product options on the product details page.
+
+The container receives initial product data during [initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/initialization/) to preload the component and, being event-driven, updates with data emitted to `pdp/data` within the event scope.
+
+## ProductOptions configurations
+
+The `ProductOptions` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['hideSelectedValue', 'boolean', 'No', 'Hides the selected value of the option.'],
+    ['transformer', 'function', 'No', 'Enables custom option type conversion. Receives the full options array and returns a modified version. Supports error handling for advanced product configuration scenarios.'],
+    ['onValues', 'function', 'No', 'Callback that receives the selected option UIDs.'],
+    ['onErrors', 'function', 'No', 'Callback that receives errors encountered during option selection.'],
+    ['slots', 'object', 'No', 'Overrides slots for the Swatches component.'],
+    ['scope', 'string', 'No', 'Unique identifier for the PDP context. Only containers rendered with this scope will respond to product events.'],
+  ]
+```
+
+## Example
+
+The following example demonstrates how to configure the `ProductOptions` container:
+
+```js
+return productRenderer.render(ProductOptions, {
+  slots: {
+    Swatches: (ctx) => {
+      const size = ctx.getSlotElement('product-swatch--fashion_size');
+
+      // Add link to Sizes
+      if (size) {
+        // Create Size Link
+        const link = document.createElement('a');
+        link.href = '#';
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          console.log('Size Chart');
+        });
+        // append inside size
+        size.appendChild(link);
+      }
+    },
+  },
+});
+```
+
+---
+
+# ProductPrice
+
+The `ProductPrice` container displays the price of a product on the product details page. It includes special prices and regular prices if they are available and visible.
+
+The container receives initial product data during [initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/initialization/) to preload the component and, being event-driven, updates with data emitted to `pdp/data` within the event scope.
+
+## ProductPrice configurations
+
+The `ProductPrice` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['scope', 'string', 'No', 'Unique identifier for the PDP context. Only containers rendered with this scope will respond to product events.'],
+  ]
+```
+
+## Example
+
+The following example demonstrates how to configure the `ProductPrice` container:
+
+```js
+return productRenderer.render(ProductPrice, {
+  scope: 'modal', // optional
+});
+```
+
+---
+
+# ProductQuantity
+
+The `ProductQuantity` container manages and displays the quantity of a product that a shopper wants to purchase on the product details page.
+
+The container receives initial product data during [initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/initialization/) to preload the component and, being event-driven, updates with data emitted to `pdp/data` within the event scope.
+
+## ProductQuantity configurations
+
+The `ProductQuantity` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['onValue', 'function', 'No', 'Callback function to handle changes in the quantity.'],
+    ['scope', 'string', 'No', 'Unique identifier for the PDP context. Only containers rendered with this scope will respond to product events.'],
+  ]
+```
+
+## Example
+
+The following example demonstrates how to configure the `ProductQuantity` container:
+
+```js
+
+await provider.render(ProductQuantity, {
+  onValue: (value) => console.log(value),
+})(mountElement);
+```
+
+Replace `mountElement` with the DOM node where the quantity control should appear.
+
+---
+
+# ProductShortDescription
+
+The `ProductShortDescription` container displays a short description of a product on the product details page.
+
+The container receives initial product data during [initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/initialization/) to preload the component and, being event-driven, updates with data emitted to `pdp/data` within the event scope.
+
+## ProductShortDescription configurations
+
+The `ProductShortDescription` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['scope', 'string', 'No', 'Unique identifier for the PDP context. Only containers rendered with this scope will respond to product events.'],
+  ]
+```
+
+## Example
+
+The following example demonstrates how to configure the `ProductShortDescription` container:
+
+```js
+return productRenderer.render(ProductShortDescription, {
+  scope: 'modal', // optional
+});
+```
+
+---
+
+# Product Details Dictionary
+
+The **Product Details dictionary** contains all user-facing text, labels, and messages displayed by this drop-in. Customize the dictionary to:
+
+- **Localize** the drop-in for different languages and regions
+- **Customize** labels and messages to match your brand voice
+- **Override** default text without modifying source code for the drop-in
+
+Dictionaries use the **i18n (internationalization)** pattern, where each text string is identified by a unique key path.
+
+<strong>Version: 3.0.2</strong>
+
+## How to customize
+
+Override dictionary values during drop-in initialization. The drop-in deep-merges your custom values with the defaults.
+
+```javascript
+
+await initialize({
+  langDefinitions: {
+    en_US: {
+      "PDP": {
+        "Product": {
+          "Incrementer": {
+            "label": "Custom Label"
+          },
+          "OutOfStock": {
+            "label": "Custom Label"
+          }
+        }
+      }
+    }
+  }
+});
+```
+
+You only need to include the keys you want to change. For multi-language support and advanced patterns, see the [Dictionary customization guide](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/dictionaries/).
+
+## Default keys and values
+
+Below are the default English (`en_US`) strings provided by the **Product Details** drop-in:
+
+```json title="en_US.json"
+{
+  "PDP": {
+    "Product": {
+      "Incrementer": {
+        "label": "Item Quantity"
+      },
+      "OutOfStock": {
+        "label": "Out of Stock"
+      },
+      "AddToCart": {
+        "label": "Add to Cart"
+      },
+      "Details": {
+        "label": "Details"
+      },
+      "RegularPrice": {
+        "label": "Regular Price"
+      },
+      "SpecialPrice": {
+        "label": "Special Price"
+      },
+      "TierPrice": {
+        "label": "Tier Price"
+      },
+      "TierPricing": {
+        "label": "Buy {quantity} for {price} each and save {percent}%"
+      },
+      "Image": {
+        "label": "{product} Image {key} of {total}"
+      },
+      "GiftCardOptions": {
+        "ChooseAmount": {
+          "label": "Choose amount"
+        },
+        "OtherAmount": {
+          "label": "Other amount"
+        },
+        "RequiredFieldError": {
+          "label": "This field is required"
+        },
+        "NumberError": {
+          "label": "Please enter a valid number"
+        },
+        "MinError": {
+          "label": "Minimum value is {min}"
+        },
+        "MaxError": {
+          "label": "Maximum value is {max}"
+        },
+        "MinLengthError": {
+          "label": "Minimum length is {min_length} characters"
+        },
+        "MaxLengthError": {
+          "label": "Maximum length is {max_length} characters"
+        },
+        "EmailError": {
+          "label": "Please enter a valid email address"
+        },
+        "InvalidValueError": {
+          "label": "Please select one of the allowed values: {values}"
+        }
+      }
+    },
+    "Swatches": {
+      "Required": {
+        "label": "Required"
+      },
+      "ChooseOption": {
+        "label": "Choose an option"
+      }
+    },
+    "Carousel": {
+      "label": "Carousel",
+      "Next": {
+        "label": "Next"
+      },
+      "Previous": {
+        "label": "Previous"
+      },
+      "Slide": {
+        "label": "Slide"
+      },
+      "Controls": {
+        "label": "Carousel Controls",
+        "Button": {
+          "label": "Show slide {key} of {total}"
+        }
+      }
+    },
+    "Overlay": {
+      "Close": {
+        "label": "Close"
+      }
+    },
+    "Zoom": {
+      "Close": {
+        "label": "Close"
+      }
+    },
+    "DownloadableOptions": {
+      "Sample": {
+        "label": "Sample"
+      },
+      "ViewSample": {
+        "label": "View sample for {label}"
+      }
+    }
+  }
+}
+```
+
+---
+
+# Product Details Data & Events
+
+The **Product Details** drop-in uses the [event bus](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/events/) to emit and listen to events for communication between drop-ins and external integrations.
+
+<strong>Version: 3.0.2</strong>
+
+## Events reference
+
+{/* EVENTS_TABLE_START */}
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [pdp/valid](#pdpvalid-emits) | Emits | Emitted when validation state changes. |
+| [pdp/setValues](#pdpsetvalues-listens) | Listens | Fired by PDP (`pdp`) when values are set programmatically. |
+| [pdp/data](#pdpdata-emits-and-listens) | Emits and listens | Triggered when data is available or changes. |
+| [pdp/values](#pdpvalues-emits-and-listens) | Emits and listens | Triggered when form or configuration values change. |
+
+{/* EVENTS_TABLE_END */}
+
+## Event details
+
+The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
+
+### `pdp/data` (emits and listens)
+
+Triggered when data is available or changes.
+
+#### Event payload
+
+```typescript
+ProductModel | null
+```
+
+See [`ProductModel`](#productmodel) for full type definition.
+
+#### Example
+
+```js
+
+events.on('pdp/data', (payload) => {
+  console.log('pdp/data event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `pdp/setValues` (listens)
+
+Fired by PDP (`pdp`) when values are set programmatically.
+
+#### Event payload
+
+#### Example
+
+```js
+
+events.on('pdp/setValues', (payload) => {
+  console.log('pdp/setValues event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `pdp/valid` (emits)
+
+Emitted when validation state changes.
+
+#### Event payload
+
+```typescript
+boolean
+```
+
+#### Example
+
+```js
+
+events.on('pdp/valid', (payload) => {
+  console.log('pdp/valid event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `pdp/values` (emits and listens)
+
+Triggered when form or configuration values change.
+
+#### Event payload
+
+```typescript
+ValuesModel
+```
+
+See [`ValuesModel`](#valuesmodel) for full type definition.
+
+#### Example
+
+```js
+
+events.on('pdp/values', (payload) => {
+  console.log('pdp/values event received:', payload);
+  // Add your custom logic here
+});
+```
+
+## Data Models
+
+The following data models are used in event payloads for this drop-in.
+
+### ProductModel
+
+Used in: [`pdp/data`](#pdpdata-emits-and-listens).
+
+```ts
+interface ProductModel {
+  name: string;
+  sku: string;
+  isBundle: boolean;
+  addToCartAllowed: boolean;
+  inStock: boolean | null;
+  shortDescription?: string;
+  metaDescription?: string;
+  metaKeyword?: string;
+  metaTitle?: string;
+  description?: string;
+  images?: Image[];
+  prices: Prices;
+  attributes?: Attribute[];
+  options?: Option[];
+  optionUIDs?: string[];
+  url?: string;
+  urlKey?: string;
+  externalId?: string;
+  externalParentId?: string;
+  variantSku?: string;
+  productType?: ProductType | undefined;
+}
+```
+
+### ValuesModel
+
+Used in: [`pdp/values`](#pdpvalues-emits-and-listens).
+
+```ts
+interface ValuesModel {
+  sku: string;
+  quantity: number;
+  optionsUIDs?: string[];
+  enteredOptions?: Array<{ uid: string; value: string }>;
+}
+```
+
+---
+
+# Product Details Functions
+
+The Product Details drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
+
+<strong>Version: 3.0.2</strong>
+
+| Function | Description |
+| --- | --- |
+| [`fetchProductData`](#fetchproductdata) | Fetches product data for a given SKU. |
+| [`getFetchedProductData`](#getfetchedproductdata) | Returns previously fetched product data from cache. |
+| [`getProductConfigurationValues`](#getproductconfigurationvalues) | Returns the current product configuration values. |
+| [`getProductData`](#getproductdata) | Returns the product data for a given product SKU. |
+| [`getProductsData`](#getproductsdata) | Fetches multiple products by SKUs with optional per-product option configuration. |
+| [`getRefinedProduct`](#getrefinedproduct) | Returns refined product data with specific options selected. |
+| [`isProductConfigurationValid`](#isproductconfigurationvalid) | Checks if the current product configuration is valid. |
+| [`setProductConfigurationValid`](#setproductconfigurationvalid) | Sets a callback to be called when product configuration validity changes. |
+| [`setProductConfigurationValues`](#setproductconfigurationvalues) | Sets a callback to be called when product configuration values change. |
+
+## fetchProductData
+
+The `fetchProductData` function fetches product data for a given SKU. It can fetch either simple product data or refined product data with selected options.
+
+```ts
+const fetchProductData = async (
+  sku: string,
+  options?: Options
+): Promise<any>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `sku` | `string` | Yes | The SKU (Stock Keeping Unit) of the product to fetch. |
+| `options` | `Options` | No | Optional configuration including \`anchors\` (anchor options), \`optionsUIDs\` (selected option IDs), \`preselectFirstOption\` (whether to preselect first option), \`isBundle\` (whether product is a bundle), and \`skipTransform\` (whether to skip data transformation). |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## getFetchedProductData
+
+The `getFetchedProductData` function returns previously fetched product data from cache.
+
+```ts
+const getFetchedProductData = async (
+  { scope, }: { scope?: string } = {}
+): Promise<ProductModel | null>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `options` | `{ scope?: string }` | No | Optional configuration. Use `scope` to identify the PDP instance when using scoped contexts. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`ProductModel`](#productmodel) or `null`.
+
+## getProductConfigurationValues
+
+The `getProductConfigurationValues` function returns the current product configuration values.
+
+```ts
+const getProductConfigurationValues = (
+  { scope, }: { scope?: string } = {}
+): ValuesModel | null
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `options` | `{ scope?: string }` | No | Optional configuration. Use `scope` to identify the PDP instance when using scoped contexts. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`ValuesModel`](#valuesmodel) or `null`.
+
+## getProductData
+
+The `getProductData` function returns the product data for a given product SKU. It fetches data from Adobe Commerce and optionally preselects the first available option. The function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/products/queries/products/ query.
+
+```ts
+const getProductData = async (
+  sku: string,
+  options?: { preselectFirstOption?: boolean; optionsUIDs?: string[]; },
+  raw?: boolean
+): Promise<ProductModel | null>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `sku` | `string` | Yes | The SKU (Stock Keeping Unit) of the product to fetch. |
+| `preselectFirstOption` | `boolean` | No | Whether to automatically preselect the first available option for configurable products. |
+| `optionsUIDs` | `string[]` | No | An array of option UIDs to preselect for the product. |
+| `raw` | `boolean` | No | Whether to return raw GraphQL data without transformation. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`ProductModel`](#productmodel) or `null`.
+
+## getProductsData
+
+The `getProductsData` function fetches multiple products by their SKUs in a single request. Each item can include optional configuration such as selected option UIDs and a flag to pre-select the first available option. Useful for bulk product data retrieval, such as in Quick Order or product list pages.
+
+```ts
+const getProductsData = async (
+  items: ProductDataItem[],
+  raw?: boolean
+): Promise<ProductModel[] | null>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `items` | `ProductDataItem[]` | Yes | An array of product request objects. Each object must include a `sku` and optionally `optionsUIDs` (array of selected option UIDs) and `preselectFirstOption` (boolean to auto-select the first available option for each swatch). |
+| `raw` | `boolean` | No | When `true`, returns the raw GraphQL response without transformation. Defaults to `false`. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns an array of [`ProductModel`](#productmodel) objects or `null` when no products are found or the input is empty.
+
+## getRefinedProduct
+
+The `getRefinedProduct` function returns refined product data with specific options selected. This is used for configurable products where options have been chosen. The function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/catalog-service/queries/refine-product query.
+
+For configurable products, the returned [`ProductModel`](#productmodel) always keeps the parent product’s `name` and `sku`. When refinement resolves to a simple variant (`SimpleProductView`), the model also includes `variantSku` and `variantName` for that variant so you can display or forward the child SKU and title (for example from the [`ProductHeader`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-header/) container).
+
+```ts
+const getRefinedProduct = async (
+  sku: string,
+  optionUIDs: string[],
+  anchorOptions?: string[],
+  raw?: boolean
+): Promise<ProductModel | null>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `sku` | `string` | Yes | The SKU (Stock Keeping Unit) of the product to fetch. |
+| `optionUIDs` | `string[]` | Yes | An array of option UIDs representing the selected variant. |
+| `anchorOptions` | `string[]` | No | Anchor options for the product selection. |
+| `raw` | `boolean` | No | Whether to return raw GraphQL data without transformation. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`ProductModel`](#productmodel) or `null`.
+
+## isProductConfigurationValid
+
+The `isProductConfigurationValid` function checks if the current product configuration is valid.
+
+```ts
+const isProductConfigurationValid = async (
+  { scope, }: { scope?: string } = {}
+): boolean | null
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `options` | `{ scope?: string }` | No | Optional configuration. Use `scope` to identify the PDP instance when using scoped contexts. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `boolean | null`.
+
+## setProductConfigurationValid
+
+The `setProductConfigurationValid` function sets a callback to be called when product configuration validity changes.
+
+```ts
+const setProductConfigurationValid = async (
+  callback: (prev: boolean) => boolean,
+  options?: { scope?: string }
+): any
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `callback` | `prev: boolean` | No | A callback function that receives the validity status of the product configuration. |
+
+### Events
+
+Emits the [`pdp/valid`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/events/#pdpvalid-emits) event.
+
+### Returns
+
+Returns `void`.
+
+## setProductConfigurationValues
+
+The `setProductConfigurationValues` function sets a callback to be called when product configuration values change.
+
+```ts
+const setProductConfigurationValues = async (
+  callback: (prev: ValuesModel) => ValuesModel,
+  options?: { scope?: string }
+): any
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `callback` | `prev: ValuesModel` | No | A callback function that receives the updated product configuration values. |
+
+### Events
+
+Emits the [`pdp/values`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/events/#pdpvalues-emits-and-listens) event.
+
+### Returns
+
+Returns `void`.
+
+## Data Models
+
+The following data models are used by functions in this drop-in.
+
+### ProductModel
+
+The `ProductModel` object is returned by the following functions: [`getFetchedProductData`](#getfetchedproductdata), [`getProductData`](#getproductdata), [`getRefinedProduct`](#getrefinedproduct).
+
+```ts
+interface ProductModel {
+  name: string;
+  sku: string;
+  isBundle: boolean;
+  addToCartAllowed: boolean;
+  inStock: boolean | null;
+  shortDescription?: string;
+  metaDescription?: string;
+  metaKeyword?: string;
+  metaTitle?: string;
+  description?: string;
+  images?: Image[];
+  videos?: Video[];
+  prices: Prices;
+  attributes?: Attribute[];
+  options?: Option[];
+  optionUIDs?: string[];
+  url?: string;
+  urlKey?: string;
+  externalId?: string;
+  externalParentId?: string;
+  variantSku?: string;
+  variantName?: string;
+  productType?: ProductType | undefined;
+}
+```
+
+### Video
+
+The `Video` interface defines the shape of a product video object returned as part of the `ProductModel`.
+
+```ts
+interface Video {
+  url: string;
+  title?: string;
+  description?: string;
+  preview?: {
+    url: string;
+    label?: string;
+    roles?: string[];
+  };
+}
+```
+
+### ValuesModel
+
+The `ValuesModel` object is returned by the following functions: [`getProductConfigurationValues`](#getproductconfigurationvalues).
+
+```ts
+interface ValuesModel {
+  sku: string;
+  quantity: number;
+  optionsUIDs?: string[];
+  enteredOptions?: Array<{ uid: string; value: string }>;
+}
+```
+
+{/* This documentation is auto-generated from the drop-in source repository: REPO_URL */}
+
+---
+
+# Product details page overview
+
+The product details page (PDP) drop-in renders the full product page from a set of composable containers — gallery, header, price, options, quantity, and more. Each container is independently customizable through props, slots, and CSS, and you can rearrange, replace, or remove any container without touching the others.
+
+The image below shows the different containers that make up the product details page.
+
+![The different containers that make up the product details page.](https://experienceleague.adobe.com/developer/commerce/storefront/images/merchants/blocks/product-details-anatomy-developers.png)
+
+*The different containers that make up the product details page.*
+
+- **Product Gallery** - displays the product images and videos. See [`ProductGallery`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-gallery/).
+
+- **Product Header** - displays the product name and SKU. See [`ProductHeader`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-header/).
+
+- **Product Price** - displays the product price and special price. See [`ProductPrice`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-price/).
+
+- **Product Gift Card Options** - displays the product gift card options. See [`ProductGiftCardOptions`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-gift-card-options/).
+
+- **Product Short Description** - displays the product short description. See [`ProductShortDescription`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-short-description/).
+
+- **Product Options** - displays the product options (size, color, and so on). See [`ProductOptions`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-options/).
+
+- **Product Downloadable Options** - displays the downloadable link selection UI so shoppers can choose which files to include in their purchase. Not shown in image — renders only for downloadable product types. See [`ProductDownloadableOptions`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-downloadable-options/).
+
+- **Product Quantity** - displays the product quantity selector. See [`ProductQuantity`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-quantity/).
+
+- **Add to Cart and Wishlist Buttons** - rendered by the block, not the drop-in, so they can be rearranged or restyled in the block code.
+
+- **Product Description** - displays the product description. See [`ProductDescription`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-description/).
+
+- **Product Attributes** - displays the product attributes. See [`ProductAttributes`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/product-attributes/).
+
+The practical application of rendering different product types is to provide a consistent user experience across different products. For example, a simple product can be rendered with a single price and quantity, while a complex product can be rendered with multiple options that combine into product variants. This flexibility allows you to showcase a wide range of products in a consistent and user-friendly manner. These product types allow you to cater to diverse customer needs, streamline operations, and enhance the shopping experience.
+
+All containers in the product-details drop-in support **scoped contexts**, allowing multiple independent PDP instances to run on the same page and enabling features like product comparison, related products, and quick product previews without conflicts.
+
+## Use cases
+
+The PDP component provides a variety of fully-customizable controls to showcase your products according to your brand's aesthetics and build interactive experiences that engage customers. Use cases include:
+
+- **Image Carousel**: Display multiple product images and videos in a carousel format, allowing users to browse product images, videos, and other details.
+- **Product Information**: Showcase detailed product information, including pricing, descriptions, and specifications.
+- **Product Variants**: Display different product variants, such as colors, sizes, and styles, allowing users to select the option that best fits their needs.
+- **Product Reviews**: Include user reviews and ratings to provide social proof and help users make informed purchasing decisions.
+- **Customization Options**: Customize the appearance and behavior of the drop-in component to align with your brand's design aesthetic and user experience goals.
+
+## Supported Commerce features
+
+The following table provides an overview of the Adobe Commerce features that the PDP drop-in component supports:
+
+| Feature                         | Status                                       |
+| ------------------------------- | -------------------------------------------- |
+| Bundle product type             | Supported |
+| Configurable product type       | Supported |
+| Image gallery                   | Supported |
+| Grouped products                | Roadmap      |
+| Product details                 | Supported |
+| Simple product type             | Supported |
+| Virtual product type            | Roadmap      |
+| Zoom                            | Supported |
+
+## Render product types
+
+The PDP component supports rendering different product types configured in your Adobe Commerce instance by default using data provided by the https://developer.adobe.com/commerce/webapi/graphql/schema/catalog-service/. Adobe Commerce supports seven product types, but the Catalog Service GraphQL API schema maps these to two types:
+
+- _Simple products_ are products that are defined with a single price and quantity. Catalog Service maps the simple, virtual, downloadable, and gift card product types to https://developer.adobe.com/commerce/webapi/graphql/schema/catalog-service/queries/products/#return-details-about-a-simple-product.
+- _Complex products_ comprise multiple simple products. The component simple products can have different prices. A complex product can also be defined so that the shopper can specify the quantity of component simple products. Catalog Service maps the configurable, bundle, and grouped product types to https://developer.adobe.com/commerce/webapi/graphql/schema/catalog-service/queries/products/#return-details-about-a-complex-product.
+
+  
+
+> **Pro tip!** Go to the https://experienceleague.adobe.com/developer/commerce/storefront/playgrounds/commerce-services/
+    and run the `product` query to see the product data structure for different product types.
+
+## Product metadata and SEO
+
+Generating product metadata is crucial for optimizing search engine visibility, enhancing user experience, integrating with social media, supporting ecommerce functionality, ensuring compliance, and enabling data-driven decision-making.
+
+The Commerce boilerplate provides a [metadata generation script](https://experienceleague.adobe.com/developer/commerce/storefront/setup/seo/metadata/#generate-metadata) that fetches product data from the Catalog Service GraphQL API and generates meta tags and structured data in JSON-LD format. The script writes the metadata to an Excel file, which you can upload to Edge Delivery Services.
+
+---
+
+# Product Details initialization
+
+The **Product Details initializer** configures how product information is displayed and managed, including images, descriptions, pricing, and options. Use initialization to customize product data models and enhance product presentation.
+
+<strong>Version: 3.0.2</strong>
+
+## Configuration options
+
+The following table describes the configuration options available for the **Product Details** initializer:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
+| `models` | [`Record<string, any>`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
+| `scope` | `string` | No | Defines the store view scope for product data retrieval. Used in multi-store setups to fetch store-specific product information. |
+| `defaultLocale` | `string` | No | Sets the default locale for product content when no specific locale is detected. |
+| `globalLocale` | `string` | No | Overrides locale detection and forces all product content to use this specific locale regardless of user settings. |
+| `sku` | `string` | No | Pre-loads a specific product SKU on initialization. Useful for server-side rendering or direct product page access. |
+| `acdl` | `boolean` | No | Configuration for Adobe Client Data Layer (ACDL) integration to track product view events and user interactions for analytics. |
+| `anchors` | `string[]` | No | Controls hash navigation behavior for product page sections (e.g., #reviews, #specifications). Enables deep linking to specific content areas. |
+| `persistURLParams` | `boolean` | No | Determines which URL query parameters should persist when navigating between product variants. Useful for tracking campaigns or referral sources. |
+| `preselectFirstOption` | `boolean` | No | When \`true\`, automatically selects the first available option for each configurable attribute. Streamlines selection for products with default variants. |
+| `optionsUIDs` | `string[]` | No | Pre-selects specific product options by their unique identifiers. Useful for direct links to configured product variants (e.g., specific \`size/color\` combinations). |
+
+## Default configuration
+
+The initializer runs with these defaults when no configuration is provided:
+
+```javascript title="scripts/initializers/product-details.js"
+
+// All configuration options are optional
+await initializers.mountImmediately(initialize, {
+  langDefinitions: {}, // Uses built-in English strings
+  models: {}, // Uses default data models
+  // Drop-in-specific defaults:
+  // scope: undefined // See configuration options below
+  // defaultLocale: undefined // See configuration options below
+  // globalLocale: undefined // See configuration options below
+  // sku: undefined // See configuration options below
+  // acdl: undefined // See configuration options below
+  // anchors: undefined // See configuration options below
+  // persistURLParams: undefined // See configuration options below
+  // preselectFirstOption: undefined // See configuration options below
+  // optionsUIDs: undefined // See configuration options below
+});
+```
+
+## Language definitions
+
+Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override default text for the drop-in.
+
+```javascript title="scripts/initializers/product-details.js"
+
+const customStrings = {
+  'AddToCart': 'Add to Bag',
+  'Checkout': 'Complete Purchase',
+  'Price': 'Cost',
+};
+
+const langDefinitions = {
+  default: customStrings,
+};
+
+await initializers.mountImmediately(initialize, { langDefinitions });
+```
+
+> For complete dictionary customization including all available keys and multi-language support, see the [Product Details Dictionary](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/dictionary/) page.
+
+## Customizing data models
+
+Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
+
+### Model properties
+
+Each model in the `models` configuration object supports the following properties:
+
+| Property | Type | Description |
+|---|---|---|
+| `initialData` | `any` | Provides initial data for the model before backend data is fetched. |
+| `transformer` | `(data?: ProductModel) => ProductModel` | Transforms product data returned from GraphQL. Use this to add custom fields or modify existing data structures. |
+| `transform` | `(data?: ProductModel) => ProductModel` | **Deprecated.** Use `transformer` instead. |
+| `fallbackData` | `(parentProduct: any, simpleProduct: ProductModel) => ProductModel` | Provides fallback data when a simple product variant is selected from a configurable parent product. |
+
+The following example shows how to customize a model for the **Product Details** drop-in:
+
+```javascript title="scripts/initializers/product-details.js"
+
+const models = {
+  ProductModel: {
+    transformer: (data) => ({
+      ...data,
+      customField: data?.custom_field,
+      promotionBadge: data?.promotion?.label,
+      displayPrice: data?.price?.value ? `${data.price.value}` : 'N/A',
+    }),
+  },
+};
+
+await initializers.mountImmediately(initialize, { models });
+```
+
+## Drop-in configuration
+
+The **Product Details initializer** configures how product information is displayed and managed, including images, descriptions, pricing, and options. Use initialization to customize product data models and enhance product presentation.
+
+```javascript title="scripts/initializers/product-details.js"
+
+await initializers.mountImmediately(initialize, {
+  scope: 'value',
+  langDefinitions: {},
+  defaultLocale: 'value',
+  globalLocale: 'value',
+  sku: 'value',
+  acdl: true,
+  anchors: 'value',
+  persistURLParams: true,
+  preselectFirstOption: true,
+  optionsUIDs: 'abc123',
+  models: {},
+});
+```
+
+> Refer to the [Configuration options](#configuration-options) table for detailed descriptions of each option.
+
+## Configuration types
+
+The following TypeScript definitions show the structure of each configuration object:
+
+### langDefinitions
+
+Maps locale identifiers to dictionaries of key-value pairs. The `default` locale is used as the fallback when no specific locale matches. Each dictionary key corresponds to a text string used in the drop-in UI.
+
+```typescript
+langDefinitions?: {
+  [locale: string]: {
+    [key: string]: string;
+  };
+};
+```
+
+### models
+
+Maps model names to objects that configure how product data is transformed. Each model can provide an initial data state, a transformer function to modify GraphQL responses, and a fallback for configurable product variants.
+
+```typescript
+models?: {
+  [name: string]: {
+    initialData: any;
+    /** @deprecated Use "transformer" instead */
+    transform?: (data?: ProductModel) => ProductModel;
+    transformer?: (data?: ProductModel) => ProductModel;
+    fallbackData?: (parentProduct: any, simpleProduct: ProductModel) => ProductModel;
+  };
+};
+```
+
+---
+
+# Product Details Quick Start
+
+The Product Details drop-in provides a comprehensive product display page with image galleries, pricing, options, swatches, and add-to-cart functionality for all product types.
+
+<strong>Version: 3.0.2</strong>
+
+## Quick example
+
+The Product Details drop-in is included in the https://github.com/hlxsites/aem-boilerplate-commerce. This example shows the basic pattern:
+
+```js
+// 1. Import initializer (handles all setup)
+
+// 2. Import the container you need
+
+// 3. Import the provider
+
+// 4. Render in your block
+export default async function decorate(block) {
+  await provider.render(ProductAttributes, {
+    // Configuration options - see Containers page
+  })(block);
+}
+```
+
+**New to drop-ins?** See the [Using drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/quick-start/) guide for complete step-by-step instructions.
+
+## Quick reference
+
+**Import paths:**
+- Initializer: `import '../../scripts/initializers/pdp.js'`
+- Containers: `import ContainerName from '@dropins/storefront-pdp/containers/ContainerName.js'`
+- Provider: `import { render } from '@dropins/storefront-pdp/render.js'`
+
+**Package:** `@dropins/storefront-pdp`
+
+**Version:** 3.0.2 (verify compatibility with your Commerce instance)
+
+**Example container:** `ProductAttributes`
+
+## Learn more
+
+- [Containers](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/) - Available UI components and configuration options
+- [Initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/initialization/) - Customize initializer settings and data models
+- [Functions](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/functions/) - Control drop-in behavior programmatically
+- [Events](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/events/) - Listen to and respond to drop-in state changes
+- [Slots](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/slots/) - Extend containers with custom content
+
+---
+
+# Product Details Slots
+
+The Product Details drop-in exposes slots on each composed container so you can customize specific UI sections. Use slots to replace or extend those container components.
+
+See the [containers overview](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/) for the official deprecation wording. The summary table includes a deprecated `ProductDetails` row so you can map legacy slot names during migration. Use the sections below for [ProductAttributes](#productattributes-slots), [ProductGallery](#productgallery-slots), [ProductOptions](#productoptions-slots), and [ProductDetails (deprecated) slots](#productdetails-deprecated-slots). For default properties available to all slots, see [Extending drop-in components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/extending/). For Add to Cart, Add to Wishlist, and similar buttons, read [Add to Cart and Add to Wishlist](#add-to-cart-and-add-to-wishlist) first, because that pattern is not covered by the slots in the table below.
+
+<strong>Version: 3.0.2</strong>
+
+| Container | Slots | Deprecated |
+|-----------|-------|------------|
+| [`ProductAttributes`](#productattributes-slots) | `Attributes` | No |
+| [`ProductGallery`](#productgallery-slots) | `CarouselThumbnail`, `CarouselMainImage` | No |
+| [`ProductOptions`](#productoptions-slots) | `Swatches`, `SwatchImage` | No |
+| [`ProductDetails` container (deprecated)](#productdetails-deprecated-slots) | `Title`, `SKU`, `RegularPrice`, `SpecialPrice`, `Options`, `Quantity`, `Actions`, `ShortDescription`, `Description`, `Attributes`, `Breadcrumbs`, `GalleryContent`, `InfoContent`, `Content` | Yes |
+
+## Add to Cart and Add to Wishlist
+
+The slot topics for `ProductAttributes`, `ProductGallery`, and `ProductOptions` describe the supported Commerce boilerplate pattern. The [ProductDetails (deprecated) slots](#productdetails-deprecated-slots) section documents the legacy monolithic container only. None of these slot topics is the extension point for placing a secondary button directly under Add to Cart in the Commerce boilerplate, and you do not need to fork `@dropins/storefront-pdp` to get that layout. For the supported pattern, see [Commerce storefront layouts](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/layouts/#add-an-element-to-the-layout-and-reference-it) (the `product-details__buttons` markup) and the bullets below for wiring Add to Cart and Add to Wishlist.
+
+In the Commerce boilerplate, those controls live in your product-details block: you define empty mount elements in the HTML fragment (next to or below the quantity area), then your block script renders into them. The [Commerce storefront layouts](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/layouts/) topic shows a `product-details__buttons` row with separate targets for Add to Cart and Add to Wishlist so you can stack or arrange them with ordinary CSS.
+
+Use that composition pattern together with the Product Details event bus:
+
+- Add to Cart — Your block owns the button and wires it to cart logic and `pdp/data` / `pdp/valid` (see [Notify Me CTA](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/tutorials/notify-me-cta/) for the same mount pattern when stock changes the label).
+- Add to Wishlist — Initialize the Wishlist drop-in, then render [`WishlistToggle`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/wishlist/containers/wishlist-toggle/) into a second mount point (for example, the wishlist `div` next to the cart `div` in the layout). Subscribe to `pdp/data` so the `product` you pass into `WishlistToggle` updates when the shopper changes configurable options.
+
+For wishlist setup and imports, start at [Wishlist quick start](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/wishlist/quick-start/).
+
+## ProductAttributes slots
+
+The slots for the `ProductAttributes` container allow you to customize its appearance and behavior.
+
+```typescript
+interface ProductAttributesProps {
+  slots?: {
+    Attributes?: SlotProps<DefaultSlotContext>;
+  };
+}
+```
+
+### Attributes slot
+
+The Attributes slot allows you to customize the attributes section of the `ProductAttributes` container.
+
+#### Example
+
+```js
+
+await provider.render(ProductAttributes, {
+  slots: {
+    Attributes: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Attributes';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+## ProductDetails (deprecated) slots
+
+> **Deprecated** The monolithic `ProductDetails` container is deprecated. It is not used in the Commerce boilerplate. Do not use it for new work. Compose the smaller containers from the [containers overview](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/) instead. This section is for legacy code only. For migration context, see [Product details page architectural evolution](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/updates/#product-details-page-architectural-evolution).
+
+The slots for the `ProductDetails` container (deprecated) allow you to customize its appearance and behavior.
+
+```typescript
+interface ProductDetailsProps {
+  slots?: {
+    Title?: SlotProps<DefaultSlotContext>;
+    SKU?: SlotProps<DefaultSlotContext>;
+    RegularPrice?: SlotProps<DefaultSlotContext>;
+    SpecialPrice?: SlotProps<DefaultSlotContext>;
+    Options?: SlotProps<DefaultSlotContext>;
+    Quantity?: SlotProps<DefaultSlotContext>;
+    Actions?: SlotProps<
+      DefaultSlotContext & {
+        appendButton: SlotMethod<
+          Omit<ButtonProps, 'icon'> & {
+            text?: string;
+            icon?: IconType;
+          }
+        >;
+      }
+    >;
+    ShortDescription?: SlotProps<DefaultSlotContext>;
+    Description?: SlotProps<DefaultSlotContext>;
+    Attributes?: SlotProps<DefaultSlotContext>;
+    Breadcrumbs?: SlotProps<
+      DefaultSlotContext & {
+        setSeparator: SlotMethod<IconType>;
+        appendLink: SlotMethod<
+          HTMLAttributes<HTMLAnchorElement> & { text?: string }
+        >;
+        appendHTMLElement: SlotMethod<HTMLElement>;
+      }
+    >;
+    GalleryContent?: SlotProps<DefaultSlotContext>;
+    InfoContent?: SlotProps<DefaultSlotContext>;
+    Content?: SlotProps<DefaultSlotContext>;
+  };
+}
+```
+
+### Title slot
+
+The Title slot allows you to customize the title section of the `ProductDetails` container (deprecated).
+
+#### Example
+
+```js
+
+await provider.render(ProductDetails, {
+  slots: {
+    Title: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Title';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### SKU slot
+
+The SKU slot allows you to customize the SKU section of the `ProductDetails` container (deprecated).
+
+#### Example
+
+```js
+
+await provider.render(ProductDetails, {
+  slots: {
+    SKU: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom SKU';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### RegularPrice slot
+
+The `RegularPrice` slot allows you to customize the regular price section of the `ProductDetails` container (deprecated).
+
+#### Example
+
+```js
+
+await provider.render(ProductDetails, {
+  slots: {
+    RegularPrice: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom RegularPrice';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### SpecialPrice slot
+
+The `SpecialPrice` slot allows you to customize the special price section of the `ProductDetails` container (deprecated).
+
+#### Example
+
+```js
+
+await provider.render(ProductDetails, {
+  slots: {
+    SpecialPrice: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom SpecialPrice';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Options slot
+
+The Options slot allows you to customize the options section of the `ProductDetails` container (deprecated).
+
+#### Example
+
+```js
+
+await provider.render(ProductDetails, {
+  slots: {
+    Options: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Options';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Quantity slot
+
+The Quantity slot allows you to customize the quantity section of the `ProductDetails` container (deprecated).
+
+#### Example
+
+```js
+
+await provider.render(ProductDetails, {
+  slots: {
+    Quantity: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Quantity';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Actions slot
+
+The Actions slot allows you to customize the actions section of the `ProductDetails` container (deprecated).
+
+#### Example
+
+```js
+
+await provider.render(ProductDetails, {
+  slots: {
+    Actions: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Actions';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ShortDescription slot
+
+The `ShortDescription` slot allows you to customize the short description section of the `ProductDetails` container (deprecated).
+
+#### Example
+
+```js
+
+await provider.render(ProductDetails, {
+  slots: {
+    ShortDescription: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ShortDescription';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Description slot
+
+The Description slot allows you to customize the description section of the `ProductDetails` container (deprecated).
+
+#### Example
+
+```js
+
+await provider.render(ProductDetails, {
+  slots: {
+    Description: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Description';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Attributes slot
+
+The Attributes slot allows you to customize the attributes section of the `ProductDetails` container (deprecated).
+
+#### Example
+
+```js
+
+await provider.render(ProductDetails, {
+  slots: {
+    Attributes: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Attributes';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Breadcrumbs slot
+
+The Breadcrumbs slot allows you to customize the breadcrumbs section of the `ProductDetails` container (deprecated).
+
+#### Example
+
+```js
+
+await provider.render(ProductDetails, {
+  slots: {
+    Breadcrumbs: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Breadcrumbs';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### GalleryContent slot
+
+The `GalleryContent` slot allows you to customize the gallery content section of the `ProductDetails` container (deprecated).
+
+#### Example
+
+```js
+
+await provider.render(ProductDetails, {
+  slots: {
+    GalleryContent: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom GalleryContent';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### InfoContent slot
+
+The `InfoContent` slot allows you to customize the info content section of the `ProductDetails` container (deprecated).
+
+#### Example
+
+```js
+
+await provider.render(ProductDetails, {
+  slots: {
+    InfoContent: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom InfoContent';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Content slot
+
+The Content slot allows you to customize the content section of the `ProductDetails` container (deprecated).
+
+#### Example
+
+```js
+
+await provider.render(ProductDetails, {
+  slots: {
+    Content: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Content';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+## ProductGallery slots
+
+The slots for the `ProductGallery` container allow you to customize its appearance and behavior.
+
+```typescript
+interface ProductGalleryProps {
+  slots?: {
+    CarouselThumbnail?: SlotProps<
+    DefaultSlotContext & {
+      defaultImageProps: ImageProps;
+      mediaType?: 'image' | 'video';
+      previewUrl?: string;
+    }
+    >;
+    CarouselMainImage?: SlotProps<
+    DefaultSlotContext & {
+      defaultImageProps: ImageProps;
+      mediaType?: 'image' | 'video';
+      previewUrl?: string;
+    }
+    >;
+  };
+}
+```
+
+### CarouselThumbnail slot
+
+The `CarouselThumbnail` slot allows you to customize the carousel thumbnail section of the `ProductGallery` container.
+
+#### Example
+
+```js
+
+await provider.render(ProductGallery, {
+  slots: {
+    CarouselThumbnail: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom CarouselThumbnail';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### CarouselMainImage slot
+
+The `CarouselMainImage` slot allows you to customize the carousel main image section of the `ProductGallery` container.
+
+#### Example
+
+```js
+
+await provider.render(ProductGallery, {
+  slots: {
+    CarouselMainImage: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom CarouselMainImage';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+## ProductOptions slots
+
+The slots for the `ProductOptions` container allow you to customize its appearance and behavior.
+
+```typescript
+interface ProductOptionsProps {
+  slots?: {
+    Swatches?: SlotProps<{ data: ProductModel | null; optionsUIDs: string[] }>;
+    SwatchImage?: SlotProps<{
+    data: ProductModel | null;
+    optionsUIDs: string[];
+    imageSwatchContext: ImageNodeRenderProps['imageSwatchContext'];
+    defaultImageProps: ImageProps;
+    }>;
+  };
+}
+```
+
+### Swatches slot
+
+The Swatches slot allows you to customize the swatches section of the `ProductOptions` container.
+
+#### Example
+
+```js
+
+await provider.render(ProductOptions, {
+  slots: {
+    Swatches: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Swatches';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### SwatchImage slot
+
+The `SwatchImage` slot allows you to customize the swatch image section of the `ProductOptions` container.
+
+#### Example
+
+```js
+
+await provider.render(ProductOptions, {
+  slots: {
+    SwatchImage: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom SwatchImage';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+---
+
+# Product Details styles
+
+Customize the Product Details drop-in using CSS classes and design tokens. This page covers the Product Details-specific container classes and customization examples. For comprehensive information about design tokens, responsive breakpoints, and styling best practices, see [Styling Drop-In Components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/styling/).
+
+<strong>Version: 3.0.2</strong>
+
+## Customization example
+
+Add this to the CSS file of the specific https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/ where you're using the Product Details drop-in.
+
+For a complete list of available design tokens (colors, spacing, typography, and more), see the [Design tokens reference](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/styling/#design-tokens-reference).
+
+```css title="styles/styles.css" del={2-2} ins={3-3}
+.pdp-price-range__label {
+  margin-left: 5px;
+  margin-left: 8px;
+}
+```
+
+## Container classes
+
+The Product Details drop-in uses BEM-style class naming. Use the browser DevTools to inspect elements and find specific class names.
+
+```css
+/* Carousel */
+.dropin-button--tertiary--disabled {}
+.pdp-carousel {}
+.pdp-carousel--arrows {}
+.pdp-carousel--main-image-controls {}
+.pdp-carousel--thumbnailsColumn {}
+.pdp-carousel--thumbnailsRow {}
+.pdp-carousel-thumbnail__span {}
+.pdp-carousel__button {}
+.pdp-carousel__button--next {}
+.pdp-carousel__button--prev {}
+.pdp-carousel__button--thumbnailsColumn {}
+.pdp-carousel__button--thumbnailsRow {}
+.pdp-carousel__button__icon--next {}
+.pdp-carousel__button__icon--prev {}
+.pdp-carousel__button__icon--thumbnailsColumn--prev {}
+.pdp-carousel__button__icon--thumbnailsRow--next {}
+.pdp-carousel__button__icon--thumbnailsRow--prev {}
+.pdp-carousel__controls {}
+.pdp-carousel__controls--thumbnailsColumn {}
+.pdp-carousel__controls--thumbnailsRow {}
+.pdp-carousel__controls__button {}
+.pdp-carousel__controls__button--active {}
+.pdp-carousel__controls__container--no-arrows {}
+.pdp-carousel__controls__container--thumbnailsColumn {}
+.pdp-carousel__controls__container--thumbnailsRow {}
+.pdp-carousel__controls__wrapper {}
+.pdp-carousel__controls__wrapper--thumbnailsColumn {}
+.pdp-carousel__controls__wrapper--thumbnailsRow {}
+.pdp-carousel__slide {}
+.pdp-carousel__slide--hidden {}
+.pdp-carousel__slide--horizontal {}
+.pdp-carousel__slide--last {}
+.pdp-carousel__slide--orphan {}
+.pdp-carousel__thumbnail--selected {}
+.pdp-carousel__thumbnail__container {}
+.pdp-carousel__thumbnail__content {}
+.pdp-carousel__thumbnail__span {}
+/* Video */
+.pdp-product-gallery__video {}
+.pdp-product-gallery__video-iframe {}
+.pdp-product-gallery__video-thumbnail {}
+.pdp-product-gallery__video-thumbnail-placeholder {}
+.pdp-product-gallery__video-icon {}
+.pdp-carousel__wrapper {}
+.pdp-carousel__wrapper--horizontal {}
+.pdp-carousel__wrapper--peak {}
+.pdp-carousel__wrapper--scrollbar {}
+
+/* GalleryGrid */
+.pdp-gallery-grid {}
+.pdp-gallery-grid__item {}
+
+/* GiftCardOptions */
+.pdp-gift-card-options {}
+.pdp-gift-card-options__grid {}
+.pdp-gift-card-options__label {}
+.pdp-gift-card-options__option-field {}
+.pdp-gift-card-options__option-field--full-width {}
+.pdp-gift-card-options__row {}
+.pdp-product__gift-card-options-container {}
+
+/* Header */
+.pdp-header {}
+.pdp-header__sku {}
+.pdp-header__title {}
+
+/* Overlay */
+.pdp-overlay {}
+.pdp-overlay--centered {}
+.pdp-overlay__close-button {}
+.pdp-overlay__content {}
+
+/* Price */
+.pdp-price {}
+.pdp-price__amount {}
+.pdp-price__amount--grey {}
+.pdp-price__amount-special {}
+
+/* PriceRange */
+.dropin-price {}
+.pdp-price-range {}
+.pdp-price-range__label {}
+
+/* Product */
+.pdp-carousel__controls__container--thumbnailsColumn {}
+.pdp-carousel__controls__container--thumbnailsRow {}
+.pdp-overlay__content {}
+.pdp-product {}
+.pdp-product__actions {}
+.pdp-product__actions--out-of-stock {}
+.pdp-product__attributes {}
+.pdp-product__breadcrumbs {}
+.pdp-product__buttons {}
+.pdp-product__column-body {}
+.pdp-product__column-container {}
+.pdp-product__content {}
+.pdp-product__content-column {}
+.pdp-product__description {}
+.pdp-product__gallery-column {}
+.pdp-product__gallery-content {}
+.pdp-product__header {}
+.pdp-product__images--carousel {}
+.pdp-product__images--carousel--thumbnails {}
+.pdp-product__images__placeholder {}
+.pdp-product__options {}
+.pdp-product__out-of-stock__text {}
+.pdp-product__overlay {}
+.pdp-product__overlay__carousel {}
+.pdp-product__price {}
+.pdp-product__price--grey {}
+.pdp-product__price-special {}
+.pdp-product__prices {}
+.pdp-product__quantity {}
+.pdp-product__short_description {}
+.pdp-product__sku {}
+.pdp-product__title {}
+
+/* Swatches */
+.pdp-swatches {}
+.pdp-swatches__field {}
+.pdp-swatches__field__label {}
+.pdp-swatches__options {}
+
+/* Zoom */
+.pdp-zoom {}
+.pdp-zoom--no-effects {}
+.pdp-zoom--zoomed {}
+.pdp-zoom__close-button {}
+```

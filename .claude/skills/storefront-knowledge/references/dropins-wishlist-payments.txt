@@ -1,0 +1,1646 @@
+<SYSTEM>This is the Wishlist and payments drop-ins bundle for Adobe Commerce Storefront on Edge Delivery Services</SYSTEM>
+
+# Wishlist and payments drop-ins
+
+> Wishlist and payment services drop-in reference
+> Generated: 2026-06-26T22:40:20.158Z
+> Source: https://experienceleague.adobe.com/developer/commerce/storefront
+
+
+---
+
+# ApplePay Container
+
+The `ApplePay` container renders a checkout button that enables macOS and iOS users to pay using https://www.apple.com/apple-pay/.
+
+<strong>Version: 3.1.1</strong>
+
+## Configuration
+
+The `ApplePay` container provides the following configuration options:
+
+| Option | Type | Req? | Description |
+|--------|------|------|-------------|
+| `location` | string | Yes | Location where Apple Pay is rendered. Must be either `CHECKOUT` or `PRODUCT_DETAIL`. |
+| `getCartId` | function | Maybe | Required if `createCart` is not provided. Returns a promise that resolves to the shopper's cart ID. |
+| `createCart` | object | Maybe | Required if `getCartId` is not provided. Provides cart items when `getCartId` is not used. Must be an object with a `getCartItems` function that returns at least one cart item. Each item must include at least a `sku` (string) and `quantity` (number). See "Cart item object" for details. |
+| `onButtonClick` | function | No | Called when the shopper clicks the Apple Pay button. Receives a `showPaymentSheet` function, which must be called synchronously to start the Apple Pay session and display the payment sheet. If the `onButtonClick` callback is not provided, clicking the Apple Pay button will automatically trigger the payment sheet. |
+| `onSuccess` | function | No | Called when the payment completes successfully. Receives `{ cartId: string }`. If the function returns a promise, it is awaited before marking the payment as successful in the Apple Pay sheet. If the promise rejects, the payment is marked as failed and the error is passed to `onError` (if provided). |
+| `onError` | function | No | Called when the payment flow fails or is aborted. Receives `{ name: string, message: string }`, containing localized, user-facing error details. These values can be translated using `PaymentServices.ApplePay.errors` [language definitions](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/payment-services/dictionary/). |
+| `hidden` | boolean | No | Whether the button is hidden. Set to `true` to hide the Apple Pay button. Default: `false`. |
+| `disabled` | boolean | No | Whether the button is disabled. Set to `true` to disable the Apple Pay button. Default: `false`. |
+
+### Cart item object
+
+The cart items that `getCartItems` returns should be objects with the following properties:
+
+| Property | Type | Req? | Description |
+|----------|------|------|-------------|
+| `sku` | string | Yes | The product SKU. |
+| `quantity` | number | Yes | The quantity of the product. |
+| `parentSku` | string | No | The parent product SKU. |
+| `selectedOptions` | `(string \| number)[]` | No | Selected product options. |
+| `enteredOptions` | `{ uid: string \| number; value: string }[]` | No | Entered product options. |
+
+## Slots
+
+This container does not expose any customizable slots.
+
+## Usage
+
+### Checkout page example
+
+The following example demonstrates how to use the `ApplePay` container on the checkout page.
+
+```js
+
+const cart = events.lastPayload('checkout/initialized');
+
+if (cart) {
+  const $content = document.createElement('div');
+  PaymentServices.render(ApplePay, {
+    location: PaymentLocation.CHECKOUT,
+    getCartId: async () => cart.id,
+    onSuccess: () => orderApi.placeOrder(cart.id),
+    onError: (error) => { console.error(error) },
+  })($content);
+}
+```
+
+### Product details page example
+
+The following example demonstrates how to use the `ApplePay` container on a product details page.
+
+```js
+
+const product = events.lastPayload('pdp/values');
+
+if (product) {
+  const $content = document.createElement('div');
+  PaymentServices.render(ApplePay, {
+    location: PaymentLocation.PRODUCT_DETAIL,
+    createCart: {
+      getCartItems: () => [{
+        sku: product.sku,
+        quantity: 1,
+      }],
+    },
+    onSuccess: ({cartId}) => orderApi.placeOrder(cartId),
+    onError: (error) => { console.error(error) },
+  })($content);
+}
+```
+
+---
+
+# CreditCard Container
+
+The `CreditCard` container renders a form for entering credit card details during checkout.
+
+<strong>Version: 3.1.1</strong>
+
+## Configuration
+
+The `CreditCard` container provides the following configuration options:
+
+| Option | Type | Req? | Description |
+|--------|------|------|-------------|
+| `getCartId` | function | Yes | Returns a promise that resolves to the shopper’s cart ID. |
+| `creditCardFormRef` | object | Yes | Reference to the credit card form. Initially, `{ current: null }` should be passed. After rendering, the container sets `current` to the `validate: () => boolean` and `submit: () => Promise<void>` object, which parent containers can use to programmatically validate and submit the form. Any error during the payment flow propagates to `onError` and causes the promise returned by `submit()` to be rejected.|
+| `onSuccess` | function | No | Called when the payment completes successfully. Receives `{ cartId: string }`. |
+| `onError` | function | No | Called when the payment flow fails or is aborted. Receives `{ name: string, message: string }`, containing localized, user-facing error details. These values can be translated using `PaymentServices.CreditCard.errors` [language definitions](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/payment-services/dictionary/). |
+
+## Slots
+
+This container exposes no customizable slots.
+
+## Usage
+
+The following example demonstrates how to render and submit a credit card form:
+
+```js
+
+const $content = document.createElement('div');
+const creditCardFormRef = { current: null };
+const placeOrderButton = document.getElementById('place-order');
+
+PaymentServices.render(CreditCard, {
+  getCartId: async () => 'ozGi7uLI74etDYyMijoI2cla5CmGIBch',
+  creditCardFormRef: creditCardFormRef,
+})($content);
+
+placeOrderButton.onclick = () => {
+  if (creditCardFormRef.current) {
+    if (creditCardFormRef.current.validate()) {
+      const future = creditCardFormRef.current.submit()
+      future.catch(console.error)
+    }
+  }
+}
+```
+
+---
+
+# Payment Services Containers
+
+The **Payment Services** drop-in provides pre-built container components for integrating into your storefront.
+
+<strong>Version: 3.1.1</strong>
+
+## What are Containers?
+
+Containers are pre-built UI components that combine functionality, state management, and presentation. They provide a complete solution for specific features and can be customized through props, slots, and CSS.
+
+## Available Containers
+
+| Container | Description |
+| --------- | ----------- |
+| [ApplePay](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/payment-services/containers/apple-pay/) | The `ApplePay` container renders a checkout button that enables macOS and iOS users to pay using Apple Pay. |
+| [CreditCard](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/payment-services/containers/credit-card/) | The `CreditCard` container renders a form for shoppers to enter credit card details during checkout. |
+
+> Each container is designed to work independently but can be composed together to create comprehensive user experiences.
+
+---
+
+# Payment Services Dictionary
+
+The **Payment Services dictionary** contains all user-facing text, labels, and messages displayed by this drop-in. Customize the dictionary to:
+
+- **Localize** the drop-in for different languages and regions
+- **Customize** labels and messages to match your brand voice
+- **Override** default text without modifying source code for the drop-in
+
+Dictionaries use the **i18n (internationalization)** pattern, where each text string is identified by a unique key path.
+
+<strong>Version: 3.1.1</strong>
+
+## How to customize
+
+Override dictionary values during drop-in initialization. The drop-in deep-merges your custom values with the defaults.
+
+```javascript
+
+await initialize({
+  langDefinitions: {
+    en_US: {
+      "PaymentServices": {
+        "ApplePay": {
+          "errors": {
+            "default": {
+              "name": "Custom value",
+              "message": "Your custom message here"
+            }
+          }
+        }
+      }
+    }
+  }
+});
+```
+
+You only need to include the keys you want to change. For multi-language support and advanced patterns, see the [Dictionary customization guide](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/dictionaries/).
+
+## Default keys and values
+
+Below are the default English (`en_US`) strings provided by the **Payment Services** drop-in:
+
+```json title="en_US.json"
+{
+  "PaymentServices": {
+    "ApplePay": {
+      "errors": {
+        "default": {
+          "name": "Apple Pay error",
+          "message": "An unexpected error occurred. Please try again or contact support."
+        }
+      }
+    },
+    "CreditCard": {
+      "errors": {
+        "default": {
+          "name": "Credit Card error",
+          "message": "An unexpected error occurred. Please try again or contact support."
+        }
+      },
+      "formFields": {
+        "cvv": {
+          "invalidError": "Enter valid cvv.",
+          "label": "",
+          "missingError": "This field is required.",
+          "placeholder": "CVV*"
+        },
+        "expirationDate": {
+          "invalidError": "Enter valid expiration date.",
+          "label": "",
+          "missingError": "This field is required.",
+          "placeholder": "MM/YY*"
+        },
+        "number": {
+          "invalidError": "Enter valid card number.",
+          "label": "",
+          "missingError": "This field is required.",
+          "placeholder": "Card Number*"
+        }
+      }
+    },
+    "messages": {
+      "methodNotAvailable": "Payment method not available. Please contact support.",
+      "methodNotLoaded": "Failed to load payment method. Please try again later.",
+      "methodLoading": "Loading payment method..."
+    }
+  }
+}
+```
+
+---
+
+# Payment Services Data & Events
+
+The Payment Services drop-in uses the [event bus](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/events/) to emit and listen for events, enabling communication between drop-ins and external integrations.
+
+<strong>Version: 3.1.1</strong>
+
+## Events reference
+
+| Event         | Direction | Description                                                |
+|---------------|-----------|------------------------------------------------------------|
+| authenticated | Listens   | Used to determine whether the shopper is a guest customer. |
+
+---
+
+# Payment Services Functions
+
+{/*
+  ⚠️ TEMPLATE USAGE GUIDE ⚠️
+  
+  This template is used by scripts/@generate-function-docs.js to generate API function documentation.
+  
+  Placeholders used in this template:
+  - DROPIN_NAME → Display name (e.g., "Cart", "Checkout")
+  - DROPIN_DISPLAY_NAME → Display name for use in text (e.g., "Cart", "Checkout")
+  - DROPIN_VERSION → Version number (e.g., "1.5.1")
+  - FUNCTIONS_TABLE → Table listing all functions with brief descriptions
+  - FUNCTIONS_CONTENT → All function documentation (generated from source .mdx files)
+  
+  The script handles:
+  - Reading function .mdx files from src/api directories in source repositories
+  - Cleaning Storybook imports and metadata
+  - Combining all functions into a single documentation page
+  
+  The template and script must be kept in sync.
+  
+  HEADING HIERARCHY:
+  H1: "DROPIN_NAME functions" (from title)
+  H2: Individual function names
+  H3: Examples, Events, Returns (subsection headings)
+  Content flow: [Signature code block] → [Parameters table] → Examples → Events → Returns
+*/}
+
+The Payment Services drop-in currently has no functions defined.
+
+<strong>Version: 3.1.1</strong>
+
+{/* AUTO-GENERATED CONTENT - Do not edit below this line */}
+
+{/* This documentation is auto-generated from the drop-in source repository: git@github.com:adobe-commerce/storefront-payment-services */}
+
+---
+
+# Payment Services overview
+
+The Payment Services drop-in component renders the credit card form and the Apple Pay button.
+
+## Supported payment methods
+
+The following table provides an overview of the payment methods that the Payment Services drop-in supports. The "Payment method code" column lists the `PaymentMethodCode` enum value for each method:
+
+| Payment method    | Payment method code | Status                                     |
+|-------------------|---------------------|--------------------------------------------|
+| Apple Pay         | `APPLE_PAY`         | Supported   |
+| Credit/debit card | `CREDIT_CARD`       | Supported   |
+| Google Pay        | `GOOGLE_PAY`        | Roadmap |
+| PayPal Fastlane   | `FASTLANE`          | Roadmap |
+| PayPal buttons    | `SMART_BUTTONS`     | Roadmap |
+
+Use the `PaymentMethodCode` enum from the API import:
+
+```ts
+```
+
+## Available containers
+
+The Payment Services drop-in component provides two containers:
+
+- **Apple Pay container:** The `ApplePay` container renders an Apple Pay button that shoppers on Apple devices can use to place an order.
+
+- **Credit card container:** The `CreditCard` container renders a form where shoppers enter their card details to place an order with a credit or debit card.
+
+## Additional resources
+
+- https://developer.adobe.com/commerce/webapi/graphql/payment-services-extension/
+- https://developer.adobe.com/commerce/webapi/graphql/payment-services-extension/workflows/
+- https://experienceleague.adobe.com/en/docs/commerce/payment-services/guide-overview#support
+
+For more information, refer to the specific service documentation linked above.
+
+---
+
+# Payment Services initialization
+
+The Payment Services initializer provides configuration options for the backend endpoint and language definitions.
+
+<strong>Version: 3.1.1</strong>
+
+## Configuration options
+
+The following table describes the configuration options available for the **Payment Services** initializer:
+
+| Option             | Type     | Req? | Description                                                                                                                                                                                                                                                                                                                                                                                                                          |
+|--------------------|----------|------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `apiUrl` | string | Yes | Adobe Commerce GraphQL endpoint URL (for example, `https://example.com/graphql`). |
+| `getCustomerToken` | function | Yes | Provides authorization for GraphQL requests made on behalf of the shopper. For token-based auth, it must return a customer token (string) or `null` for guests. For session-based auth, it must be set to `null`. |
+| `storeViewCode` | string | No | Adobe Commerce store view code used for GraphQL requests. If not set, the `Store` HTTP header is not included. |
+| `langDefinitions` | object | No | Language definitions used for internationalization (i18n). |
+
+## Default configuration
+
+The initializer runs with these defaults when no configuration is provided:
+
+```javascript title="scripts/initializers/payment-services.js"
+
+// All configuration options are optional
+await initializers.mountImmediately(initialize, {
+  langDefinitions: {}, // Uses built-in English strings
+  // Drop-in-specific defaults:
+  // apiUrl: undefined // See configuration options above
+  // getCustomerToken: undefined // See configuration options above
+  // storeViewCode: undefined // See configuration options above
+});
+```
+
+## Language definitions
+
+Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override default text for the drop-in.
+
+```javascript title="scripts/initializers/payment-services.js"
+
+const customStrings = {
+  "CreditCard": {
+    "formFields": {
+      "cvv": { "placeholder": "CVV*" },
+      "expirationDate": { "placeholder": "MM/YY*" },
+      "number": { "placeholder": "Card number*" }
+    }
+  },
+};
+
+const langDefinitions = {
+  default: customStrings,
+};
+
+await initializers.mountImmediately(initialize, { langDefinitions });
+```
+
+> For complete dictionary customization including all available keys and multi-language support, see the [Payment Services Dictionary](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/payment-services/dictionary/) page.
+
+## Customizing data models
+
+No customizable models are available for this drop-in.
+
+## Drop-in configuration
+
+The **Payment Services initializer** provides options to configure the backend endpoint and language definitions.
+
+```javascript title="scripts/initializers/payment-services.js"
+
+const initializeDropin = async () => {
+  const labels = await fetchPlaceholders('placeholders/payment-services.json');
+  const langDefinitions = {
+    default: {
+      ...labels,
+    },
+  };
+
+  const coreEndpoint = await getConfigValue('commerce-core-endpoint');
+  const getUserTokenCookie = () => getCookie('auth_dropin_user_token');
+
+  return initializers.mountImmediately(initialize, {
+    apiUrl: coreEndpoint,
+    getCustomerToken: getUserTokenCookie,
+    langDefinitions,
+  });
+};
+
+await initializeDropin();
+```
+
+> Refer to the [Configuration options](#configuration-options) table for detailed descriptions of each option.
+
+### Initialization is asynchronous
+
+The Payment Services drop-in initializer is fully asynchronous. Even if mounted immediately, it initializes in the background and emits initialization updates via custom events.
+
+### Payment method availability
+
+During asynchronous initialization, the Payment Services drop-in emits a series of events to indicate readiness across different locations. Each event includes a payload of `{ availablePaymentMethods: string[] }`, listing the available payment method codes.
+
+The following table contains the available event names and their descriptions:
+
+| Event name                                    | Description                                                                                                                                                |
+|-----------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `payment-services/initialized/checkout` | Indicates the drop-in is initialized for the `CHECKOUT` location. The `event.availablePaymentMethods` property lists the payment methods available on the checkout page. |
+| `payment-services/initialized/product-detail` | Indicates the drop-in is initialized for the `PRODUCT_DETAIL` location. The `event.availablePaymentMethods` property lists the payment methods available on the product detail page. |
+
+The following example demonstrates how to implement payment method availability event handlers for the checkout page.
+
+```javascript
+
+events.on('payment-services/initialized/checkout', ({ availablePaymentMethods }) => {
+  if (availablePaymentMethods.contains(PaymentMethodCode.APPLE_PAY)) {
+    console.log("Apple Pay available for checkout page.");
+  }
+  if (availablePaymentMethods.contains(PaymentMethodCode.CREDIT_CARD)) {
+    console.log("Credit Card available for checkout page.");
+  }
+});
+```
+
+---
+
+# Payment Services installation
+
+This guide explains how to install and configure the Payment Services drop-in component in your storefront.
+
+## Onboard to Payment Services
+
+Before you can use the Payment Services component in your storefront, you must https://experienceleague.adobe.com/en/docs/commerce/payment-services/get-started/onboard to Payment Services in the Adobe Commerce Admin.
+
+> **Payment Services extension** The Payment Services drop-in requires the Payment Services extension version https://experienceleague.adobe.com/en/docs/commerce/payment-services/release-notes#v2100 or higher. PaaS only (Applies to Adobe Commerce on Cloud projects (Adobe-managed PaaS infrastructure) and on-premises projects only.)
+
+## Register your storefront domain with Apple
+The following steps explain how to register your storefront domain with Apple, which is required to use Apple Pay.
+
+  
+    ### 1. Download the file SaaS only (Applies to Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer projects only (Adobe-managed SaaS infrastructure).)
+    Download the Apple Pay domain verification file.
+    https://paypalobjects.com/devdoc/apple-pay/well-known/apple-developer-merchantid-domain-association.
+  
+
+  
+    ### 2. Serve as binary content SaaS only (Applies to Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer projects only (Adobe-managed SaaS infrastructure).)
+Add the file to the following path in your storefront repository. Note the added `.bin` extension, which is currently the only way available in EDS to serve binary content.
+    ```txt showLineNumbers=false
+    /.well-known/apple-developer-merchantid-domain-association.bin
+    ```
+  
+
+  
+    ### 3. Set up URL redirect SaaS only (Applies to Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer projects only (Adobe-managed SaaS infrastructure).)
+Add a https://www.aem.live/docs/redirects to make the domain verification file accessible at `https://your-sandbox-domain.com/.well-known/apple-developer-merchantid-domain-association`.
+
+    | Source                                                    | Destination                                                    |
+    |-----------------------------------------------------------|----------------------------------------------------------------|
+    | .well-known/apple-developer-merchantid-domain-association | /.well-known/apple-developer-merchantid-domain-association.bin |
+
+    
+
+> **Sandbox only** Serving the file via a redirect works for sandbox domain registration, but not for production. In production, the file [must be served directly](#set-up-production-url-rewrite), without a redirect.
+
+  
+
+  
+    ### 4. Register sandbox domain
+Contact your sales representative to register the sandbox domain with Apple.
+  
+
+  
+    ### 5. Set up production URL rewrite SaaS only (Applies to Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer projects only (Adobe-managed SaaS infrastructure).)
+Set up a /setup/configuration/content-delivery-network/#url-rewrites at the CDN level to make the domain verification file directly accessible at https://your-production-domain.com/.well-known/apple-developer-merchantid-domain-association, without redirects.
+  
+
+  
+    ### 6. Register production domain
+Contact your sales representative to register the production domain with Apple.
+
+---
+
+# Payment Services Slots
+
+The Payment Services drop-in does not expose any slots for customization.
+
+## Why no slots?
+
+This drop-in wraps the Adobe Payment Services SDK (`@adobe-commerce/payment-services-sdk`), which renders secure payment forms directly into specified DOM elements. The SDK controls all UI rendering to maintain PCI (Payment Card Industry) compliance and security standards. You customize the payment forms through SDK configuration options (field placeholders, card type settings, callback handlers) passed to `sdk.Payment.CreditCard.render()`, not through the slot-based pattern other drop-ins use.
+
+<strong>Version: 3.1.1</strong>
+
+---
+
+# Payment Services styles
+
+Customize the Payment Services drop-in using CSS classes and design tokens. This page covers the Payment Services-specific container classes and customization examples. For comprehensive information about design tokens, responsive breakpoints, and styling best practices, see [Styling Drop-In Components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/styling/).
+
+<strong>Version: 3.1.1</strong>
+
+## Customization example
+
+Add this to the CSS file of the specific https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/ where you're using the Payment Services drop-in.
+
+For a complete list of available design tokens (colors, spacing, typography, and more), see the [Design tokens reference](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/styling/#design-tokens-reference).
+
+```css title="styles/styles.css" del={2-2} ins={3-3}
+.credit-card-error {
+  padding: var(--spacing-small);
+  padding: var(--spacing-medium);
+}
+```
+
+## Container classes
+
+The Payment Services drop-in uses BEM-style class naming. Use the browser DevTools to inspect elements and find specific class names.
+
+```css
+/* CheckoutPaymentMethods */
+.payment-services-checkout-payment-methods {}
+
+/* CreditCardForm */
+.credit-card-error {}
+.credit-card-error__icon {}
+
+/* CreditCardForm */
+.credit-card-field {}
+.credit-card-field__container {}
+.credit-card-field__container--error {}
+.credit-card-field__error {}
+.credit-card-field__label {}
+
+/* CreditCardForm */
+.hidden {}
+.payment-services-credit-card-form {}
+.payment-services-credit-card-form__card-number {}
+.payment-services-credit-card-form__eligible-cards {}
+.payment-services-credit-card-form__eligible-cards-icon {}
+.payment-services-credit-card-form__eligible-cards-selected {}
+.payment-services-credit-card-form__eligible-cards-unselected {}
+.payment-services-credit-card-form__loading {}
+```
+
+---
+
+# Wishlist Containers
+
+The **Wishlist** drop-in provides pre-built container components for integrating into your storefront.
+
+<strong>Version: 3.2.0</strong>
+
+## What are Containers?
+
+Containers are pre-built UI components that combine functionality, state management, and presentation. They provide a complete solution for specific features and can be customized through props, slots, and CSS.
+
+## Available Containers
+
+| Container | Description |
+| --------- | ----------- |
+| [Wishlist](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/wishlist/containers/wishlist/) | Learn about the wishlist container. |
+| [WishlistAlert](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/wishlist/containers/wishlist-alert/) | Learn about the `WishlistAlert` container. |
+| [WishlistItem](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/wishlist/containers/wishlist-item/) | Learn about the `WishlistItem` container. |
+| [WishlistToggle](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/wishlist/containers/wishlist-toggle/) | Learn about the `WishlistToggle` container. |
+
+> Each container is designed to work independently but can be composed together to create comprehensive user experiences.
+
+---
+
+# Wishlist container
+
+This container manages and displays the list of products on a user's wishlist.
+A container's behavior is controlled by configuration options like `moveProdToCart`, `getProductData`, and `refineProduct`, and routing via `routeEmptyWishlistCTA`, `routeProdDetailPage`, and `routeToWishlist`.
+
+![Wishlist container](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/wish-list/wishlist.png)
+
+*Wishlist container*
+
+## Configurations
+
+The `Wishlist` container provides the following configuration options:
+
+```text
+[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['routeEmptyWishlistCTA', 'function', 'No', 'Specifies the URL to show when the wishlist is empty.'],
+        ['routeToWishlist', 'string', 'No', 'Specifies the URL to show when the wishlist has products.'],
+        ['moveProdToCart', 'function', 'Yes', 'A function that is executed when the user clicks the "move product to cart" button.'],
+        ['routeProdDetailPage', 'function', 'Yes', 'A function that returns the URL for the product details page.'],
+        ['getProductData', 'function', 'No', 'A function that is executed to retrieve product information when rendering the wishlist.'],
+        ['getRefinedProduct', 'function', 'No', 'A function that is executed to retrieve complex product information (such as product options) when rendering the wishlist.'],
+    ]
+```
+
+## Example
+
+The following example demonstrates how to render the `Wishlist` container:
+
+```javascript
+provider.render(Wishlist, {
+    moveProdToCart: cartApi.addProductsToCart,
+    routeProdDetailPage: (product) => rootLink(`/products/${product.urlKey}/${product.sku}`),
+    getProductData: pdpApi.getProductData,
+    getRefinedProduct: pdpApi.getRefinedProduct,
+  });
+```
+
+---
+
+# WishlistAlert container
+
+The `WishlistAlert` container displays notifications that give feedback about actions performed in a wishlist drop-in component.
+
+![Wishlist container](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/wish-list/wishlist-alert.png)
+
+*WishlistAlert container*
+
+## Configurations
+
+The `WishlistAlert` container provides the following configuration options:
+
+```text
+[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['action', 'string', 'Yes', 'Specifies the action to notify the user about. Valid values are: "add", "remove", "move", "addError" and "removeError.'],
+        ['item', 'object', 'Yes', 'The wishlist item where the action is performed.'],
+        ['routeToWishlist', 'string', 'No', 'Specifies the URL to show when the wishlist has products.'],
+    ]
+```
+
+## Example
+
+The following example demonstrates how to render the `WishlistAlert` container:
+
+```javascript
+provider.render(Wishlist, {
+    action: 'add', // or 'remove', 'move', 'addError', 'removeError'
+    item: { product: { name: 'Sample Product' } },
+    routeToWishlist: '/wishlist',
+  });
+```
+
+---
+
+# WishlistItem container
+
+The `WishlistItem` container manages and displays a single product from a wishlist. It allows users to interact with the product, such as moving it to the cart or navigating to the product details page.
+
+For complex products that have no variant selected in the wishlist, the **Move To Cart** button becomes a **Customize** button. Users must select a variant first by navigating to the product details page.
+Its behavior is driven by configuration options such as `moveProdToCart`, `getProductData`, `getRefinedProduct` and routing via `routeProdDetailPage` callbacks.
+
+![Wishlist container](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/wish-list/wishlist-item.png)
+
+*WishlistItem container*
+
+## Configurations
+
+The `WishlistItem` container provides the following configuration options:
+
+```text
+[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['item', 'Item', 'Yes', 'The wishlisted item.'],
+        ['moveProdToCart', 'function', 'Yes', 'A function that is executed when the user clicks the "move product to cart" button.'],
+        ['routeProdDetailPage', 'function', 'Yes', 'A function that returns the URL for the product details page.'],
+        ['getProductData', 'function', 'No', 'A function that is executed to retrieve product information when rendering the wishlist item.'],
+        ['getRefinedProduct', 'function', 'No', 'A function that is executed to retrieve complex product information (such as product options) when rendering the wishlist item.'],
+        ['imageNode', 'function', 'No', 'Custom render function for the product thumbnail image. Receives `{ defaultImageProps }` (of type `ImageNodeRenderProps`) and must return a JSX element. Use to replace the default product image with a custom component.'],
+    ]
+```
+
+## Example
+
+The following example demonstrates how to render the `WishlistItem` container:
+
+```javascript
+provider.render(WishlistItem, {
+    item: sampleWishlistItem,
+    moveProdToCart: cartApi.addProductsToCart,
+    routeProdDetailPage: (product) => rootLink(`/products/${product.urlKey}/${product.sku}`),
+    getProductData: pdpApi.getProductData,
+    getRefinedProduct: pdpApi.getRefinedProduct
+  });
+```
+
+---
+
+# WishlistToggle container
+
+The `WishlistToggle` container provides a button for adding and removing specific products.
+Configuration options drive its behavior and appearance, such as size and variant.
+
+![Wishlist container](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/wish-list/wishlist.png)
+
+*Wishlist container*
+
+## Configurations
+
+The `WishlistToggle` container provides the following configuration options:
+
+```text
+[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['product', 'object', 'Yes', 'The product object to add to or remove from a wishlist.'],
+        ['iconWishlisted', 'VNode', 'No', 'The icon to show when the product is already in the wishlist.'],
+        ['iconToWishlist', 'VNode', 'No', 'The icon to show when the product is not in the wishlist.'],
+        ['size', 'string', 'No', 'The size of the button, "medium" or "large".'],
+        ['variant', 'string', 'No', 'The variant of the button from "primary", "secondary" or "tertiary".'],
+        ['disabled', 'boolean', 'No', 'If true, the button is disabled.'],
+        ['labelToWishlist', 'string', 'No', 'The label to show when the product is not in the wishlist.'],
+        ['labelWishlisted', 'string', 'No', 'The label to show when the product is already in the wishlist.'],
+        ['onClick', 'function', 'No', 'A function that is executed when the user clicks the button.'],
+        ['removeProdFromCart', 'function', 'No', 'Callback invoked when a product is added to the wishlist that already exists in the cart. Use to remove the product from the cart upon wishlisting.'],
+    ]
+```
+
+## Example
+
+The following example demonstrates how to render the `Wishlist` container:
+
+```javascript
+provider.render(WishlistToggle, {
+    product: sampleProduct,
+    iconWishlisted: <Icon name="heart" />,
+    iconToWishlist: <Icon name="heart-outline" />,
+    size: 'medium',
+    variant: 'primary',
+    labelToWishlist: 'Add to Wishlist',
+    labelWishlisted: 'Remove from Wishlist',
+  });
+```
+
+---
+
+# Wishlist Dictionary
+
+The **Wishlist dictionary** contains all user-facing text, labels, and messages displayed by this drop-in. Customize the dictionary to:
+
+- **Localize** the drop-in for different languages and regions
+- **Customize** labels and messages to match your brand voice
+- **Override** default text without modifying source code for the drop-in
+
+Dictionaries use the **i18n (internationalization)** pattern, where each text string is identified by a unique key path.
+
+<strong>Version: 3.2.0</strong>
+
+## How to customize
+
+Override dictionary values during drop-in initialization. The drop-in deep-merges your custom values with the defaults.
+
+```javascript
+
+await initialize({
+  langDefinitions: {
+    en_US: {
+      "Wishlist": {
+        "EmptyWishlist": {
+          "heading": "My Custom Title",
+          "message": "Your custom message here"
+        }
+      }
+    }
+  }
+});
+```
+
+You only need to include the keys you want to change. For multi-language support and advanced patterns, see the [Dictionary customization guide](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/dictionaries/).
+
+## Default keys and values
+
+Below are the default English (`en_US`) strings provided by the **Wishlist** drop-in:
+
+```json title="en_US.json"
+{
+  "Wishlist": {
+    "EmptyWishlist": {
+      "heading": "Your wishlist is empty",
+      "message": "Add items by clicking on the heart icon.",
+      "cta": "Start shopping"
+    },
+    "Wishlist": {
+      "heading": "Wishlist {count}",
+      "loading": "Loading...",
+      "ariaLabelAddToWishlist": "add {PRODUCT_NAME} to wishlist",
+      "ariaLabelRemoveFromWishlist": "remove {PRODUCT_NAME} from wishlist"
+    },
+    "Alert": {
+      "addProduct": {
+        "heading": "Added to wishlist",
+        "message": "{product} has been added to your wishlist"
+      },
+      "removeProduct": {
+        "heading": "Removed from wishlist",
+        "message": "{product} has been removed from your wishlist"
+      },
+      "moveToCart": {
+        "heading": "Moved to cart",
+        "message": "{product} has been moved to your cart"
+      },
+      "addError": {
+        "heading": "Error",
+        "message": "Failed to add product to wishlist"
+      },
+      "removeError": {
+        "heading": "Error",
+        "message": "Failed to remove {product} from wishlist"
+      },
+      "viewWishlist": "View wishlist"
+    },
+    "Login": {
+      "sync": " to sync your saved items across all your devices.",
+      "logIn": "Log in"
+    }
+  },
+  "ProductItem": {
+    "CartActionButton": "Move To Cart",
+    "TrashActionButton": "Remove this product from wishlist",
+    "CustomizeActionButton": "Customize"
+  }
+}
+```
+
+---
+
+# Wishlist Data & Events
+
+The **Wishlist** drop-in uses the [event bus](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/events/) to emit and listen to events for communication between drop-ins and external integrations.
+
+<strong>Version: 3.2.0</strong>
+
+## Events reference
+
+{/* EVENTS_TABLE_START */}
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [wishlist/initialized](#wishlistinitialized-emits) | Emits | Emitted when the component completes initialization. |
+| [wishlist/alert](#wishlistalert-emits-and-listens) | Emits and listens | Emitted when the wishlist shows an alert or notification. |
+| [wishlist/data](#wishlistdata-emits-and-listens) | Emits and listens | Triggered when data is available or changes. |
+| [wishlist/reset](#wishlistreset-emits-and-listens) | Emits and listens | Triggered when the component state is reset. |
+
+{/* EVENTS_TABLE_END */}
+
+## Event details
+
+The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
+
+### `wishlist/alert` (emits and listens)
+
+Emitted when the wishlist shows an alert or notification.
+
+#### Event payload
+
+```typescript
+WishlistActionPayload | null
+```
+
+See [`WishlistActionPayload`](#wishlistactionpayload) for full type definition.
+
+#### Example
+
+```js
+
+events.on('wishlist/alert', (payload) => {
+  console.log('wishlist/alert event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `wishlist/data` (emits and listens)
+
+Emitted when wishlist data is updated or retrieved. This event is triggered after operations like adding items, removing items, or updating quantities in the wishlist.
+
+#### Event payload
+
+```typescript
+Wishlist | null
+```
+
+See [`Wishlist`](#wishlist) for full type definition.
+
+#### Example
+
+```js
+
+events.on('wishlist/data', (payload) => {
+  console.log('wishlist/data event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `wishlist/initialized` (emits)
+
+Emitted when the wishlist component completes initialization. This indicates the wishlist is ready to display items and accept user interactions.
+
+#### Event payload
+
+```typescript
+Wishlist | null
+```
+
+See [`Wishlist`](#wishlist) for full type definition.
+
+#### Example
+
+```js
+
+events.on('wishlist/initialized', (payload) => {
+  console.log('wishlist/initialized event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `wishlist/reset` (emits and listens)
+
+Triggered when the component state is reset.
+
+#### Event payload
+
+#### Example
+
+```js
+
+events.on('wishlist/reset', (payload) => {
+  console.log('wishlist/reset event received:', payload);
+  // Add your custom logic here
+});
+```
+
+## Data Models
+
+The following data models are used in event payloads for this drop-in.
+
+### Wishlist
+
+Used in: [`wishlist/data`](#wishlistdata-emits-and-listens), [`wishlist/initialized`](#wishlistinitialized-emits).
+
+```ts
+interface Wishlist {
+  id: string;
+  updated_at: string;
+  sharing_code: string;
+  items_count: number;
+  items: Item[];
+}
+```
+
+### WishlistActionPayload
+
+Used in: [`wishlist/alert`](#wishlistalert-emits-and-listens).
+
+```ts
+interface WishlistActionPayload {
+    action: WishlistAlertProps.action;
+    item: WishlistAlertProps.item;
+  }
+```
+
+---
+
+# Wishlist Functions
+
+The Wishlist drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
+
+<strong>Version: 3.2.0</strong>
+
+| Function | Description |
+| --- | --- |
+| [`addProductsToWishlist`](#addproductstowishlist) | Add products to a user's wishlist. |
+| [`clearPersistedLocalStorage`](#clearpersistedlocalstorage) | Removes the persisted wishlist data from local storage. |
+| [`getDefaultWishlist`](#getdefaultwishlist) | Fetches the authenticated customer's default (first) wishlist. |
+| [`getGuestWishlist`](#getguestwishlist) | Returns the current guest wishlist from persisted storage. |
+| [`getPersistedWishlistData`](#getpersistedwishlistdata) | Returns wishlist data from browser storage. |
+| [`getStoreConfig`](#getstoreconfig) | Retrieves the store configuration, which includes various settings and preferences for the store. |
+| [`getWishlistById`](#getwishlistbyid) | Retrieves a wishlist by its ID. |
+| [`getWishlistItemFromStorage`](#getwishlistitemfromstorage) | Looks up a specific wishlist item in browser storage by SKU and option UIDs. |
+| [`getWishlists`](#getwishlists) | Retrieves all wishlists associated with a user. |
+| [`initializeWishlist`](#initializewishlist) | Initializes wishlist state for the drop-in. |
+| [`mergeWishlists`](#mergewishlists) | Merge a wishlist from local storage with one belonging to a registered user. |
+| [`removeProductsFromWishlist`](#removeproductsfromwishlist) | Remove products from a user's wishlist. |
+| [`resetWishlist`](#resetwishlist) | Resets the wishlist by clearing the current wishlist ID and marking the user as unauthenticated. |
+| [`setPersistedWishlistData`](#setpersistedwishlistdata) | Persists wishlist data to browser storage. |
+| [`updateProductsInWishlist`](#updateproductsinwishlist) | Update the quantity of products in a user's wishlist. |
+
+## addProductsToWishlist
+
+The `addProductsToWishlist` function allows you to add products to a user's wishlist. This function is typically used when a user wants to save a product for later purchase. The function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/wishlist/mutations/add-products/ mutation.
+
+```ts
+const addProductsToWishlist = async (
+  items: [ { sku: string; quantity: number; optionsUIDs?: string[]; // should be the options available for the product enteredOptions?: { uid: string; value: string }[]; // refer to both selected and entered options } ]
+): Promise<Wishlist | null>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `sku` | `string` | Yes | The product identifier (SKU) for the product. For configurable products (like a shirt available in multiple colors and sizes), use the child product SKU that represents the specific variant selected by the customer (for example, \`MS09-M-Blue\` for a medium blue shirt). |
+| `quantity` | `number` | Yes | The number of items. This value must be a positive number. |
+| `optionsUIDs` | `string[]` | No | An array of option UIDs for configurable products—the selected options (such as color or size) that identify the variant. Use the product query to retrieve available option UIDs for a product. |
+
+### Events
+
+Emits the [`wishlist/data`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/wishlist/events/#wishlistdata-emits-and-listens) event with the updated wishlist information after adding the products. This event may be emitted multiple times depending on the operation flow (for example, creating a new wishlist, merging wishlists, or updating an existing wishlist).
+
+### Returns
+
+Returns [`Wishlist`](#wishlist) or `null`.
+
+## getStoreConfig
+
+The `getStoreConfig` function retrieves the store configuration, which includes various settings and preferences for the store.
+
+```ts
+const getStoreConfig = async (): Promise<StoreConfigModel | null>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`StoreConfigModel`](#storeconfigmodel) or `null`.
+
+## getWishlistById
+
+The `getWishlistById` function returns a customer's wishlist by ID, using the https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/ query, with the contents defined by the `wishlist_v2` object.
+
+```ts
+const getWishlistById = async (
+  wishlistId: string
+): Promise<void | Wishlist | null>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `wishlistId` | `string` | Yes | The unique identifier of the wishlist to retrieve. |
+
+### Events
+
+Emits the [`wishlist/data`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/wishlist/events/#wishlistdata-emits-and-listens) event with the retrieved wishlist information.
+
+### Returns
+
+Returns `void | Wishlist | null`. See [`Wishlist`](#wishlist).
+
+## getWishlists
+
+The `getWishlists` function retrieves all wishlists associated with a user. This is useful for displaying all wishlists a user has created.
+
+```ts
+const getWishlists = async (): Promise<void | Wishlist[] | null>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void | Wishlist[] | null`. See [`Wishlist`](#wishlist).
+
+## initializeWishlist
+
+The `initializeWishlist` function loads wishlist state when the drop-in starts. Call it during setup so containers receive data before rendering.
+
+```ts
+const initializeWishlist = async (): Promise<Wishlist | null>
+```
+
+### Events
+
+Emits the following events: [`wishlist/data`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/wishlist/events/#wishlistdata-emits-and-listens), [`wishlist/initialized`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/wishlist/events/#wishlistinitialized-emits).
+
+### Returns
+
+Returns [`Wishlist`](#wishlist) or `null`.
+
+## mergeWishlists
+
+The `mergeWishlists` function allows you to merge a wishlist from local storage with one belonging to a registered user. This is useful when a user wants to synchronize both local and remote wishlists into one wishlist after logging in.
+
+### Signature
+
+```typescript
+function mergeWishlists(wishlist: Wishlist): Promise<Wishlist | null>
+```
+
+---
+
+## removeProductsFromWishlist
+
+The `removeProductsFromWishlist` function allows you to remove products from a user's wishlist. The function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/wishlist/mutations/remove-products/ mutation.
+
+```ts
+const removeProductsFromWishlist = async (
+  items: Array<Item>
+): Promise<Wishlist | null>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `items` | `Array<Item>` | Yes | An array of wishlist item identifiers to remove from the wishlist. |
+
+### Events
+
+Emits the [`wishlist/data`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/wishlist/events/#wishlistdata-emits-and-listens) event with the updated wishlist information after removing the products. This event may be emitted multiple times depending on whether the wishlist becomes empty after removal.
+
+### Returns
+
+Returns [`Wishlist`](#wishlist) or `null`.
+
+## resetWishlist
+
+The `resetWishlist` function resets the wishlist by clearing the current wishlist ID and marking the user as unauthenticated. It returns a promise that resolves to `null`.
+
+```ts
+const resetWishlist = async (): Promise<Wishlist | null>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`Wishlist`](#wishlist) or `null`.
+
+## updateProductsInWishlist
+
+The `updateProductsInWishlist` function allows you to update the quantity of products in a user's wishlist. The function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/wishlist/mutations/update-products/ mutation.
+
+```ts
+const updateProductsInWishlist = async (
+  items: { wishlistItemId: string; quantity: number; description: string; selectedOptions?: string[]; enteredOptions?: { uid: string; value: string }[]; }[]
+): Promise<Wishlist | null>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `wishlistItemId` | `string` | Yes | The unique identifier of the wishlist item to update. This ID is returned in the wishlist data structure when you retrieve a wishlist (not the product SKU). Each item in a wishlist has its own unique ID, even if multiple items reference the same product. |
+| `quantity` | `number` | Yes | The new quantity for the item. This replaces the current quantity (it does not increment). For example, setting this to \`2\` will change the quantity to 2, regardless of the previous value. This value must be a positive number. |
+| `description` | `string` | Yes | A text description. |
+| `selectedOptions` | `string[]` | No | An array of option UIDs to update the selected product options for configurable products. For example, if a customer wants to change the size from \*\*Medium\*\* to \*\*Large\*\*, you would provide the UID for the Large option. These are the same type of option UIDs used when selecting product options. |
+| `enteredOptions` | `{ uid: string; value: string }[]` | No | An array of custom options that allow text input for customizable products. Each object contains a \`uid\` (the unique identifier for the custom option field from the product data) and a \`value\` (the text the customer entered). These are typically used for personalization like engravings or custom messages. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`Wishlist`](#wishlist) or `null`.
+
+## clearPersistedLocalStorage
+
+The `clearPersistedLocalStorage` function removes the persisted wishlist data from local storage. Used during sign-out or wishlist reset flows to clean up guest session data.
+
+```ts
+const clearPersistedLocalStorage = (): void
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## getDefaultWishlist
+
+The `getDefaultWishlist` function fetches all wishlists for the authenticated customer and returns the first one as the default. Sets the retrieved wishlist ID in the drop-in state.
+
+```ts
+const getDefaultWishlist = async (): Promise<Wishlist | null>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`Wishlist`](#wishlist) or `null` if the customer has no wishlists.
+
+## getGuestWishlist
+
+The `getGuestWishlist` function retrieves the current guest wishlist from persisted browser storage. Used internally by `initializeWishlist` when the user is not authenticated.
+
+```ts
+const getGuestWishlist = async (): Promise<Wishlist | {}>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`Wishlist`](#wishlist) or an empty object `{}` when no guest wishlist exists.
+
+## getPersistedWishlistData
+
+The `getPersistedWishlistData` function returns wishlist data from browser storage. Reads from `sessionStorage` for authenticated users and `localStorage` for guests. Returns an empty wishlist object when no data is stored.
+
+```ts
+const getPersistedWishlistData = (guest?: boolean): Wishlist | {}
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `guest` | `boolean` | No | When `true`, forces reading from `localStorage` regardless of authentication state. Defaults to `false`. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`Wishlist`](#wishlist) or `{}` when no data is found.
+
+## getWishlistItemFromStorage
+
+The `getWishlistItemFromStorage` function looks up a specific wishlist item in browser storage by its product SKU and option UIDs. Useful for checking whether a product (with specific configuration) is already in the wishlist.
+
+```ts
+const getWishlistItemFromStorage = (
+  productSku: string,
+  optionUIDs?: string[]
+): WishlistItem | undefined
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `productSku` | `string` | Yes | The SKU of the product to look up. |
+| `optionUIDs` | `string[]` | No | An array of selected option UIDs for configurable products. Defaults to an empty array. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns the matching wishlist item or `undefined` when not found.
+
+## setPersistedWishlistData
+
+The `setPersistedWishlistData` function persists wishlist data to browser storage. Writes to `sessionStorage` for authenticated users and `localStorage` for guests. Passing `null` removes the stored wishlist.
+
+```ts
+const setPersistedWishlistData = (data: Wishlist | null): void
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `data` | `Wishlist \| null` | Yes | The wishlist data to persist. Pass `null` to remove the stored data. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## Data Models
+
+The following data models are used by functions in this drop-in.
+
+### StoreConfigModel
+
+The `StoreConfigModel` object is returned by the following functions: [`getStoreConfig`](#getstoreconfig).
+
+```ts
+interface StoreConfigModel {
+  wishlistIsEnabled: boolean;
+  wishlistMaxNumber: number;
+  wishlistMultipleListIsEnabled: boolean;
+}
+```
+
+### Wishlist
+
+The `Wishlist` object is returned by the following functions: [`addProductsToWishlist`](#addproductstowishlist), [`getWishlistById`](#getwishlistbyid), [`getWishlists`](#getwishlists), [`initializeWishlist`](#initializewishlist), [`mergeWishlists`](#mergewishlists), [`removeProductsFromWishlist`](#removeproductsfromwishlist), [`resetWishlist`](#resetwishlist), [`updateProductsInWishlist`](#updateproductsinwishlist).
+
+```ts
+interface Wishlist {
+  id: string;
+  updated_at: string;
+  sharing_code: string;
+  items_count: number;
+  items: Item[];
+}
+```
+
+---
+
+# Wishlist overview
+
+The wishlist drop-in component provides both guests and registered customers with a mechanism to store products they are interested in purchasing later.
+
+The wishlist component is fully customizable and can be integrated into your storefront to enhance the shopping experience.
+
+## Use cases
+
+The wishlist drop-in component offers a variety of fully customizable controls to highlight your products (according to your brand's aesthetics) and create interactive experiences. Use cases include:
+
+- **Save for later**: Users can save products they find interesting to a dedicated location for quick access when they are ready to make a purchase.
+- **Synchronization**: When a guest user creates an account or logs in, their wishlist items automatically sync across all devices where they are signed in.
+
+## Supported Commerce features
+
+The following table provides an overview of the Adobe Commerce features that the wishlist drop-in component supports:
+
+| Feature          | Status                                       |
+| ---------------- | -------------------------------------------- |
+| Wishlist a product for customers | Supported      |
+| Move a product from wishlist to cart | Supported      |
+| Move a product from cart to wishlist | Supported      |
+
+---
+
+# Wishlist initialization
+
+The **Wishlist initializer** configures wishlist functionality including saving items, sharing lists, and managing multiple wishlists. Use initialization to customize wishlist behavior and data models.
+
+<strong>Version: 3.2.0</strong>
+
+## Configuration options
+
+The following table describes the configuration options available for the **Wishlist** initializer:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Provides language definitions for internationalization (i18n). Overrides dictionary keys for localization or branding. |
+| `isGuestWishlistEnabled` | `boolean` | No | Allows guest users to create and manage wishlists without authentication when set to true. Stores guest wishlists in browser storage. |
+| `storeCode` | `string` | No | Scopes wishlist data (cookies and browser storage) per store. Shares wishlist data across all stores when omitted or set to `default`. |
+
+## Default configuration
+
+The initializer runs with these defaults when no configuration is provided:
+
+```javascript title="scripts/initializers/wishlist.js"
+
+// All configuration options are optional
+await initializers.mountImmediately(initialize, {
+  langDefinitions: {}, // Uses built-in English strings
+  models: {}, // Uses default data models
+  // Drop-in-specific defaults:
+  // isGuestWishlistEnabled: undefined // See configuration options below
+});
+```
+
+## Language definitions
+
+Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override default text for the drop-in.
+
+```javascript title="scripts/initializers/wishlist.js"
+
+const customStrings = {
+  'AddToCart': 'Add to Bag',
+  'Checkout': 'Complete Purchase',
+  'Price': 'Cost',
+};
+
+const langDefinitions = {
+  default: customStrings,
+};
+
+await initializers.mountImmediately(initialize, { langDefinitions });
+```
+
+> For complete dictionary customization including all available keys and multi-language support, see the [Wishlist Dictionary](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/wishlist/dictionary/) page.
+
+## Customizing data models
+
+Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
+
+### Available models
+
+The following models can be customized through the `models` configuration option:
+
+> No customizable models are available for this drop-in.
+
+The following example shows the general `models` configuration pattern used across Commerce drop-ins (for reference if you extend the initializer):
+
+```javascript title="scripts/initializers/wishlist.js"
+
+const models = {
+  CustomModel: {
+    transformer: (data) => ({
+      // Add custom fields from backend data
+      customField: data?.custom_field,
+      promotionBadge: data?.promotion?.label,
+      // Transform existing fields
+      displayPrice: data?.price?.value ? `${data.price.value}` : 'N/A',
+    }),
+  },
+};
+
+await initializers.mountImmediately(initialize, { models });
+```
+
+## Drop-in configuration
+
+The **Wishlist initializer** configures wishlist functionality including saving items, sharing lists, and managing multiple wishlists. Use initialization to customize wishlist behavior and data models.
+
+```javascript title="scripts/initializers/wishlist.js"
+
+await initializers.mountImmediately(initialize, {
+  langDefinitions: {},
+  isGuestWishlistEnabled: true,
+});
+```
+
+> Refer to the [Configuration options](#configuration-options) table for detailed descriptions of each option.
+
+## Configuration types
+
+The following TypeScript definitions show the structure of each configuration object:
+
+### langDefinitions
+
+Maps locale identifiers to dictionaries of key-value pairs. The `default` locale is used as the fallback when no specific locale matches. Each dictionary key corresponds to a text string used in the drop-in UI.
+
+```typescript
+langDefinitions?: {
+  [locale: string]: {
+    [key: string]: string;
+  };
+};
+```
+
+---
+
+# Wishlist Quick Start
+
+The Wishlist drop-in enables customers to save products for later purchase, manage multiple wishlists, and easily move items between wishlists and cart.
+
+<strong>Version: 3.2.0</strong>
+
+## Quick example
+
+The Wishlist drop-in is included in the https://github.com/hlxsites/aem-boilerplate-commerce. This example shows the basic pattern:
+
+```js
+// 1. Import initializer (handles all setup)
+
+// 2. Import the container you need
+
+// 3. Import the provider
+
+// 4. Render in your block
+export default async function decorate(block) {
+  await provider.render(Wishlist, {
+    // Configuration options - see Containers page
+  })(block);
+}
+```
+
+**New to drop-ins?** See the [Using drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/quick-start/) guide for complete step-by-step instructions.
+
+## Quick reference
+
+**Import paths:**
+- Initializer: `import '../../scripts/initializers/wishlist.js'`
+- Containers: `import ContainerName from '@dropins/storefront-wishlist/containers/ContainerName.js'`
+- Provider: `import { render } from '@dropins/storefront-wishlist/render.js'`
+
+**Package:** `@dropins/storefront-wishlist`
+
+**Version:** 3.2.0 (verify compatibility with your Commerce instance)
+
+**Example container:** `Wishlist`
+
+## Learn more
+
+- [Containers](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/wishlist/containers/) - Available UI components and configuration options
+- [Initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/wishlist/initialization/) - Customize initializer settings and data models
+- [Functions](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/wishlist/functions/) - Control drop-in behavior programmatically
+- [Events](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/wishlist/events/) - Listen to and respond to drop-in state changes
+- [Slots](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/wishlist/slots/) - Extend containers with custom content
+
+---
+
+# Wishlist Slots
+
+The Wishlist drop-in exposes slots for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/extending/).
+
+<strong>Version: 3.2.0</strong>
+
+| Container | Slots |
+|-----------|-------|
+| [`Wishlist`](#wishlist-slots) | `image` |
+
+## Wishlist slots
+
+The slots for the Wishlist container allow you to customize its appearance and behavior.
+
+```typescript
+interface WishlistProps {
+  slots?: {
+    image?: SlotProps<{
+    defaultImageProps: ImageProps;
+    item: Item;
+    }>;
+  };
+}
+```
+
+### image slot
+
+The image slot allows you to customize the image section of the Wishlist container.
+
+#### Example
+
+```js
+
+await provider.render(Wishlist, {
+  slots: {
+    image: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom image';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+---
+
+# Wishlist styles
+
+Customize the Wishlist drop-in using CSS classes and design tokens. This page covers the Wishlist-specific container classes and customization examples. For comprehensive information about design tokens, responsive breakpoints, and styling best practices, see [Styling Drop-In Components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/styling/).
+
+<strong>Version: 3.2.0</strong>
+
+## Customization example
+
+Add this to https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-wishlist/commerce-wishlist.css to customize the Wishlist drop-in.
+
+For a complete list of available design tokens (colors, spacing, typography, and more), see the [Design tokens reference](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/styling/#design-tokens-reference).
+
+```css title="styles/styles.css" del={2-2} ins={3-3}
+.wishlist-login__sign-in {
+  color: var(--color-neutral-800);
+  color: var(--color-brand-800);
+}
+```
+
+## Container classes
+
+The Wishlist drop-in uses BEM-style class naming. Use the browser DevTools to inspect elements and find specific class names.
+
+```css
+/* EmptyWishlist */
+.dropin-card {}
+.dropin-card--secondary {}
+.dropin-illustrated-message__heading {}
+.dropin-illustrated-message__message {}
+.wishlist-empty-wishlist {}
+.wishlist-empty-wishlist__wrapper {}
+
+/* ImageCarousel */
+.image-carousel {}
+.image-carousel-image {}
+.image-switcher {}
+.image-switcher-active {}
+.image-switcher-area {}
+.image-switcher-inactive {}
+
+/* Login */
+.wishlist-login__link {}
+.wishlist-login__sign-in {}
+
+/* ProductItem */
+.strikethrough {}
+.wishlist-product-item {}
+.wishlist-product-item-button__remove {}
+.wishlist-product-item-discounted-price {}
+.wishlist-product-item-image {}
+.wishlist-product-item-move-to-cart {}
+.wishlist-product-item-name {}
+.wishlist-product-item-option__attribute {}
+.wishlist-product-item-option__label {}
+.wishlist-product-item-options {}
+.wishlist-product-item-price {}
+.wishlist-product-item-tax {}
+.wishlist-product-item__content {}
+.wishlist-product-item__title {}
+
+/* Wishlist */
+.dropin-skeleton {}
+.dropin-skeleton-row {}
+.wishlist-wishlist {}
+.wishlist-wishlist__content {}
+.wishlist-wishlist__content--empty {}
+.wishlist-wishlist__heading {}
+.wishlist-wishlist__heading-count {}
+.wishlist-wishlist__heading-text {}
+```

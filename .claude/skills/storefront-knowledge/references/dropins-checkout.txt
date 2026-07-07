@@ -1,0 +1,4238 @@
+<SYSTEM>This is the Checkout drop-in bundle for Adobe Commerce Storefront on Edge Delivery Services</SYSTEM>
+
+# Checkout drop-in
+
+> Checkout drop-in containers, slots, events, and customization APIs
+> Generated: 2026-06-26T22:40:20.158Z
+> Source: https://experienceleague.adobe.com/developer/commerce/storefront
+
+
+---
+
+# AddressValidation container
+
+The `AddressValidation` container displays a suggested shipping address (from a third-party verification service) alongside the entered address, allowing shoppers to choose between them.
+
+Typically invoked from a modal during checkout after calling your address verification service.
+
+## AddressValidation configurations
+
+The `AddressValidation` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['suggestedAddress', 'CartAddressInput | null', 'No', 'Address suggestion to present to the shopper.'],
+    ['handleSelectedAddress', 'function', 'No', 'Async callback fired when the shopper selects an address. Receives the selection and the chosen address.'],
+  ]
+```
+
+### AddressValidationProps interface
+
+The `AddressValidation` container receives an object that implements the following interface:
+
+```ts
+interface AddressValidationProps {
+  suggestedAddress: Partial<CartAddressInput> | null;
+  handleSelectedAddress?: (payload: {
+    selection: 'suggested' | 'original';
+    address: CartAddressInput | null | undefined;
+  }) => void;
+}
+```
+
+- `suggestedAddress` - The normalized address to propose to the shopper.
+- `handleSelectedAddress` - Called when the shopper selects an address. Use this to persist the selection or continue checkout.
+
+## CartAddressInput type
+
+The `CartAddressInput` type has this shape:
+
+```ts
+interface CartAddressInput {
+  city: string;
+  countryCode: string;
+  postcode: string;
+  region: string;
+  street: string[];
+}
+```
+
+> **Get the current address** The container automatically maps the current shipping address to `CartAddressInput` from checkout events. Only pass `suggestedAddress` when available.
+
+> **Normalization** Transform your address verification service output to `CartAddressInput` format (with fields like `street`, `city`, `region`, `countryCode`, `postcode`) before passing to the container. Missing properties default to the original address values.
+
+## Example
+
+For a complete walkthrough, see the [Validate shipping address](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/tutorials/validate-shipping-address/) tutorial.
+
+---
+
+# BillToShippingAddress container
+
+The `BillToShippingAddress` container includes a checkbox that allows users to indicate if the billing address is the same as the shipping address. If unchecked, the billing address form will be displayed.
+
+This container provides internal business logic to hide itself in case the cart is empty or virtual.
+
+## BillToShippingAddress configurations
+
+The `BillToShippingAddress` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['active', 'boolean', 'No', 'Activates/deactivates the container (default value is true).'],
+    ['autoSync', 'boolean', 'No', 'Synchronizes/does not synchronize the container local state with the backend (default value is true).'],
+    ['onCartSyncError', 'function', 'No', 'A function that takes an error as argument. It is called when the setBillingAddressOnCart() API throws an error when bill to shipping address checkbox is clicked to be stored to the backend.'],
+    ['onChange', 'function', 'No', 'Callback function that is called when the checkbox state changes.'],
+  ]
+```
+
+These configuration options implement the `BillToShippingAddressProps` interface:
+
+### BillToShippingAddressProps interface
+
+The `BillToShippingAddress` container receives an object as a parameter which implements the `BillToShippingAddressProps` interface with the following properties:
+
+```ts
+interface CartSyncError {
+  error: Error;
+}
+
+export interface BillToShippingAddressProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onChange'> {
+  active?: boolean;
+  autoSync?: boolean;
+  onCartSyncError?: (error: CartSyncError) => void;
+  onChange?: (checked: boolean) => void;
+}
+```
+
+- Set the `active` property to _true_ to have the container in reactive mode (it is visible and responds to system events). If it is set to _false_, the container is deactivated (it does not subscribe to system events and is not rendered).
+- Set the `autoSync` property to _true_ to automatically synchronize the container state changes with the backend via API calls. If it is set to _false_ the container does not automatically synchronize its state, but still maintains local updates.
+- The `onCartSyncError` property is a handler used to perform actions called when bill to shipping address checkbox is clicked and the setBillingAddressOnCart() API throws an error. It could be used as a callback in the integration layer by the merchant to show errors or perform other actions.
+- The `onChange` property is a handler used to perform actions called when the checkbox is checked/unchecked.
+
+## Example
+
+The following example renders the `BillToShippingAddress` container on a checkout page. It handles changes to the billing address form visibility and validation. If the billing address form is shown, it validates the form data and updates the billing address on the cart. Finally, an error message is shown in case there is an issue saving the billing address to the backend.
+
+```ts
+
+const DEBOUNCE_TIME = 1000;
+
+const $billToShipping = checkoutFragment.querySelector(
+  '.checkout__bill-to-shipping',
+);
+const $billingForm = checkoutFragment.querySelector(
+  '.checkout__billing-form',
+);
+
+const billingFormRef = { current: null };
+
+CheckoutProvider.render(BillToShippingAddress, {
+  onCartSyncError: (error) => {
+    const billToShippingMsg = document.createElement('div');
+    billToShippingMsg.style.color = 'red';
+    billToShippingMsg.innerText = `Error saving the Billing address with the Shipping address information: ${error.message}`;
+    $billToShipping.appendChild(billToShippingMsg);
+  },
+  onChange: (checked) => {
+    $billingForm.style.display = checked ? 'none' : 'block';
+    if (!checked && billingFormRef?.current) {
+      const { formData, isDataValid } = billingFormRef.current;
+
+      setAddressOnCart({
+        api: checkoutApi.setBillingAddress,
+        debounceMs: DEBOUNCE_TIME,
+        placeOrderBtn: placeOrder,
+      })({ data: formData, isDataValid });
+    }
+  },
+})($billToShipping),
+```
+
+---
+
+# EstimateShipping container
+
+The `EstimateShipping` container is designed to estimate and display shipping costs during the checkout process.
+
+This container is read-only, unlike the editable [`EstimateShipping`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/containers/estimate-shipping/) container in the cart drop-in component. Initially, it displays estimated shipping costs. After a customer provides a shipping address and selects a shipping method, it shows the actual shipping cost. This container is designed to be used as a slot within the `OrderSummary` container from the cart, where the estimated shipping information is displayed.
+
+## EstimateShipping configurations
+
+The `EstimateShipping` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['active', 'boolean', 'No', 'Activates/deactivates the container (default value is true).'],
+  ]
+```
+
+These configuration options implement the `EstimateShippingProps` interface:
+
+### EstimateShippingProps interface
+
+The `EstimateShipping` container receives an object as a parameter which implements the `EstimateShippingProps` interface with the following properties:
+
+```ts
+export interface EstimateShippingProps {
+  active?: boolean;
+}
+```
+
+- Set the `active` property to _true_ to have the container in reactive mode (it is visible and responds to system events). If it is set to _false_, the container is deactivated (it does not subscribe to system events and is not rendered).
+
+## Example
+
+The following example renders an `OrderSummary` container within a checkout page and includes a slot for estimating shipping:
+
+```ts
+
+const $orderSummary = checkoutFragment.querySelector(
+  '.checkout__order-summary',
+);
+
+CartProvider.render(OrderSummary, {
+  slots: {
+    EstimateShipping: (esCtx) => {
+      const estimateShippingForm = document.createElement('div');
+      CheckoutProvider.render(EstimateShipping)(estimateShippingForm);
+      esCtx.appendChild(estimateShippingForm);
+    },
+  },
+})($orderSummary),
+```
+
+---
+
+# Checkout Containers
+
+The **Checkout** drop-in provides pre-built container components for integrating into your storefront.
+
+<strong>Version: 3.2.0</strong>
+
+## What are Containers?
+
+Containers are pre-built UI components that combine functionality, state management, and presentation. They provide a complete solution for specific features and can be customized through props, slots, and CSS.
+
+## Available Containers
+
+| Container | Description |
+| --------- | ----------- |
+| [AddressValidation](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/containers/address-validation/) | Configure the `AddressValidation` container to present suggested vs. |
+| [BillToShippingAddress](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/containers/bill-to-shipping-address/) | Configure the `BillToShippingAddress` container to manage and display the billing address form during checkout. |
+| [EstimateShipping](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/containers/estimate-shipping/) | Learn how the `EstimateShipping` container displays shipping costs during checkout. |
+| [LoginForm](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/containers/login-form/) | Configure the `LoginForm` container to handle user email input and validation during checkout. |
+| [MergedCartBanner](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/containers/merged-cart-banner/) | Configure the `MergedCartBanner` container to display notifications when items from an old cart are merged into the current cart. |
+| [OutOfStock](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/containers/out-of-stock/) | Configure the `OutOfStock` container to handle and display out-of-stock items in the cart. |
+| [PaymentMethods](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/containers/payment-methods/) | Configure the `PaymentMethods` container to manage and display available payment methods during checkout. |
+| [PaymentOnAccount](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/containers/payment-on-account/) | *Enrichment needed - add description to `_dropin-enrichments/checkout/containers.json`* |
+| [PlaceOrder](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/containers/place-order/) | Configure the `PlaceOrder` container to handle the final checkout step, including place order action, button disablement, and main slot management. |
+| [PurchaseOrder](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/containers/purchase-order/) | *Enrichment needed - add description to `_dropin-enrichments/checkout/containers.json`* |
+| [ServerError](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/containers/server-error/) | Configure the `ServerError` container to handle and display server error messages during checkout. |
+| [ShippingMethods](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/containers/shipping-methods/) | Configure the `ShippingMethods` container to manage and display available shipping methods during checkout. |
+| [TermsAndConditions](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/containers/terms-and-conditions/) | Configure the `TermsAndConditions` container to manage and display the terms and conditions form during checkout. |
+
+> Each container is designed to work independently but can be composed together to create comprehensive user experiences.
+
+---
+
+# LoginForm container
+
+The `LoginForm` container handles user email input and validation within the checkout process.
+
+## LoginForm configurations
+
+The `LoginForm` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['displayTitle (*)', 'boolean', 'No', 'Displays the container title (default value is true).'],
+    ['active', 'boolean', 'No', 'Activates/deactivates the container (default value is true).'],
+    ['autoSync', 'boolean', 'No', 'Synchronizes/does not synchronize the container local state with the backend (default value is true).'],
+    ['displayHeadingContent', 'boolean', 'No', 'Displays the container heading content (default value is true).'],
+    ['onSignInClick', 'function', 'No', 'A function that handles the sign-in button click. It takes the email (string or null) as an argument.'],
+    ['onSignOutClick', 'function', 'No', 'A function that handles the sign-out button click. It takes no arguments.'],
+    ['onCartSyncError', 'function', 'No', 'A function that takes an error and the email address as arguments. It is called when the setGuestEmailOnCart() API throws an error when filling in the email address to be stored to the backend.'],
+    ['onValidationError', 'function', 'No', 'A function that takes the email validated with the type of error and its message as arguments. It is called when the email form field is validated with an error (due to it\'s missing or has an invalid format).'],
+    ['slots', 'object', 'No', 'Object with the content to be displayed on the LoginForm container. This slot allows setting the heading content dynamically based on the user authentication status.'],
+  ]
+```
+
+(*) Properties inherited from `TitleProps`
+
+These configuration options are implementing the `LoginFormProps` interface:
+
+### LoginFormProps interface
+
+The `LoginForm` container receives an object as a parameter which implements the `LoginFormProps` interface with the following properties:
+
+```ts
+interface ValidationError {
+  email: string;
+  message: string;
+  type: 'missing' | 'invalid';
+}
+
+interface CartSyncError {
+  email: string;
+  error: Error;
+}
+
+export interface LoginFormProps extends HTMLAttributes<HTMLFormElement>, TitleProps {
+  active?: boolean;
+  autoSync?: boolean;
+  displayHeadingContent?: boolean;
+  onSignInClick?: (email: string) => void;
+  onSignOutClick?: () => void;
+  onCartSyncError?: (error: CartSyncError) => void;
+  onValidationError?: (error: ValidationError) => void;
+  slots?: {
+    Heading?: SlotProps<{
+      authenticated: boolean;
+    }>;
+    Preferences?: SlotProps<{
+      email: string;
+      isEmailValid: boolean;
+      isAuthenticated: boolean;
+    }>;
+  } & TitleProps['slots'];
+}
+```
+
+- The `displayTitle (*)` property inherits from the `TitleProps` interface to display or hide the title.
+- Set the `active` property to _true_ to have the container in reactive mode (it is visible and responds to system events). If it is set to _false_, the container is deactivated (it does not subscribe to system events and is not rendered).
+- Set the `autoSync` property to _true_ to automatically synchronize the container state changes with the backend via API calls. If it is set to _false_ the container does not automatically synchronize its state, but still maintains local updates.
+- Set the `displayHeadingContent` property to _true_ to display the heading content with the sign-in/sign-out button.
+- The `onSignInClick` property is a handler used to perform actions called when the sign-in button is clicked. It accepts an email as an input parameter.
+- The `onSignOutClick` property is a handler used to perform actions called when the sign-out button is clicked.
+- The `onCartSyncError` property is a handler used to perform actions called when filling in the email address and the setGuestEmailOnCart() API throws an error. It could be used as a callback in the integration layer by the merchant to show errors or perform other actions.
+- The `onValidationError` property is a handler used to perform actions called when the email address form field is validated with an error. It could be used as a callback in the integration layer by the merchant to show errors or perform other actions.
+- The `slots` property is an object containing the following properties:
+  - Use the `Title (*)` property to render a custom title. This property is inherited from `TitleProps` interface.
+  - The `Heading` property is a handler used to render a customized heading content based on the authenticated status provided by the context.
+  - The `Preferences` property is a handler used to render custom marketing preference fields (such as newsletter subscriptions or promotional consent checkboxes). The slot receives context with the current email address, email validation state, and authentication status.
+
+## Example 1: Render with title and heading content by default
+
+The following example renders the `LoginForm` container on a checkout page, which includes rendering the [`AuthCombine`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/user-auth/containers/auth-combine/) container from the user auth drop-in component in a modal for authentication:
+
+```ts
+
+const LOGIN_FORM_NAME = 'login-form';
+
+const $loader = checkoutFragment.querySelector('.checkout__loader');
+const $login = checkoutFragment.querySelector('.checkout__login');
+
+let loader;
+
+const displayOverlaySpinner = async () => {
+  if (loader) return;
+
+  loader = await UI.render(ProgressSpinner, {
+    className: '.checkout__overlay-spinner',
+  })($loader);
+};
+
+CheckoutProvider.render(LoginForm, {
+  name: LOGIN_FORM_NAME,
+  onSignInClick: async (initialEmailValue) => {
+    const signInForm = document.createElement('div');
+
+    AuthProvider.render(AuthCombine, {
+      signInFormConfig: {
+        renderSignUpLink: true,
+        initialEmailValue,
+        onSuccessCallback: () => {
+          displayOverlaySpinner();
+        },
+      },
+      signUpFormConfig: {
+        slots: {
+          ...authPrivacyPolicyConsentSlot,
+        },
+      },
+      resetPasswordFormConfig: {},
+    })(signInForm);
+
+    showModal(signInForm);
+  },
+  onSignOutClick: () => {
+    authApi.revokeCustomerToken();
+  },
+})($login),
+```
+
+## Example 2: Render without title and heading content
+
+The following example renders the `LoginForm` container on a checkout page but without displaying both title and heading content:
+
+```ts
+
+const LOGIN_FORM_NAME = 'login-form';
+
+const $login = checkoutFragment.querySelector('.checkout__login');
+
+CheckoutProvider.render(LoginForm, {
+  displayTitle: false,
+  displayHeadingContent: false,
+})($login),
+```
+
+## Example 3: Render with customized title and heading content
+
+The following example renders the `LoginForm` container on a checkout page providing customized title and heading content:
+
+```ts
+
+const LOGIN_FORM_NAME = 'login-form';
+
+const $login = checkoutFragment.querySelector('.checkout__login');
+
+CheckoutProvider.render(LoginForm, {
+  name: LOGIN_FORM_NAME,
+  onSignInClick: async (initialEmailValue) => { . . . },
+  onSignOutClick: () => { . . . },
+  slots: {
+    Title: (ctx) => {
+      const content = document.createElement('div');
+      content.innerText = 'Custom title';
+      ctx.replaceWith(content);
+    },
+    Heading: (ctx) => {
+      const content = document.createElement('div');
+      if (ctx.authenticated) {
+        // Put here a customized content when the user has signed-in
+      } else {
+        // Put here a customized content when the user still has not signed-in
+      }
+      ctx.replaceWith(content);
+    },
+  },
+})($login),
+```
+
+## Example 4: Render with callbacks for error handling
+
+The following example renders the `LoginForm` container on a checkout page providing handlers for validation and API errors:
+
+```ts
+
+const LOGIN_FORM_NAME = 'login-form';
+
+const $login = checkoutFragment.querySelector('.checkout__login');
+
+CheckoutProvider.render(LoginForm, {
+  name: LOGIN_FORM_NAME,
+  onSignInClick: async (initialEmailValue) => { . . . },
+  onSignOutClick: () => { . . . },
+  onCartSyncError: ({ email, error }) => {
+    const loginFormMsg = document.createElement('div');
+    loginFormMsg.style.color = 'red';
+    loginFormMsg.innerText = `Error saving the email address ${email}: ${error.message}`;
+    $login.appendChild(loginFormMsg);
+  },
+  onValidationError: ({ email, message, type }) => {
+    const loginFormMsg = document.createElement('div');
+    loginFormMsg.style.color = 'red';
+    loginFormMsg.innerText = `Validation error (${type}) introducing the email address ${email}: ${message}`;
+    $login.appendChild(loginFormMsg);
+  },
+})($login),
+```
+
+## Example 5: Render with marketing preferences slot
+
+The following example renders the `LoginForm` container with a custom marketing preferences slot that allows merchants to capture newsletter subscription consent:
+
+```ts
+
+const LOGIN_FORM_NAME = 'login-form';
+
+const $login = checkoutFragment.querySelector('.checkout__login');
+
+CheckoutProvider.render(LoginForm, {
+  name: LOGIN_FORM_NAME,
+  onSignInClick: async (initialEmailValue) => { . . . },
+  onSignOutClick: () => { . . . },
+  slots: {
+    Preferences: (ctx) => {
+      // Only show preferences when email is valid and user is not authenticated
+      if (!ctx.isEmailValid || ctx.isAuthenticated) {
+        return;
+      }
+
+      const label = document.createElement('label');
+      label.className = 'checkout__preference-item';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.name = 'newsletter';
+      checkbox.id = 'newsletter-subscription';
+
+      const text = document.createElement('span');
+      text.textContent = 'Subscribe to our newsletter for exclusive offers';
+
+      label.appendChild(checkbox);
+      label.appendChild(text);
+
+      ctx.appendChild(label);
+    },
+  },
+})($login),
+```
+
+---
+
+# MergedCartBanner container
+
+Use the `MergedCartBanner` container to display a notification banner when items from an old cart are merged into the current cart.
+
+When a customer signs in, if they had items in a previous cart, a banner will notify them that the items from their previous cart have been merged with the current cart. You can apply styles to the banner by passing a CSS `className` prop to the container.
+
+## MergedCartBanner configurations
+
+The `MergedCartBanner` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['active', 'boolean', 'No', 'Activates/deactivates the container (default value is true).'],
+  ]
+```
+
+These configuration options are implementing the `MergedCartBannerProps` interface:
+
+### MergedCartBannerProps interface
+
+The `MergedCartBanner` container receives an object as a parameter which implements the `MergedCartBannerProps` interface with the following properties:
+
+```ts
+export interface MergedCartBannerProps extends AlertBannerProps {
+  active?: boolean;
+}
+```
+
+- Set the `active` property to _true_ to have the container in reactive mode (it is visible and responds to system events). If it is set to _false_, the container is deactivated (it does not subscribe to system events and is not rendered).
+
+## Example
+
+The following example renders the `MergedCartBanner` container with a custom class name:
+
+```ts
+
+const $mergedCartBanner = checkoutFragment.querySelector(
+  '.checkout__merged-cart-banner'
+);
+
+CheckoutProvider.render(MergedCartBanner, {
+  className: 'checkout__merged-cart-banner--custom',
+})($mergedCartBanner);
+```
+
+---
+
+# OutOfStock container
+
+The `OutOfStock` container is designed to handle and display items in the shopping cart that are out of stock or have insufficient quantity. You can configure it to handle the removal of out-of-stock items and provide a route to the cart page.
+
+## OutOfStock configurations
+
+The `OutOfStock` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['active', 'boolean', 'No', 'Activates/deactivates the container (default value is true).'],
+    ['onCartProductsUpdate', 'function', 'No', 'Handles the removal of out-of-stock items. It takes the list of items that are out of stock as an argument.'],
+    ['routeCart', 'function', 'No', 'The route to the cart page.'],
+  ]
+```
+
+These configuration options implement the `OutOfStockProps` interface:
+
+### OutOfStockProps interface
+
+The `OutOfStock` container receives an object as a parameter which implements the `OutOfStockProps` interface with the following properties:
+
+```ts
+export type UpdateProductsFromCart = Array<{
+  uid: string;
+  quantity: number;
+}>;
+
+export interface OutOfStockProps extends Omit<HTMLAttributes<HTMLDivElement>, 'icon'> {
+  active?: boolean;
+  onCartProductsUpdate?: (items: UpdateProductsFromCart) => void;
+  routeCart?: () => string;
+}
+```
+
+- Set the `active` property to _true_ to have the container in reactive mode (it is visible and responds to system events). If it is set to _false_, the container is deactivated (it does not subscribe to system events and is not rendered).
+- The `onCartProductsUpdate` property is a handler used to perform actions called when there are out-of-stock items. It takes the list of items (array with pairs of _uid_ and _quantity_ values) as an input parameter.
+- The `routeCart` property is a handler used to indicate the route to the cart page.
+
+## Example
+
+The following example renders the `OutOfStock` container to handle and display out-of-stock items in the cart:
+
+```ts
+
+const $outOfStock = checkoutFragment.querySelector('.checkout__out-of-stock');
+
+CheckoutProvider.render(OutOfStock, {
+  routeCart: () => '/cart',
+  onCartProductsUpdate: (items) => {
+    cartApi.updateProductsFromCart(items).catch(console.error);
+  },
+})($outOfStock),
+```
+
+---
+
+# PaymentMethods container
+
+Use the `PaymentMethods` container to manage and display the available payment methods during the checkout process. Configuration options:
+- Set the payment method automatically or manually (starting without a selected payment method)
+- Show an icon beside of the label
+- Display or hide the label
+- Provide a specific handler to render the payment method
+
+## PaymentMethods configurations
+
+The `PaymentMethods` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['displayTitle (*)', 'boolean', 'No', 'Displays the container title (default value is true).'],
+    ['active', 'boolean', 'No', 'Activates/deactivates the container (default value is true).'],
+    ['autoSync', 'boolean', 'No', 'Synchronizes/does not synchronize the container local state with the backend (default value is true).'],
+    ['onCartSyncError', 'function', 'No', 'A function that takes a PaymentMethod object and an error as arguments. It is called when the setPaymentMethodOnCart() API throws an error when a payment method is selected to be stored to the backend.'],
+    ['onSelectionChange', 'function', 'No', 'A function that takes a PaymentMethod object as an argument. It is called when a payment method is selected.'],
+    ['slots', 'object', 'No', 'Object with a list of configurations for existing payment methods.'],
+    ['UIComponentType', 'string', 'No', 'String with the UI component type to be used as selector (default value is \'ToggleButton\').'],
+  ]
+```
+
+(*) Properties inherited from `TitleProps`
+
+These configuration options are implementing the `PaymentMethodsProps` interface:
+
+### PaymentMethodsProps interface
+
+The `PaymentMethods` container receives an object as parameter which implements the `PaymentMethodsProps` interface with the following properties:
+
+```ts
+export type UIComponentType = 'ToggleButton' | 'RadioButton';
+
+interface CartSyncError {
+  method: PaymentMethod;
+  error: Error;
+}
+
+export interface PaymentMethodsProps extends HTMLAttributes<HTMLDivElement>, TitleProps {
+  active?: boolean;
+  autoSync?: boolean;
+  onCartSyncError?: (error: CartSyncError) => void;
+  onSelectionChange?: (method: PaymentMethod) => void;
+  slots?: {
+    Methods?: PaymentMethodsSlot;
+  } & TitleProps['slots'];
+  UIComponentType?: UIComponentType;
+}
+```
+
+- The `displayTitle (*)` property is inherited from the `TitleProps` interface. It is used to determine whether to display the title.
+- Set the `active` property to _true_ to have the container in reactive mode (it is visible and responds to system events). If it is set to _false_, the container is deactivated (it does not subscribe to system events and is not rendered).
+- Set the `autoSync` property to _true_ to automatically synchronize the container state changes with the backend via API calls. If it is set to _false_ the container does not automatically synchronize its state, but still maintains local updates.
+- The `onCartSyncError` property is a handler used to perform actions called when a payment method is selected and the setPaymentMethodOnCart() API throws an error. It could be used in the integration layer by the merchant to show errors.
+- The `onSelectionChange` property is a handler used to perform actions called when a payment method is selected.
+- The `UIComponentType` property is a string containing the name of the UI component type to be used as a selector for each payment method. The available UI components are: `ToggleButton` or `RadioButton`.
+- The `slots` property is an object containing the following properties:
+  - Use the `Title (*)` property to render a custom title. This property is inherited from `TitleProps` interface.
+  - The `Methods` property is an object which implements the `PaymentMethodsSlot` interface:
+
+  ```ts
+  export interface PaymentMethodsSlot {
+    [code: string]: PaymentMethodConfig;
+  }
+  ```
+
+  It consists on a list of payment method codes providing a set of configurations to customize the payment method.
+  Each payment method will have its own set of configurations implementing the `PaymentMethodConfig` interface:
+
+  ```ts
+  export type SlotProps<T = any> = (
+    ctx: T & DefaultSlotContext<T>,
+    element: HTMLDivElement | null
+  ) => Promise<void> | void;
+
+  export interface PaymentMethodRenderCtx {
+    cartId: string;
+    replaceHTML: (domElement: HTMLElement) => void;
+    additionalData?: Record<string, unknown>;
+    setAdditionalData: (data: Record<string, unknown>) => void;
+  }
+
+  export interface PaymentMethodConfig {
+    displayLabel?: boolean;
+    enabled?: boolean;
+    icon?: string;
+    autoSync?: boolean;
+    render?: SlotProps<PaymentMethodRenderCtx>;
+  }
+  ```
+  - The `PaymentMethodConfig` interface is composed by:
+    - The `displayLabel` configuration hides the payment method label (for instance, if you only want to display the icon).
+    - The `enabled` configuration allows merchants to individually hide payment methods filtering them from the available payment methods list (for instance, it is useful when a payment provider has enabled a payment method in the backend, which is configured with more than one payment option and you don't want to display one of them).
+    - The `icon` configuration specifies the name of the icon to be shown beside of the label. The icon name must exist within the list of available icons defined on the /sdk/components/icon/.
+    - The `autoSync` configuration sets the payment method automatically when it is selected. Only if a payment method is specifically set to _false_, the container will not automatically set the payment method to the cart when selected (for instance, if a payment method needs more information obtained during the place order action). This specific configuration has more priority than the generic one declared on the `PaymentMethodsProps`. In case this configuration is not provided, then it will be used the generic `autoSync` property.
+    - The `render` configuration is a handler used to render and configure the payment method.
+
+## Example 1: Render the available payment methods with callbacks
+
+The following example renders the `PaymentMethods` container on a checkout page, displaying the available payment methods in the element with the class `checkout__payment-methods`. It includes configurations to show a message if the chosen payment method is Credit Card, and show an error message in case there was an issue saving the selected payment method to the backend.
+
+```ts
+// Checkout Dropin
+
+// Payment Services Dropin
+
+const $paymentMethods = checkoutFragment.querySelector(
+  '.checkout__payment-methods',
+);
+
+CheckoutProvider.render(PaymentMethods, {
+  onCartSyncError: ({ method, error }) => {
+    const paymentMsg = document.createElement('div');
+    paymentMsg.style.color = 'red';
+    paymentMsg.innerText = `Error selecting the Payment Method ${method.code} ${method.title}: ${error.message}`;
+    $paymentMethods.appendChild(paymentMsg);
+  },
+  onSelectionChange: (method) => {
+    if (method.code === PaymentMethodCode.CREDIT_CARD) {
+      const paymentMsg = document.createElement('div');
+      paymentMsg.innerText = 'Payment method not available for the country selected';
+      $paymentMethods.appendChild(paymentMsg);
+    }
+  },
+})($paymentMethods),
+```
+
+## Example 2: Render with the `displayLabel` and `icon` configurations
+
+The following example renders the `PaymentMethods` container on a checkout page, displaying the available payment methods in the element with the class `checkout__payment-methods`, providing an icon for `checkmo` and `banktransfer`, and hiding the label for `banktransfer`.
+
+```ts
+// Checkout Dropin
+
+const $paymentMethods = checkoutFragment.querySelector(
+  '.checkout__payment-methods',
+);
+
+CheckoutProvider.render(PaymentMethods, {
+  slots: {
+    Methods: {
+      checkmo: {
+        icon: 'Wallet',
+        render: (ctx) => {
+          const $content = document.createElement('div');
+
+          $content.innerText = 'Pay later with Checkmo config handler';
+          ctx.replaceHTML($content);
+        },
+      },
+      banktransfer: {
+        displayLabel: false,
+        icon: 'Card',
+      },
+    },
+  },
+})($paymentMethods),
+
+```
+
+## Example 3: Render with the `autoSync` and `render` configurations
+
+The following example renders the `PaymentMethods` container on a checkout page, displaying the available payment methods in the element with the class `checkout__payment-methods`, providing a specific handler for `braintree` payment method indicating it cannot be set to the cart when selected.
+
+```ts
+// Checkout Dropin
+
+const $paymentMethods = checkoutFragment.querySelector(
+  '.checkout__payment-methods',
+);
+
+let braintreeInstance;
+
+CheckoutProvider.render(PaymentMethods, {
+  slots: {
+    Methods: {
+      braintree: {
+        autoSync: false,
+        render: async (ctx) => {
+          const container = document.createElement('div');
+
+          window.braintree.dropin.create({
+            authorization: 'sandbox_cstz6tw9_sbj9bzvx2ngq77n4',
+            container,
+          }, (err, dropinInstance) => {
+            if (err) {
+              console.error(err);
+            }
+
+            braintreeInstance = dropinInstance;
+          });
+
+          ctx.replaceHTML(container);
+        },
+      },
+    },
+  },
+})($paymentMethods),
+
+```
+
+## Example 4: Render with the `enabled` configurations
+
+The following example renders the `PaymentMethods` container on a checkout page, displaying the available payment methods in the element with the class `checkout__payment-methods`, providing a specific handler for the credit card payment option but disabling the rest of payment options from `PaymentServices` payment method.
+
+```ts
+// Checkout Dropin
+
+// Payment Services Dropin
+
+const $paymentMethods = checkoutFragment.querySelector(
+  '.checkout__payment-methods',
+);
+
+// Container and component references
+const creditCardFormRef = { current: null };
+
+// Adobe Commerce GraphQL endpoint
+const commerceCoreEndpoint = await getConfigValue('commerce-core-endpoint');
+
+CheckoutProvider.render(PaymentMethods, {
+  slots: {
+    Methods: {
+      [PaymentMethodCode.CREDIT_CARD]: {
+        render: (ctx) => {
+          const $content = document.createElement('div');
+
+          PaymentServicesProvider.render(CreditCard, {
+            apiUrl: commerceCoreEndpoint,
+            getCustomerToken: getUserTokenCookie,
+            getCartId: () => ctx.cartId,
+            creditCardFormRef,
+          })($content);
+
+          ctx.replaceHTML($content);
+        },
+      },
+      [PaymentMethodCode.SMART_BUTTONS]: {
+        enabled: false,
+      },
+      [PaymentMethodCode.APPLE_PAY]: {
+        enabled: false,
+      },
+      [PaymentMethodCode.GOOGLE_PAY]: {
+        enabled: false,
+      },
+      [PaymentMethodCode.VAULT]: {
+        enabled: false,
+      },
+    },
+  },
+})($paymentMethods),
+```
+
+## Example 5: Render with custom title and radio button as selector
+
+The following example renders the `PaymentMethods` container on a checkout page to display a custom title and radio buttons instead of toggle buttons for selecting the payment options.
+
+```ts
+// Checkout Dropin
+
+const $paymentMethods = checkoutFragment.querySelector(
+  '.checkout__payment-methods',
+);
+
+CheckoutProvider.render(PaymentMethods, {
+  UIComponentType: 'RadioButton',
+  displayTitle: true,
+  slots: {
+    Title: (ctx) => {
+      const content = document.createElement('div');
+      content.innerText = 'Custom title';
+      ctx.replaceWith(content);
+    },
+  },
+})($paymentMethods),
+
+```
+
+---
+
+# PaymentOnAccount Container
+
+<strong>Version: 3.2.0</strong>
+
+## Configuration
+
+The `PaymentOnAccount` container provides the following configuration options:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `initialReferenceNumber` | `string` | No |  |
+| `onReferenceNumberChange` | `function` | No | Callback function triggered when reference number change |
+| `onReferenceNumberBlur` | `function` | No | Callback function triggered when reference number blur |
+
+## Slots
+
+This container does not expose any customizable slots.
+
+## Usage
+
+The following example demonstrates how to use the `PaymentOnAccount` container:
+
+```js
+
+await provider.render(PaymentOnAccount, {
+  initialReferenceNumber: "example",
+  onReferenceNumberChange: onReferenceNumberChange,
+  onReferenceNumberBlur: onReferenceNumberBlur,
+})(block);
+```
+
+---
+
+# PlaceOrder container
+
+The `PlaceOrder` container handles the final step in the checkout process, where the user confirms and places an order. Configure it to disable the button, perform validations before submitting the form, handle the place order action, and manage the content slot for the place order button.
+
+## PlaceOrder configurations
+
+The `PlaceOrder` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['active', 'boolean', 'No', 'Activates/deactivates the container (default value is true).'],
+    ['disabled', 'boolean', 'No', 'Disables the Place Order button.'],
+    ['handleValidation', 'function', 'No', 'Performs validation checks and returns a boolean or Promise&lt;boolean&gt;. Supports asynchronous validation for server-side fraud checks. The order proceeds only when this function returns true (or a promise that resolves to true).'],
+    ['handlePlaceOrder', 'function', 'Yes', 'Handles the order placement process asynchronously. Receives a context object containing the selected payment method code and the cart ID.'],
+    ['slots', 'object', 'No', 'Sets the PlaceOrder container content dynamically based on the selected payment method.'],
+  ]
+```
+
+These configuration options implement the `PlaceOrderProps` interface:
+
+### PlaceOrderProps interface
+
+The `PlaceOrder` container receives an object that implements the `PlaceOrderProps` interface:
+
+```ts
+export interface PlaceOrderProps extends HTMLAttributes<HTMLDivElement> {
+  active?: boolean;
+  disabled?: boolean;
+  handleValidation?: () => boolean | Promise<boolean>;
+  handlePlaceOrder: (ctx: HandlePlaceOrderContext) => Promise<void>;
+  slots?: {
+    Content?: SlotProps<ContentSlotContext>;
+  };
+}
+```
+
+- The `active` property controls whether the container responds to system events and renders. Set to _true_ (default) for reactive mode. Set to _false_ to deactivate and hide the container.
+- The `disabled` property forces the Place Order button into a disabled state when set to _true_.
+- The `handleValidation` property performs validation checks before submitting the checkout forms and placing the order. It returns a `boolean` synchronously or a `Promise<boolean>` for asynchronous validation (for example, server-side fraud checks).
+- The `handlePlaceOrder` property executes when the user clicks the Place Order button and `handleValidation` returns _true_ (when provided). It accepts a context parameter that implements the `HandlePlaceOrderContext` interface:
+
+  ```ts
+  export interface HandlePlaceOrderContext {
+    code: string;
+    cartId: string;
+  }
+  ```
+
+- The `slots` property contains the following:
+  - The `Content` slot renders PlaceOrder container content based on the selected payment method code:
+
+  ```ts
+  export type SlotProps<T = any> = (
+    ctx: T & DefaultSlotContext<T>,
+    element: HTMLDivElement | null
+  ) => Promise<void> | void;
+
+  export interface ContentSlotContext {
+    code: string;
+  }
+  ```
+
+## Example 1: Render performing validations and a handler for order placement
+
+The following example renders the `PlaceOrder` container on a checkout page using the `PaymentServices` drop-in component as a payment method. It includes functionality to validate login, shipping, billing, and terms & conditions forms before placing an order. If the validation passes, it attempts to place the order and handles any errors.
+
+```ts
+// Checkout Dropin
+
+// Order Dropin Modules
+
+// Payment Services Dropin
+
+const LOGIN_FORM_NAME = 'login-form';
+const SHIPPING_FORM_NAME = 'selectedShippingAddress';
+const BILLING_FORM_NAME = 'selectedBillingAddress';
+const TERMS_AND_CONDITIONS_FORM_NAME = 'checkout-terms-and-conditions__form';
+
+const $placeOrder = checkoutFragment.querySelector('.checkout__place-order');
+
+const shippingFormRef = { current: null };
+const billingFormRef = { current: null };
+const creditCardFormRef = { current: null };
+
+CheckoutProvider.render(PlaceOrder, {
+  handleValidation: () => {
+    let success = true;
+    const { forms } = document;
+
+    const loginForm = forms[LOGIN_FORM_NAME];
+
+    if (loginForm) {
+      success = loginForm.checkValidity();
+      if (!success) scrollToElement($login);
+    }
+
+    const shippingForm = forms[SHIPPING_FORM_NAME];
+
+    if (
+      success
+      && shippingFormRef.current
+      && shippingForm
+      && shippingForm.checkVisibility()
+    ) {
+      success = shippingFormRef.current.handleValidationSubmit(false);
+    }
+
+    const billingForm = forms[BILLING_FORM_NAME];
+
+    if (
+      success
+      && billingFormRef.current
+      && billingForm
+      && billingForm.checkVisibility()
+    ) {
+      success = billingFormRef.current.handleValidationSubmit(false);
+    }
+
+    const termsAndConditionsForm = forms[TERMS_AND_CONDITIONS_FORM_NAME];
+
+    if (success && termsAndConditionsForm) {
+      success = termsAndConditionsForm.checkValidity();
+      if (!success) scrollToElement($termsAndConditions);
+    }
+
+    return success;
+  },
+  handlePlaceOrder: async ({ cartId, code }) => {
+    await displayOverlaySpinner();
+    try {
+      // Payment Services credit card
+      if (code === PaymentMethodCode.CREDIT_CARD) {
+        if (!creditCardFormRef.current) {
+          console.error('Credit card form not rendered.');
+          return;
+        }
+        if (!creditCardFormRef.current.validate()) {
+          // Credit card form invalid; abort order placement
+          return;
+        }
+        // Submit Payment Services credit card form
+        await creditCardFormRef.current.submit();
+      }
+      // Place order
+      await orderApi.placeOrder(cartId);
+    } catch (error) {
+      console.error(error);
+      throw error;
+    } finally {
+      removeOverlaySpinner();
+    }
+  },
+})($placeOrder),
+```
+
+## Example 2: Render providing explicit content for the button
+
+The following example renders the `PlaceOrder` container on a checkout page providing different text for the Place Order button depending on the selected payment method.
+
+```ts
+// Checkout Dropin
+
+// Order Dropin Modules
+
+const $placeOrder = checkoutFragment.querySelector('.checkout__place-order');
+
+CheckoutProvider.render(PlaceOrder, {
+  handlePlaceOrder: async ({ cartId }) => {
+    orderApi.placeOrder(cartId).catch(console.error);
+  },
+  slots: {
+    Content: (ctx) => {
+      const content = document.createElement('span');
+      ctx.appendChild(content);
+
+      function setContent(currentCtx) {
+        switch (currentCtx.code) {
+          case 'checkmo': {
+            content.textContent = 'Pay Now';
+            break;
+          }
+          case 'banktransfer': {
+            content.textContent = 'Make a transfer';
+            break;
+          }
+          default: {
+            content.textContent = currentCtx.dictionary.Checkout.PlaceOrder.button;
+          }
+        }
+      }
+
+      setContent(ctx);
+      ctx.onChange(setContent);
+    },
+  },
+})($placeOrder),
+```
+
+---
+
+# PurchaseOrder Container
+
+<strong>Version: 3.2.0</strong>
+
+## Configuration
+
+The `PurchaseOrder` container provides the following configuration options:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `initialReferenceNumber` | `string` | No |  |
+| `onReferenceNumberChange` | `function` | No | Callback function triggered when reference number change |
+| `onReferenceNumberBlur` | `function` | No | Callback function triggered when reference number blur |
+
+## Slots
+
+This container does not expose any customizable slots.
+
+## Usage
+
+The following example demonstrates how to use the `PurchaseOrder` container:
+
+```js
+
+await provider.render(PurchaseOrder, {
+  initialReferenceNumber: "example",
+  onReferenceNumberChange: onReferenceNumberChange,
+  onReferenceNumberBlur: onReferenceNumberBlur,
+})(block);
+```
+
+---
+
+# ServerError container
+
+The `ServerError` container is designed to handle and display server error messages during the checkout process. You can configure it to display an error message and handle click events.
+
+## ServerError configurations
+
+The `ServerError` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['active', 'boolean', 'No', 'Activates/deactivates the container (default value is true).'],
+    ['autoScroll', 'boolean', 'No', 'Scrolls the element`s ancestor containers such that the error message is visible to the user.'],
+    ['onRetry', 'function', 'No', 'A function to handle retry actions.'],
+    ['onServerError', 'function', 'No', 'A function to handle when there are server errors.'],
+  ]
+```
+
+These configuration options are implementing the `ServerErrorProps` interface:
+
+### ServerErrorProps interface
+
+The `ServerError` container receives an object as parameter which implements the `ServerErrorProps` interface with the following properties:
+
+```ts
+export interface ServerErrorProps {
+  active?: boolean;
+  autoScroll?: boolean;
+  onRetry?: () => void;
+  onServerError?: (error: string) => void;
+}
+```
+
+- Set the `active` property to _true_ to have the container in reactive mode (it is visible and responds to system events). If it is set to _false_, the container is deactivated (it does not subscribe to system events and is not rendered).
+- The `autoScroll` property is a boolean to indicate if the page should scroll to the element containing the error message and put the focus on it to be visible to the user.
+- The `onRetry` property is a handler used to perform actions called when the retry button is clicked.
+- The `onServerError` property is a handler used to perform actions called when there is a new error message.
+
+## Example
+
+The following example renders the `ServerError` container on a checkout page. It provides functionality to handle retry actions by removing an error class from the content element and to handle server errors by adding an error class to the content element. The page will scroll to the element containing the error message focusing on it.
+
+```ts
+
+const $serverError = checkoutFragment.querySelector(
+  '.checkout__server-error'
+);
+
+CheckoutProvider.render(ServerError, {
+  autoScroll: true,
+  onRetry: () => {
+    $content.classList.remove('checkout__content--error');
+  },
+  onServerError: () => {
+    $content.classList.add('checkout__content--error');
+  },
+})($serverError),
+```
+
+---
+
+# ShippingMethods container
+
+The `ShippingMethods` container is designed to manage and display the selection of available shipping methods during the checkout process. You can configure it to handle the selection of shipping methods, display the available shipping methods, and manage the main slot for the shipping methods.
+
+This container includes internal business logic to hide itself if the cart is empty or virtual.
+
+Finally, if an error is thrown selecting a shipping method, a callback function is provided in order to handle that error in the integration layer; a rollback will be performed to the last valid shipping method selected by the user.
+
+## ShippingMethods configurations
+
+The `ShippingMethods` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['displayTitle (*)', 'boolean', 'No', 'Displays the container title (default value is true).'],
+    ['active', 'boolean', 'No', 'Activates/deactivates the container (default value is true).'],
+    ['autoSync', 'boolean', 'No', 'Synchronizes/does not synchronize the container local state with the backend (default value is true).'],
+    ['onCartSyncError', 'function', 'No', 'A function that takes a ShippingMethod object and an error as arguments. It is called when the setShippingMethodsOnCart() API throws an error when a shipping method is selected to be stored to the backend.'],
+    ['onSelectionChange', 'function', 'No', 'A function that takes a ShippingMethod object as an argument. It is called when a shipping method is selected.'],
+    ['slots (*)', 'object', 'No', 'Object with the title to be displayed on the `ShippingMethods` container and optional `ShippingMethodItem` slot for a fully custom row per method (icons, descriptions, badges, layout) while keeping selection behavior. See [ShippingMethods slots](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/slots/#shippingmethods-slots).'],
+    ['UIComponentType', 'string', 'No', 'String with the UI component type to be used as selector (default value is \'RadioButton\').'],
+  ]
+```
+
+(*) Properties inherited from `TitleProps`
+
+These configuration options are implementing the `ShippingMethodsProps` interface:
+
+### ShippingMethodsProps interface
+
+The `ShippingMethods` container receives an object as a parameter which implements the `ShippingMethodsProps` interface with the following properties:
+
+```ts
+interface CartSyncError {
+  method: ShippingMethod;
+  error: Error;
+}
+
+/** Context for the ShippingMethodItem slot (published `ShippingMethodItemContext`). */
+export interface ShippingMethodItemContext {
+  method: ShippingMethod;
+  isSelected: boolean;
+  onSelect: () => void;
+}
+
+export interface ShippingMethodsProps extends HTMLAttributes<HTMLDivElement>, TitleProps {
+  active?: boolean;
+  autoSync?: boolean;
+  onCartSyncError?: (error: CartSyncError) => void;
+  onSelectionChange?: (method: ShippingMethod) => void;
+  UIComponentType?: UIComponentType;
+  slots?: {
+    ShippingMethodItem?: SlotProps<ShippingMethodItemContext>;
+  } & TitleProps['slots'];
+}
+```
+
+- The `displayTitle (*)` property is inherited from the `TitleProps` interface. It is used to determine whether to display the title.
+- Set the `active` property to _true_ to have the container in reactive mode (it is visible and responds to system events). If it is set to _false_, the container is deactivated (it does not subscribe to system events and is not rendered).
+- Set the `autoSync` property to _true_ to automatically synchronize the container state changes with the backend via API calls. If it is set to _false_ the container does not automatically synchronize its state, but still maintains local updates.
+- The `onCartSyncError` property is a handler used to perform actions called when a shipping method is selected and the setShippingMethodsOnCart() API throws an error. It could be used in the integration layer by the merchant to show errors.
+- The `onSelectionChange` property is a handler used to perform actions called when a shipping method is selected.
+- The `UIComponentType` property is a string containing the name of the UI component type to be used as a selector for each shipping method. The available UI components are: `ToggleButton` or `RadioButton`.
+- The `slots (*)` property is inherited from the `TitleProps` interface. It is an object that contains the following properties:
+  - Use the `Title (*)` property to render a custom title. This property is inherited from `TitleProps` interface.
+  - Use the `ShippingMethodItem` property to fully replace the default UI for each shipping method (for example, add an icon, description, or badge next to the price). The slot context provides `method`, `isSelected`, and `onSelect` per `ShippingMethodItemContext`. See [ShippingMethods slots](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/slots/#shippingmethods-slots) for details, including how `busy` relates to the internal presentation component rather than the slot context.
+
+### ShippingMethod model
+
+Each shipping method is represented by the following model:
+
+```ts
+type ShippingMethod = {
+  amount: Money;
+  carrier: {
+    code: string;
+    title: string;
+  };
+  code: string;
+  title: string;
+  value: string;
+  amountExclTax?: Money;
+  amountInclTax?: Money;
+  originalAmount?: Money;
+};
+```
+
+## Strikethrough pricing
+
+The `ShippingMethods` container supports displaying strikethrough pricing for discounted shipping methods. When a shipping method includes an `originalAmount` field, the component automatically displays the original price crossed out next to the discounted price, making promotional shipping offers more visible to customers.
+
+To enable this feature, merchants must:
+
+1. **Extend the GraphQL schema on the backend** to add an `original_amount` field to the `AvailableShippingMethod` type with `value` and `currency` subfields.
+
+2. **Extend the checkout GraphQL fragment** to request the `original_amount` field by modifying the `build.mjs` script:
+
+```js title='build.mjs'
+
+overrideGQLOperations([
+  {
+    npm: '@dropins/storefront-checkout',
+    operations: [
+      `
+      fragment CHECKOUT_DATA_FRAGMENT on Cart {
+        shipping_addresses {
+          available_shipping_methods {
+            original_amount {
+              value
+              currency
+            }
+          }
+        }
+      }
+      `,
+    ],
+  },
+]);
+```
+
+When the `original_amount` field is present in the GraphQL response, the component automatically renders it with a strikethrough style next to the discounted price.
+
+## Example
+
+The following example renders the `ShippingMethods` container on a checkout page. It includes configurations to hide the title, show a message if the chosen shipping method is `Best Way` (Table Rate), and show an error message in case there was an issue saving the selected shipping method to the backend.
+
+```ts
+
+const $delivery = checkoutFragment.querySelector('.checkout__delivery');
+
+CheckoutProvider.render(ShippingMethods, {
+  displayTitle: false,
+  onCartSyncError: ({ method, error }) => {
+    const shippingMsg = document.createElement('div');
+    shippingMsg.style.color = 'red';
+    shippingMsg.innerText = `Error selecting the Shipping Method ${method.code} for the carrier ${method.carrier.title}: ${error.message}`;
+    $delivery.appendChild(shippingMsg);
+  },
+  onSelectionChange: (method) => {
+    if (method.carrier.code === 'tablerate' && method.code === 'bestway') {
+      const shippingMsg = document.createElement('div');
+      shippingMsg.innerText = 'Shipping method not available for Canary Islands';
+      $delivery.appendChild(shippingMsg);
+    }
+  },
+})($delivery),
+```
+
+---
+
+# TermsAndConditions container
+
+The `TermsAndConditions` container displays a checkbox that users must select to agree to the terms and conditions of the sale before confirming their purchase.
+During the checkout process, users must check all required agreements before placing an order. If an agreement is unchecked, a validation error appears when the user clicks the **Place Order** button.
+
+> **TermsAndConditions not displayed for any reason?** - The `TermsAndConditions` container requires a store configuration to be enabled; so it won't be displayed if the component is not properly configured.
+
+Visit the [Terms & Conditions setup](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/content-customizations/terms-and-conditions/) documentation for more information on how to enable the Terms and Conditions feature.
+
+> **TermsAndConditions requirements** In order to use the `TermsAndConditions` container, the **Storefront Compatibility Package (SCP) 4.7.1-beta8** (or higher) module must be installed.
+  The **SCP 4.7.1-beta8** added support for retrieving Terms and Conditions configuration setting via the _StoreConfig_ GraphQL query. This setting is required by `TermsAndConditions` container to allow frontend applications to dynamically enable and configure agreements by store-view in checkout page.
+
+## TermsAndConditions configurations
+
+The `TermsAndConditions` container provides the following configuration options:
+
+```text
+[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['active', 'boolean', 'No', 'Activates/deactivates the container (default value is true).'],
+    ['slots', 'object', 'No', 'Object with a list of agreements to be accepted by the user.'],
+  ]
+```
+
+These configuration options implement the `TermsAndConditionsProps` interface:
+
+### TermsAndConditionsProps interface
+
+The `TermsAndConditions` container receives an object as a parameter which implements the `TermsAndConditionsProps` interface with the following properties:
+
+```ts
+export interface TermsAndConditionsProps {
+  active?: boolean;
+  slots?: {
+    Agreements?: SlotProps<{
+      appendAgreement: SlotMethod<{
+        name: string;
+        mode: AgreementMode;
+        text?: string;
+        translationId?: string;
+      }>;
+    }>;
+  };
+}
+```
+
+- Set the `active` property to _true_ to have the container in reactive mode (it is visible and responds to system events). If it is set to _false_, the container is deactivated (it does not subscribe to system events and is not rendered).
+- The `slots` property is an object containing the following properties:
+  - The `Agreements` property is a handler used to render and configure the list of agreements. It provides a context by including the method `appendAgreement()` to add a new agreement:
+
+  ```ts
+  export type SlotProps<T = any> = (
+    ctx: T & DefaultSlotContext<T>,
+    element: HTMLDivElement | null
+  ) => Promise<void> | void;
+
+  export type SlotMethod<P = any> = (
+    callback: (next: unknown, state: State) => P
+  ) => void;
+
+  export enum AgreementMode {
+    MANUAL = 'manual',
+    AUTO = 'auto',
+  }
+
+  . . .
+    Agreements?: SlotProps<{
+      appendAgreement: SlotMethod<{
+        name: string;
+        mode: AgreementMode;
+        text?: string;
+        translationId?: string;
+      }>;
+    }>;
+. . .
+```
+
+- The `appendAgreement` configuration is a callback function which accepts the following attributes to configure an agreement:
+
+  - **`name`**
+    The agreement identifier
+  - **`mode`**
+    Specifies the mode how the checkbox should appear:
+    - 'manual': the user is required to manually check and accept the conditions to place an order
+    - 'auto': the checkbox will appear checked by default, conditions are automatically accepted upon checkout
+  - **`text`**
+    Optional attribute that contains directly the text to show, and it accepts HTML with links to a specific page in EDS. In case this attribute is not provided, the `translationId` must to. Finally, if both `text` and `translationId` are provided, the `text` has more preference and its content will be shown
+  - **`translationId`**
+- This attribute references the translation label that contains the checkbox text. It first looks in the placeholders/checkout.json file for this label identifier, otherwise it looks up the entry in the dictionary. This attribute must be provided if it is not. As a reminder, if both `text` and `translationId` are provided, the `text` has more preference and its content will be shown.
+
+## Example 1: Render a custom agreement
+
+The following example renders the `TermsAndConditions` container on the checkout page, displaying a custom agreement that directly includes the label to show along with the link to the EDS page, within the element having the class `.checkout__terms-and-conditions`:
+
+```ts
+// Checkout Dropin
+
+const $termsAndConditions = checkoutFragment.querySelector(
+  '.checkout__terms-and-conditions',
+);
+
+CheckoutProvider.render(TermsAndConditions, {
+  slots: {
+    Agreements: (ctx) => {
+      ctx.appendAgreement(() => ({
+        name: 'custom',
+        mode: 'auto',
+        text: 'Custom terms and conditions [Terms & Conditions](/en/terms-and-conditions).',
+      }));
+    },
+  },
+})($termsAndConditions),
+```
+
+## Example 2: Render three different agreements using the translations configured in EDS
+
+The following example renders the `TermsAndConditions` container on the checkout page. The container displays three different agreements using the labels from the translations in the **`placeholders`** sheet, within the element with the class `.checkout__terms-and-conditions`:
+
+```ts
+// Checkout Dropin
+
+const $termsAndConditions = checkoutFragment.querySelector(
+  '.checkout__terms-and-conditions',
+);
+
+CheckoutProvider.render(TermsAndConditions, {
+  slots: {
+    Agreements: (ctx) => {
+      ctx.appendAgreement(() => ({
+        name: 'default',
+        mode: 'auto',
+        translationId: 'Checkout.TermsAndConditions.label',
+      }));
+      ctx.appendAgreement(() => ({
+        name: 'terms',
+        mode: 'manual',
+        translationId: 'Checkout.TermsAndConditions.terms_label',
+      }));
+      ctx.appendAgreement(() => ({
+        name: 'privacy',
+        mode: 'auto',
+        translationId: 'Checkout.TermsAndConditions.privacy_label',
+      }));
+    },
+  },
+})($termsAndConditions),
+```
+
+## Example 3: Render the available agreements configured in the Admin Panel
+
+The following example renders the `TermsAndConditions` container on a checkout page, displaying the available agreements configured in the Admin Panel retrieved using the `getCheckoutAgreements()` API function, in the element with the class `.checkout__terms-and-conditions`:
+
+```ts
+// Checkout Dropin
+
+const $termsAndConditions = checkoutFragment.querySelector(
+  '.checkout__terms-and-conditions',
+);
+
+CheckoutProvider.render(TermsAndConditions, {
+  slots: {
+    Agreements: async (ctx) => {
+      const agreements = await checkoutApi.getCheckoutAgreements();
+
+      agreements.forEach((agreement) => {
+        ctx.appendAgreement(() => ({
+          name: agreement.name,
+          mode: agreement.mode,
+          text: agreement.text,
+        }));
+      });
+    },
+  },
+})($termsAndConditions),
+```
+
+---
+
+# Checkout Dictionary
+
+The **Checkout dictionary** contains all user-facing text, labels, and messages displayed by this drop-in. Customize the dictionary to:
+
+- **Localize** the drop-in for different languages and regions
+- **Customize** labels and messages to match your brand voice
+- **Override** default text without modifying source code for the drop-in
+
+Dictionaries use the **i18n (internationalization)** pattern, where each text string is identified by a unique key path.
+
+<strong>Version: 3.2.0</strong>
+
+## How to customize
+
+Override dictionary values during drop-in initialization. The drop-in deep-merges your custom values with the defaults.
+
+```javascript
+
+await initialize({
+  langDefinitions: {
+    en_US: {
+      "Checkout": {
+        "AddressValidation": {
+          "title": "My Custom Title",
+          "subtitle": "My Custom Title"
+        }
+      }
+    }
+  }
+});
+```
+
+You only need to include the keys you want to change. For multi-language support and advanced patterns, see the [Dictionary customization guide](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/dictionaries/).
+
+## Default keys and values
+
+Below are the default English (`en_US`) strings provided by the **Checkout** drop-in:
+
+```json title="en_US.json"
+{
+  "Checkout": {
+    "AddressValidation": {
+      "title": "Verify your address",
+      "subtitle": "To ensure accurate delivery, we suggest the changes highlighted below. Please choose which address you would like to use. If neither option is correct, edit your address.",
+      "suggestedAddress": "Suggested Address",
+      "originalAddress": "Original Address"
+    },
+    "BillToShippingAddress": {
+      "cartSyncError": "We were unable to save your changes. Please try again later.",
+      "title": "Bill to shipping address"
+    },
+    "EmptyCart": {
+      "button": "Start shopping",
+      "title": "Your cart is empty"
+    },
+    "EstimateShipping": {
+      "estimated": "Estimated Shipping",
+      "freeShipping": "Free",
+      "label": "Shipping",
+      "taxToBeDetermined": "TBD",
+      "withoutTaxes": "Excluding taxes",
+      "withTaxes": "Including taxes"
+    },
+    "LoginForm": {
+      "account": "Already have an account?",
+      "ariaLabel": "Email",
+      "emailExists": {
+        "alreadyHaveAccount": "It looks like you already have an account.",
+        "forFasterCheckout": "for a faster checkout.",
+        "signInButton": "Sign in"
+      },
+      "floatingLabel": "Email *",
+      "invalidEmailError": "Please enter a valid email address.",
+      "missingEmailError": "Enter an email address.",
+      "cartSyncError": "We were unable to save your changes. Please try again later.",
+      "placeholder": "Enter your email address",
+      "signIn": "Sign In",
+      "signOut": "Sign Out",
+      "switch": "Do you want to switch account?",
+      "title": "Contact details"
+    },
+    "MergedCartBanner": {
+      "items": {
+        "many": "{{count}} items from a previous session were added to your cart. Please review your new subtotal.",
+        "one": "1 item from a previous session was added to your cart. Please review your new subtotal."
+      }
+    },
+    "OutOfStock": {
+      "actions": {
+        "removeOutOfStock": "Remove out of stock items",
+        "reviewCart": "Review cart"
+      },
+      "alert": "Out of stock!",
+      "lowInventory": {
+        "many": "Only {{count}} left!",
+        "one": "Last item!"
+      },
+      "message": "The following items are out of stock:",
+      "title": "Your cart contains items that are out of stock"
+    },
+    "PaymentMethods": {
+      "cartSyncError": "We were unable to save your changes. Please try again later.",
+      "emptyState": "No payment methods available",
+      "title": "Payment"
+    },
+    "PaymentOnAccount": {
+      "referenceNumberLabel": "Custom Reference Number",
+      "referenceNumberPlaceholder": "Enter custom reference number",
+      "referenceNumberHint": "",
+      "availableCreditLabel": "Available Credit",
+      "exceedLimitWarning": "The credit limit is {{creditLimit}}. It will be exceeded by {{exceededAmount}} with this order.",
+      "exceedLimitWarningPrefix": "The credit limit is",
+      "exceedLimitWarningMiddle": ". It will be exceeded by",
+      "exceedLimitWarningSuffix": "with this order.",
+      "exceedLimitError": "Payment On Account cannot be used for this order because your order amount exceeds your credit amount."
+    },
+    "PurchaseOrder": {
+      "missingReferenceNumberError": "Reference number is required",
+      "referenceNumberHint": "",
+      "referenceNumberLabel": "Custom Reference Number",
+      "referenceNumberPlaceholder": "Enter custom reference number"
+    },
+    "PlaceOrder": {
+      "button": "Place Order"
+    },
+    "ServerError": {
+      "button": "Try again",
+      "contactSupport": "If you continue to have issues, please contact support.",
+      "title": "We were unable to process your order",
+      "unexpected": "An unexpected error occurred while processing your order. Please try again later.",
+      "permissionDenied": "You do not have permission to complete checkout. Please contact your administrator for assistance."
+    },
+    "Quote": {
+      "permissionDenied": "You do not have permission to checkout with this quote.",
+      "dataError": "We were unable to retrieve the quote data. Please try again later."
+    },
+    "ShippingMethods": {
+      "cartSyncError": "We were unable to save your changes. Please try again later.",
+      "emptyState": "This order can't be shipped to the address provided. Please review the address details you entered and make sure they're correct.",
+      "title": "Shipping options"
+    },
+    "Summary": {
+      "Edit": "Edit",
+      "heading": "Your Cart ({count})"
+    },
+    "Addresses": {
+      "billToNewAddress": "Bill to new address",
+      "shippingAddressTitle": "Shipping address",
+      "billingAddressTitle": "Billing address"
+    },
+    "TermsAndConditions": {
+      "error": "Please accept the Terms and Conditions to continue.",
+      "label": "I have read, understand, and accept our [Terms of Use, Terms of Sales, Privacy Policy, and Return Policy](https://www.adobe.com/legal/terms.html)."
+    },
+    "title": "Checkout"
+  }
+}
+```
+
+---
+
+# Error handling
+
+Errors that occur during the checkout process must be caught and logged with clear context for quick resolution. This prevents unnecessary error propagation and provides better user experience and debugging capabilities. The checkout drop-in component must implement an error handling mechanism to improve observability and debugging capabilities.
+
+It is critical to resolve errors promptly to avoid inconsistent states and clearly inform users about what occurred. This prevents data inconsistencies between the local application and the backend, which could result in incorrect orders.
+
+## Generic strategy
+
+Most issues arise from API call errors. The system must focus on how these errors propagate from API calls to the user interface and how they are presented to users in a friendly manner across different scenarios. Each container requires a centralized error handling system that captures errors as they occur, enabling control over error management and decision-making about subsequent actions.
+
+## "Optimistic" UI updates with rollback pattern
+
+The system implements optimistic UI updates with a rollback mechanism. This technique improves user experience by making the application feel more responsive to user interactions.
+
+In an optimistic update, the UI behaves as though a change was successfully completed before receiving confirmation from the backend that it actually occurred. The system optimistically assumes it will eventually receive confirmation rather than an error. This approach allows for a more responsive user experience.
+
+When a user performs an action that changes the state, the system immediately sends the information to the backend and optimistically updates the user interface (UI) to reflect the change. This process is called "optimistic" because the system updates the UI with the expectation that the backend will accept the state change. If the system waited for backend confirmation before updating the UI, the delay would negatively impact the user experience.
+
+If the backend returns an error, the system performs a rollback to revert to the previous state (when possible) and displays an error message such as an inline alert. Additionally, the containers provide callback functions that merchants can use in the integration layer to display custom error messages.
+
+---
+
+# Event handling
+
+The checkout drop-in component implements an event-driven architecture that uses the `@adobe-commerce/event-bus` package to facilitate communication between components. This event system enables containers to respond to application state changes, maintain loose coupling between components, and keep their state synchronized with the cart.
+
+## Event system architecture
+
+The system uses a publish-subscribe pattern where containers can:
+
+1. Subscribe to specific events using `events.on()`
+2. Emit events using `events.emit()`
+3. Unsubscribe using `subscription.off()`
+
+## Events declaration
+
+The following code snippet shows the contracts that define the relationship between each event and its payload:
+
+```js title='event-bus.d.ts'
+
+declare module '@adobe-commerce/event-bus' {
+  interface Events {
+    'cart/initialized': CartModel | null;
+    'cart/updated': CartModel | null;
+    'cart/reset': void;
+    'cart/merged': { oldCartItems: any[] };
+    'checkout/initialized': CheckoutData | null;
+    'checkout/updated': CheckoutData | null;
+    'checkout/values': ValuesModel;
+    'shipping/estimate': ShippingEstimate;
+    authenticated: boolean;
+    error: { source: string; type: string; error: Error };
+  }
+
+  interface Cart extends CartModel {}
+}
+```
+
+## Event subscription
+
+If a component wants to listen for an event fired in another component, the component must subscribe to that event.
+
+### Subscription configuration
+
+To subscribe to an event, you must provide the following information:
+
+1. The name of the event.
+2. The event handler, which is a callback function to be executed when a new event is fired (the payload is passed as a parameter).
+3. Event subscriptions can include an additional configuration parameter:
+    - `eager: true`: The handler executes immediately if the event has been emitted previously.
+    - `eager: false`: The handler only responds to future emissions of the event.
+
+```js
+const subscription = events.on('event-name', handler, { eager: true/false });
+```
+
+### Events subscribed by containers
+
+The following list shows the events subscribed by the checkout drop-in component containers:
+
+#### (i) External
+
+When the event is fired by external components:
+
+- `authenticated`: Indicates that a user has authenticated.
+- `cart/initialized`: Indicates that a new cart has been created and initialized.
+- `cart/reset`: Indicates that the order has been placed and the cart is not active any more.
+- `cart/updated`: Indicates that the cart data has been added or updated.
+- `cart/merged`: Indicates that a guest cart (created during the anonymous checkout) has been merged with a customer cart (recovered from a previous checkout process).
+- `cart/data`: Provides cart data.
+- `locale`: Indicates that the locale has been changed.
+
+#### (ii) Internal
+
+When the event is fired by internal checkout drop-in components:
+
+- `checkout/initialized`: Indicates that the checkout drop-in has been initialized with cart data.
+- `checkout/updated`: Indicates that the checkout data has been added or updated.
+- `shipping/estimate`: Provides shipping estimate based on shipping method selected within a shipping address.
+
+### Example
+
+Listen to the checkout initialization event:
+
+```js
+events.on('checkout/initialized', (data) => {
+  // Handle checkout data
+});
+```
+
+## Event emission
+
+Each component can emit an event if it wants to share information with other components or drop-ins.
+
+### Emission configuration
+
+To emit an event, you must provide the following information:
+
+1. The name of the event
+2. The payload containing the data to be shared
+
+```js
+events.emit('event-name', payload);
+```
+
+### Events emitted by containers
+
+The following list shows the events emitted by the checkout drop-in component containers:
+
+- `checkout/initialized`: Indicates that the checkout drop-in has been initialized with cart data.
+- `checkout/updated`: Indicates that the checkout data has been added or updated.
+- `checkout/values`: Provides the local state values.
+- `shipping/estimate`: Provides shipping estimate based on shipping method selected within a shipping address.
+- `error`: Indicates that the system has received a network error type.
+
+### Example
+
+Emit the checkout values event:
+
+```js
+events.emit('checkout/values', data);
+```
+
+---
+
+# Checkout Data & Events
+
+The **Checkout** drop-in uses the [event bus](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/events/) to emit and listen to events for communication between drop-ins and external integrations.
+
+<strong>Version: 3.2.0</strong>
+
+## Events reference
+
+{/* EVENTS_TABLE_START */}
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [checkout/values](#checkoutvalues-emits) | Emits | Emitted when form or configuration values change. |
+| [cart/data](#cartdata-listens) | Listens | Fired by Cart (`cart`) when data is available or changes. |
+| [cart/initialized](#cartinitialized-listens) | Listens | Fired by Cart (`cart`) when the component completes initialization. |
+| [cart/merged](#cartmerged-listens) | Listens | Fired by Cart (`cart`) when data is merged. |
+| [cart/reset](#cartreset-listens) | Listens | Fired by Cart (`cart`) when the component state is reset. |
+| [quote-management/quote-data](#quote-managementquote-data-listens) | Listens | Fired by Quote-management (`quote-management`) when a specific condition or state change occurs. |
+| [checkout/error](#checkouterror-emits-and-listens) | Emits and listens | Triggered when an error occurs. |
+| [checkout/initialized](#checkoutinitialized-emits-and-listens) | Emits and listens | Triggered when the component completes initialization. |
+| [checkout/updated](#checkoutupdated-emits-and-listens) | Emits and listens | Triggered when the component state is updated. |
+| [shipping/estimate](#shippingestimate-emits-and-listens) | Emits and listens | Triggered when an estimate is calculated. |
+| [authenticated](#authenticated-listens) | Listens | Fired by Auth (`auth`) when the user authentication state changes. |
+
+{/* EVENTS_TABLE_END */}
+
+## Event details
+
+The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
+
+### `cart/data` (listens)
+
+Triggered when cart data is available or changes. This event provides the current cart state including items, totals, and addresses.
+
+#### Event payload
+
+```typescript
+Cart | null
+```
+
+See [`Cart`](#cart) for full type definition.
+
+#### Example
+
+```js
+
+events.on('cart/data', (payload) => {
+  console.log('cart/data event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `cart/initialized` (listens)
+
+Fired by Cart (`cart`) when the component completes initialization.
+
+#### Event payload
+
+```typescript
+CartModel | null
+```
+
+See [`CartModel`](#cartmodel) for full type definition.
+
+#### Example
+
+```js
+
+events.on('cart/initialized', (payload) => {
+  console.log('cart/initialized event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `cart/merged` (listens)
+
+Fired by Cart (`cart`) when data is merged.
+
+#### Event payload
+
+```typescript
+{ oldCartItems: any[] }
+```
+
+#### Example
+
+```js
+
+events.on('cart/merged', (payload) => {
+  console.log('cart/merged event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `cart/reset` (listens)
+
+Fired by Cart (`cart`) when the component state is reset.
+
+#### Event payload
+
+#### Example
+
+```js
+
+events.on('cart/reset', (payload) => {
+  console.log('cart/reset event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `checkout/error` (emits and listens)
+
+Triggered when an error occurs during checkout operations such as address validation, payment processing, or order placement.
+
+#### Event payload
+
+```typescript
+CheckoutError
+```
+
+See [`CheckoutError`](#checkouterror) for full type definition.
+
+#### Example
+
+```js
+
+events.on('checkout/error', (payload) => {
+  console.log('checkout/error event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `checkout/initialized` (emits and listens)
+
+Triggered when the checkout component completes initialization with either cart or negotiable quote data. This indicates the checkout is ready for user interaction.
+
+#### Event payload
+
+```typescript
+Cart | NegotiableQuote | null
+```
+
+See [`Cart`](#cart), [`NegotiableQuote`](#negotiablequote) for full type definitions.
+
+#### Example
+
+```js
+
+events.on('checkout/initialized', (payload) => {
+  console.log('checkout/initialized event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `checkout/updated` (emits and listens)
+
+Triggered when the checkout state is updated, such as when shipping methods are selected, addresses are entered, or payment methods are chosen.
+
+#### Event payload
+
+```typescript
+Cart | NegotiableQuote | null
+```
+
+See [`Cart`](#cart), [`NegotiableQuote`](#negotiablequote) for full type definitions.
+
+#### Example
+
+```js
+
+events.on('checkout/updated', (payload) => {
+  console.log('checkout/updated event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `checkout/values` (emits)
+
+Emitted when form or configuration values change in the checkout. This event is useful for tracking user input, validating form fields, or synchronizing state across components.
+
+#### Event payload
+
+```typescript
+ValuesModel
+```
+
+See [`ValuesModel`](#valuesmodel) for full type definition.
+
+#### Example
+
+```js
+
+events.on('checkout/values', (payload) => {
+  console.log('checkout/values event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `quote-management/quote-data` (listens)
+
+Fired by Quote-management (`quote-management`) when a specific condition or state change occurs.
+
+#### Event payload
+
+```typescript
+{
+  quote: NegotiableQuoteModel;
+  permissions: {
+  requestQuote: boolean;
+  editQuote: boolean;
+  deleteQuote: boolean;
+  checkoutQuote: boolean;
+}
+}
+```
+
+See [`NegotiableQuoteModel`](#negotiablequotemodel) for full type definition.
+
+#### Example
+
+```js
+
+events.on('quote-management/quote-data', (payload) => {
+  console.log('quote-management/quote-data event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `shipping/estimate` (emits and listens)
+
+Triggered when shipping cost estimates are calculated for a given address. This event provides both the address used for estimation and the resulting shipping method with its cost.
+
+#### Event payload
+
+```typescript
+ShippingEstimate
+```
+
+See [`ShippingEstimate`](#shippingestimate) for full type definition.
+
+#### Example
+
+```js
+
+events.on('shipping/estimate', (payload) => {
+  console.log('shipping/estimate event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `authenticated` (listens)
+
+Fired by Auth (`auth`) when the user authentication state changes. Checkout listens to this event to update the `LoginForm` display — hiding the sign-in prompt when a user is authenticated and restoring it when they sign out.
+
+#### Event payload
+
+```typescript
+boolean
+```
+
+The payload is `true` if the user is authenticated, `false` otherwise.
+
+#### Example
+
+```js
+
+events.on('authenticated', (isAuthenticated) => {
+  console.log('authenticated event received:', isAuthenticated);
+  // Add your custom logic here
+});
+```
+
+## Data Models
+
+The following data models are used in event payloads for this drop-in.
+
+### Cart
+
+The `Cart` interface represents a shopping cart including items, pricing, addresses, and shipping/payment methods.
+
+Used in: [`cart/data`](#cartdata-listens), [`checkout/initialized`](#checkoutinitialized-emits-and-listens), [`checkout/updated`](#checkoutupdated-emits-and-listens).
+
+```ts
+interface Cart {
+  type: 'cart';
+  availablePaymentMethods?: PaymentMethod[];
+  billingAddress?: CartAddress;
+  email?: string;
+  id: string;
+  isEmpty: boolean;
+  isGuest: boolean;
+  isVirtual: boolean;
+  selectedPaymentMethod?: PaymentMethod;
+  shippingAddresses: CartShippingAddress[];
+}
+```
+
+### CartModel
+
+Used in: [`cart/initialized`](#cartinitialized-listens).
+
+```ts
+interface CartModel {
+  id: string;
+  totalQuantity: number;
+  errors?: ItemError[];
+  items: Item[];
+  miniCartMaxItems: Item[];
+  total: {
+    includingTax: Price;
+    excludingTax: Price;
+  };
+  discount?: Price;
+  subtotal: {
+    excludingTax: Price;
+    includingTax: Price;
+    includingDiscountOnly: Price;
+  };
+  appliedTaxes: TotalPriceModifier[];
+  totalTax?: Price;
+  appliedDiscounts: TotalPriceModifier[];
+  shipping?: Price;
+  isVirtual?: boolean;
+  addresses: {
+    shipping?: {
+      countryCode: string;
+      zipCode?: string;
+      regionCode?: string;
+    }[];
+  };
+  isGuestCart?: boolean;
+}
+```
+
+### CheckoutError
+
+Used in: [`checkout/error`](#checkouterror-emits-and-listens).
+
+```ts
+interface CheckoutError {
+  /**
+   * The primary, user-friendly error message. This should be safe to display
+   * directly in the UI.
+   * @example "Your card was declined."
+   */
+  message: string;
+
+  /**
+   * An optional, unique error code for programmatic handling. This allows the
+   * ServerError component to show specific icons, links, or actions.
+   * @example "payment_intent_declined"
+   */
+  code?: string;
+}
+```
+
+### NegotiableQuote
+
+The `NegotiableQuote` interface represents a B2B negotiable quote, which functions similarly to a cart but includes additional negotiation features like price adjustments and approval workflows.
+
+Used in: [`checkout/initialized`](#checkoutinitialized-emits-and-listens), [`checkout/updated`](#checkoutupdated-emits-and-listens).
+
+```ts
+interface NegotiableQuote {
+  type: 'quote';
+  availablePaymentMethods?: PaymentMethod[];
+  billingAddress?: Address;
+  email?: string;
+  isEmpty: boolean;
+  isVirtual: boolean;
+  name: string;
+  selectedPaymentMethod?: PaymentMethod;
+  shippingAddresses: ShippingAddress[];
+  status: NegotiableQuoteStatus;
+  uid: string;
+}
+```
+
+### NegotiableQuoteModel
+
+Used in: [`quote-management/quote-data`](#quote-managementquote-data-listens).
+
+```ts
+interface NegotiableQuoteModel {
+  uid: string;
+  name: string;
+  createdAt: string;
+  salesRepName: string;
+  expirationDate: string;
+  updatedAt: string;
+  status: NegotiableQuoteStatus;
+  buyer: {
+    firstname: string;
+    lastname: string;
+  };
+  templateName?: string;
+  comments?: {
+    uid: string;
+    createdAt: string;
+    author: {
+      firstname: string;
+      lastname: string;
+    };
+    text: string;
+    attachments?: {
+      name: string;
+      url: string;
+    }[];
+  }[];
+  history?: NegotiableQuoteHistoryEntry[];
+  prices: {
+    appliedDiscounts?: Discount[];
+    appliedTaxes?: Tax[];
+    discount?: Currency;
+    grandTotal?: Currency;
+    grandTotalExcludingTax?: Currency;
+    shippingExcludingTax?: Currency;
+    shippingIncludingTax?: Currency;
+    subtotalExcludingTax?: Currency;
+    subtotalIncludingTax?: Currency;
+    subtotalWithDiscountExcludingTax?: Currency;
+    totalTax?: Currency;
+  };
+  items: NegotiableQuoteCartItem[];
+  shippingAddresses?: ShippingAddress[];
+  canCheckout: boolean;
+  canSendForReview: boolean;
+}
+```
+
+### ShippingEstimate
+
+Used in: [`shipping/estimate`](#shippingestimate-emits-and-listens).
+
+```ts
+interface ShippingEstimate {
+  address: PartialShippingAddress;
+  availableShippingMethods?: ShippingMethod[];
+  shippingMethod: ShippingEstimateShippingMethod | null;
+  success?: boolean;
+}
+```
+
+### ValuesModel
+
+Used in: [`checkout/values`](#checkoutvalues-emits).
+
+```ts
+interface ValuesModel {
+  email: string;
+  isBillToShipping: boolean | undefined;
+  selectedPaymentMethod: PaymentMethod | null;
+  selectedShippingMethod: ShippingMethod | null;
+}
+```
+
+---
+
+# Extending the checkout drop-in component
+
+The checkout drop-in component follows the Adobe Commerce out-of-process extensibility (OOPE) pattern, which requires components to be flexible and extensible. When the checkout drop-in component lacks a specific feature, it provides mechanisms that allow developers to easily expand and customize its functionality.
+
+## GraphQL API
+
+To extend the data payload of the drop-in, developers must use the GraphQL Extensibility API. This API allows developers to extend existing GraphQL operations to meet additional data requirements without increasing code complexity or negatively impacting performance. The API provides a flexible and efficient way to customize GraphQL fragments by integrating build-time modifications into the storefront's development pipeline.
+
+GraphQL fragments are reusable pieces of GraphQL that developers can use to extend or customize the API for a drop-in component. Drop-in components expose the list of fragments that can be extended in the `fragments.ts` file. If the drop-in component does not expose these fragments, the build process fails when you install the application because it cannot locate the fragment you want to extend.
+
+The checkout drop-in component exposes the following fragments:
+
+```js title='fragments.ts'
+export {
+  BILLING_CART_ADDRESS_FRAGMENT,
+  SHIPPING_CART_ADDRESS_FRAGMENT,
+} from '@/checkout/api/graphql/CartAddressFragment.graphql';
+export { CHECKOUT_DATA_FRAGMENT } from '@/checkout/api/graphql/CheckoutDataFragment.graphql';
+export { CUSTOMER_FRAGMENT } from '@/checkout/api/graphql/CustomerFragment.graphql';
+export {
+  NEGOTIABLE_QUOTE_BILLING_ADDRESS_FRAGMENT,
+  NEGOTIABLE_QUOTE_SHIPPING_ADDRESS_FRAGMENT,
+} from '@/checkout/api/graphql/NegotiableQuoteAddressFragment.graphql';
+export { NEGOTIABLE_QUOTE_FRAGMENT } from '@/checkout/api/graphql/NegotiableQuoteFragment.graphql';
+export {
+  AVAILABLE_PAYMENT_METHOD_FRAGMENT,
+  SELECTED_PAYMENT_METHOD_FRAGMENT,
+} from '@/checkout/api/graphql/PaymentMethodFragment.graphql';
+export {
+  AVAILABLE_SHIPPING_METHOD_FRAGMENT,
+  ESTIMATE_SHIPPING_METHOD_FRAGMENT,
+  SELECTED_SHIPPING_METHOD_FRAGMENT,
+} from '@/checkout/api/graphql/ShippingMethodFragment.graphql';
+```
+
+The fragment names above match the symbols exported from `@dropins/storefront-checkout` (for example, the package `fragments` entry). The `@/checkout/...` import paths reflect the checkout drop-in source layout; in your storefront, point `build.mjs` at the same fragment names using whatever `fragments.ts` path and re-exports your scaffold provides.
+
+The `ESTIMATE_SHIPPING_METHOD_FRAGMENT` applies to the `estimateShippingMethods` mutation. Pair it with the `EstimateShippingModel` initializer model when you need to transform extended fields from the shipping estimate response. `AVAILABLE_SHIPPING_METHOD_FRAGMENT` and `SELECTED_SHIPPING_METHOD_FRAGMENT` cover cart shipping methods on the main checkout flow.
+
+### Extend or customize a fragment
+
+To make GraphQL fragments extensible in the drop-in component, you must first update the GraphQL fragment that the drop-in uses to request the additional field. You accomplish this by modifying the `build.mjs` script located at the root of your storefront project.
+
+The `build.mjs` script automatically generates a new GraphQL query for the checkout drop-in component when you run the install command. This generated query includes the additional data that you specified in your fragment extensions.
+
+#### Example 1: Adding new information
+
+The merchant wants to extend the customer information by adding the gender and date of birth data.
+
+```js title='build.mjs'
+/* eslint-disable import/no-extraneous-dependencies */
+
+overrideGQLOperations([
+  {
+    npm: '@dropins/storefront-checkout',
+    operations: [
+      `
+      fragment CUSTOMER_FRAGMENT on Customer {
+        gender
+        date_of_birth
+      }
+      `,
+    ],
+  },
+]);
+```
+
+After extending the API, you must extend the models and transformers during the initialization phase if data transformation is required. You accomplish this by modifying the `/scripts/initializers/checkout.js` script.
+
+```js title='/scripts/initializers/checkout.js'
+// Initialize checkout
+await initializeDropin(async () => {
+  // Register the checkout component with models extensibility
+  const models = {
+    CustomerModel: {
+      transformer: (data) => ({
+        gender: ((gender) => {
+          switch (gender) {
+            case 1:
+              return "Male";
+            case 2:
+              return "Female";
+            case 3:
+              return "Not Specified";
+            default:
+              return "";
+          }
+        })(data?.gender),
+        dateOfBirth: data?.date_of_birth,
+      }),
+    },
+  };
+
+  // Register initializers
+  return initializers.mountImmediately(initialize, {
+    models
+  });
+})();
+```
+
+#### Example 2: Removing information
+
+The merchant wants to remove the selected payment method data. 
+
+```js title='build.mjs'
+/* eslint-disable import/no-extraneous-dependencies */
+
+overrideGQLOperations([
+  {
+    npm: '@dropins/storefront-checkout',
+    skipFragments: ['SELECTED_PAYMENT_METHOD_FRAGMENT'],
+    operations: [],
+  },
+]);
+```
+
+> **Extending fragments** If the `build.mjs` script references a fragment that the drop-in component does not expose, the application build process fails.
+
+> **Extending drop-in components** See the [GraphQL Extensibility API](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/graphql/) and [Extending drop-in components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/extending/) documentation to learn more about how to extend the API for a drop-in component.
+
+---
+
+# Checkout Functions
+
+The Checkout drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
+
+<strong>Version: 3.2.0</strong>
+
+| Function | Description |
+| --- | --- |
+| [`authenticateCustomer`](#authenticatecustomer) | API function for the drop-in. |
+| [`estimateShippingMethods`](#estimateshippingmethods) | Calls the `estimateShippingMethods` mutation. |
+| [`getCart`](#getcart) | Retrieves the current cart's checkout data from Adobe Commerce. |
+| [`getCheckoutAgreements`](#getcheckoutagreements) | Returns a list with the available checkout agreements. |
+| [`getCompanyCredit`](#getcompanycredit) | API function for the drop-in. |
+| [`getCustomer`](#getcustomer) | API function for the drop-in. |
+| [`getNegotiableQuote`](#getnegotiablequote) | Retrieves a negotiable quote for B2B customers. |
+| [`getStoreConfig`](#getstoreconfig) | The `storeConfig` query defines information about a store's configuration. |
+| [`getStoreConfigCache`](#getstoreconfigcache) | API function for the drop-in. |
+| [`initializeCheckout`](#initializecheckout) | API function for the drop-in. |
+| [`isEmailAvailable`](#isemailavailable) | Calls the `isEmailAvailable` query. |
+| [`resetCheckout`](#resetcheckout) | API function for the drop-in. |
+| [`setBillingAddress`](#setbillingaddress) | Calls the `setBillingAddressOnCart` mutation. |
+| [`setGuestEmailOnCart`](#setguestemailoncart) | Calls the `setGuestEmailOnCart` mutation. |
+| [`setPaymentMethod`](#setpaymentmethod) | Calls the `setPaymentMethodOnCart` mutation. |
+| [`setShippingAddress`](#setshippingaddress) | Calls the `setShippingAddressesOnCart` mutation. |
+| [`setShippingMethods`](#setshippingmethods) | Sets one or more shipping methods on the cart. Also exported as `setShippingMethodsOnCart`. |
+| [`synchronizeCheckout`](#synchronizecheckout) | API function for the drop-in. |
+
+## authenticateCustomer
+
+### Signature
+
+```typescript
+function authenticateCustomer(authenticated = false): Promise<any>
+```
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+
+---
+
+## estimateShippingMethods
+
+The `estimateShippingMethods` function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/estimate-shipping-methods/ mutation.
+
+```ts
+const estimateShippingMethods = async (
+  input?: EstimateShippingInput
+): Promise<ShippingMethod[] | undefined>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `EstimateShippingInput` | No | An object of type EstimateShippingInput, which contains a criteria object including the following fields: country_code, region_name, region_id, and zip. |
+
+### Events
+
+Emits the [`shipping/estimate`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/events/#shippingestimate-emits-and-listens) event.
+
+### Returns
+
+Returns an array of [`ShippingMethod`](#shippingmethod) objects or `null`.
+
+## getCart
+
+The `getCart` function retrieves the current cart's checkout data from Adobe Commerce. It automatically uses the cart ID from internal state and calls either the `getCart` or `customerCart` `GraphQL` query depending on authentication status. The returned data includes billing address, shipping addresses, available and selected payment methods, email, total quantity, and virtual cart status—all the information needed to complete the checkout process.
+
+```ts
+const getCart = async (): Promise<any>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns a [`Cart`](#cart) model containing complete checkout information.
+
+## getCheckoutAgreements
+
+The `getCheckoutAgreements` function returns a list with the available checkout agreements. Each agreement has a name and the mode (manual or automatic).
+
+```ts
+const getCheckoutAgreements = async (): Promise<CheckoutAgreement[]>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns an array of [`CheckoutAgreement`](#checkoutagreement) objects.
+
+## getCompanyCredit
+
+```ts
+const getCompanyCredit = async (): Promise<CompanyCredit | null>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CompanyCredit`](#companycredit) or `null`.
+
+## getCustomer
+
+```ts
+const getCustomer = async (): Promise<Customer | null>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`Customer`](#customer) or `null`.
+
+## getNegotiableQuote
+
+The `getNegotiableQuote` function retrieves a negotiable quote for B2B customers. The function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/b2b/negotiable-quote/queries/quote/ query.
+
+```ts
+const getNegotiableQuote = async (
+  input: GetNegotiableQuoteInput = {}
+): Promise<any>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `GetNegotiableQuoteInput` | No | Input parameters including the quote UID to retrieve. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## getStoreConfig
+
+The `storeConfig` query defines information about a store's configuration. You can query a non-default store by changing the header in your `GraphQL` request.
+
+```ts
+const getStoreConfig = async (): Promise<any>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## getStoreConfigCache
+
+```ts
+const getStoreConfigCache = async (): any
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## initializeCheckout
+
+### Signature
+
+```typescript
+function initializeCheckout(input: InitializeInput): Promise<any>
+```
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `input` | `InitializeInput` | Yes |  |
+
+---
+
+## isEmailAvailable
+
+The `isEmailAvailable` function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/is-email-available/ query.
+
+```ts
+const isEmailAvailable = async (
+  email: string
+): Promise<EmailAvailability>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `email` | `string` | Yes | A string representing the email address to check for availability. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`EmailAvailability`](#emailavailability).
+
+## resetCheckout
+
+```ts
+const resetCheckout = async (): any
+```
+
+### Events
+
+Emits the [`checkout/updated`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/events/#checkoutupdated-emits-and-listens) event.
+
+### Returns
+
+Returns `void`.
+
+## setBillingAddress
+
+The `setBillingAddress` function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-billing-address/ mutation.
+
+```ts
+const setBillingAddress = async (
+  input: BillingAddressInputModel
+): Promise<any>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `BillingAddressInputModel` | Yes | The billing address to set on the cart, including street, city, region, country, and postal code. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## setGuestEmailOnCart
+
+The `setGuestEmailOnCart` function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-guest-email/ mutation.
+
+```ts
+const setGuestEmailOnCart = async (
+  email: string
+): Promise<any>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `email` | `string` | Yes | The guest customer's email address for order confirmation and communication. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## setPaymentMethod
+
+The `setPaymentMethod` function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-payment-method/ mutation.
+
+```ts
+const setPaymentMethod = async (
+  input: PaymentMethodInputModel
+): Promise<any>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `PaymentMethodInputModel` | Yes | The payment method code and additional payment data required by the selected payment processor. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## setShippingAddress
+
+The `setShippingAddress` function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-shipping-address/ mutation.
+
+```ts
+const setShippingAddress = async (
+  input: ShippingAddressInputModel
+): Promise<any>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `ShippingAddressInputModel` | Yes | The shipping address to set on the cart, including street, city, region, country, and postal code. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## setShippingMethods
+
+The `setShippingMethods` function sets one or more shipping methods on the cart. The function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-shipping-method/ mutation.
+
+```ts
+const setShippingMethods = async (
+  input: Array<ShippingMethodInputModel>
+): Promise<any>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `Array<ShippingMethodInputModel>` | Yes | An array of shipping method objects, each containing a carrier code and method code. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## synchronizeCheckout
+
+### Signature
+
+```typescript
+function synchronizeCheckout(data: SynchronizeInput): Promise<any>
+```
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `data` | `SynchronizeInput` | Yes |  |
+
+---
+
+## Data Models
+
+The following data models are used by functions in this drop-in.
+
+### Cart
+
+The `Cart` object is returned by the following functions: [`getCart`](#getcart).
+
+```ts
+interface Cart {
+  type: 'cart';
+  availablePaymentMethods?: PaymentMethod[];
+  billingAddress?: CartAddress;
+  email?: string;
+  id: string;
+  isEmpty: boolean;
+  isGuest: boolean;
+  isVirtual: boolean;
+  selectedPaymentMethod?: PaymentMethod;
+  shippingAddresses: CartShippingAddress[];
+}
+```
+
+### CheckoutAgreement
+
+The `CheckoutAgreement` object is returned by the following functions: [`getCheckoutAgreements`](#getcheckoutagreements).
+
+```ts
+interface CheckoutAgreement {
+  content: AgreementContent;
+  id: number;
+  mode: AgreementMode;
+  name: string;
+  text: string;
+}
+```
+
+### CompanyCredit
+
+The `CompanyCredit` object is returned by the following functions: [`getCompanyCredit`](#getcompanycredit).
+
+```ts
+type CompanyCredit = {
+  availableCredit: Money;
+  exceedLimit?: boolean;
+};
+```
+
+### Customer
+
+The `Customer` object is returned by the following functions: [`getCustomer`](#getcustomer).
+
+```ts
+interface Customer {
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+```
+
+### EmailAvailability
+
+The `EmailAvailability` object is returned by the following functions: [`isEmailAvailable`](#isemailavailable).
+
+```ts
+type EmailAvailability = boolean;
+```
+
+### ShippingMethod
+
+The `ShippingMethod` object is returned by the following functions: [`estimateShippingMethods`](#estimateshippingmethods).
+
+```ts
+type ShippingMethod = {
+  amount: Money;
+  carrier: Carrier;
+  code: string;
+  title: string;
+  value: string;
+  amountExclTax?: Money;
+  amountInclTax?: Money;
+};
+```
+
+{/* This documentation is auto-generated from the drop-in source repository: REPO_URL */}
+
+---
+
+# Checkout overview
+
+The checkout drop-in component provides a variety of fully-customizable controls to help complete a purchase.
+
+These controls include forms to introduce required information for contact details like email address, delivery and billing addresses, shipping options, and payment methods. Established customers who added items to the cart as a guest have the ability to sign in, automatically loading default addresses and contact details.
+
+## Available resources
+
+The checkout drop-in component includes the following resources:
+
+- **[API Functions](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/functions/)** - Core functions for managing checkout operations like authentication, shipping methods, and order placement
+- **[Utility Functions](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/utilities/)** - Helper functions for DOM manipulation, form handling, data transforms, and more
+- **[Containers](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/containers/)** - Pre-built UI components for checkout steps
+- **[Event Handling](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/events/)** - Event-driven architecture for component communication
+
+## Supported Commerce features
+
+The following table provides an overview of the Adobe Commerce features that the checkout component supports:
+
+| Feature                                                                            | Status                                    |
+| ---------------------------------------------------------------------------------- | ----------------------------------------- |
+| All product types                                                                  | Supported  |
+| Any checkout flow (BOPIS, one/two step)                                            | Supported  |
+| Any checkout layout                                                                | Supported  |
+| Apply coupons to the order                                                         | Supported  |
+| Apply gift cards to the order                                                      | Supported  |
+| Cart rules                                                                         | Supported  |
+| Create account after checkout                                                      | Supported  |
+| Custom customer address attributes                                                 | Supported  |
+| Customer address selection at checkout                                             | Supported  |
+| Customer checkout                                                                  | Supported  |
+| Customer segments                                                                  | Supported  |
+| Default customer shipping and billing applied at checkout                          | Supported  |
+| Extensibility for payment providers                                                | Supported  |
+| Guest checkout                                                                     | Supported  |
+| Log in during checkout                                                             | Supported  |
+| Low product stock alert                                                            | Supported  |
+| Out of stock/insufficient quantity products                                        | Supported  |
+| Taxes: Fixed                                                                       | Roadmap|
+| Taxes: Sales, VAT                                                                  | Supported  |
+| Terms and conditions consent                                                       | Supported  |
+| Zero subtotal checkout                                                             | Supported  |
+| Multi-step checkout                                                                | Supported  |
+
+---
+
+# Checkout initialization
+
+The **Checkout initializer** configures the checkout flow, payment processing, shipping options, and order placement. Use initialization to customize checkout behavior, integrate payment providers, and transform checkout data models to match your storefront requirements.
+
+<strong>Version: 3.2.0</strong>
+
+## Configuration options
+
+The following table describes the configuration options available for the **Checkout** initializer:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
+| `models` | [`Record<string, any>`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
+| `defaults` | [`defaults`](#defaults) | No | Configures default checkout behaviors including whether billing address defaults to shipping address and which shipping method is pre-selected. |
+| `shipping` | [`shipping`](#shipping) | No | Configures shipping method filtering to control which shipping options are available to customers during checkout. |
+| `features` | [`features`](#features) | No | Enables or disables checkout features including B2B quote functionality and custom login routing. |
+
+## Default configuration
+
+The initializer runs with these defaults when no configuration is provided:
+
+```javascript title="scripts/initializers/checkout.js"
+
+// All configuration options are optional
+await initializers.mountImmediately(initialize, {
+  langDefinitions: {}, // Uses built-in English strings
+  models: {}, // Uses default data models
+  // Drop-in-specific defaults:
+  // defaults: undefined // See configuration options below
+  // shipping: undefined // See configuration options below
+  // features: undefined // See configuration options below
+});
+```
+
+## Language definitions
+
+Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override default text for the drop-in.
+
+```javascript title="scripts/initializers/checkout.js"
+
+const customStrings = {
+  'AddToCart': 'Add to Bag',
+  'Checkout': 'Complete Purchase',
+  'Price': 'Cost',
+};
+
+const langDefinitions = {
+  default: customStrings,
+};
+
+await initializers.mountImmediately(initialize, { langDefinitions });
+```
+
+> For complete dictionary customization including all available keys and multi-language support, see the [Checkout Dictionary](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/dictionary/) page.
+
+## Customizing data models
+
+Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
+
+### Available models
+
+The following models can be customized through the `models` configuration option:
+
+| Model | Description |
+|---|---|
+| [`CartModel`](#cartmodel) | Transforms cart data during checkout including items, pricing, shipping, billing, and payment information. Use this to add custom fields specific to the checkout flow. |
+| [`CustomerModel`](#customermodel) | Transforms `CustomerModel` data from `GraphQL`. |
+
+The following example shows how to customize the `CartModel` model for the **Checkout** drop-in:
+
+```javascript title="scripts/initializers/checkout.js"
+
+const models = {
+  CartModel: {
+    transformer: (data) => ({
+      // Add custom fields from backend data
+      customField: data?.custom_field,
+      promotionBadge: data?.promotion?.label,
+      // Transform existing fields
+      displayPrice: data?.price?.value ? `${data.price.value}` : 'N/A',
+    }),
+  },
+};
+
+await initializers.mountImmediately(initialize, { models });
+```
+
+## Drop-in configuration
+
+The **Checkout initializer** configures the checkout flow, payment processing, shipping options, and order placement. Use initialization to customize checkout behavior, integrate payment providers, and transform checkout data models to match your storefront requirements.
+
+```javascript title="scripts/initializers/checkout.js"
+
+await initializers.mountImmediately(initialize, {
+  defaults: {},
+  shipping: {},
+  features: {},
+  langDefinitions: {},
+  models: {},
+});
+```
+
+> Refer to the [Configuration options](#configuration-options) table for detailed descriptions of each option.
+
+## Configuration types
+
+The following TypeScript definitions show the structure of each configuration object:
+
+### defaults
+
+Configures default checkout behaviors including whether billing address defaults to shipping address and which shipping method is pre-selected.
+
+```typescript
+defaults?: {
+    isBillToShipping?: boolean;
+    selectedShippingMethod?: Selector<ShippingMethod>;
+  }
+```
+
+### shipping
+
+Configures shipping method filtering to control which shipping options are available to customers during checkout.
+
+```typescript
+shipping?: {
+    filterOptions?: Filter<ShippingMethod>;
+  }
+```
+
+### features
+
+Enables or disables checkout features including B2B quote functionality and custom login routing.
+
+```typescript
+features?: {
+    b2b?: {
+      quotes?: boolean;
+      routeLogin?: () => string | void;
+    };
+  }
+```
+
+### langDefinitions
+
+Maps locale identifiers to dictionaries of key-value pairs. The `default` locale is used as the fallback when no specific locale matches. Each dictionary key corresponds to a text string used in the drop-in UI.
+
+```typescript
+langDefinitions?: {
+  [locale: string]: {
+    [key: string]: string;
+  };
+};
+```
+
+### models
+
+Maps model names to transformer functions. Each transformer receives data from GraphQL and returns a modified or extended version. Use the `Model<T>` type from `@dropins/tools` to create type-safe transformers.
+
+```typescript
+models?: {
+  [modelName: string]: Model<any>;
+};
+```
+
+## Model definitions
+
+The following TypeScript definitions show the structure of each customizable model:
+
+### CartModel
+
+```typescript
+export interface CartAddress extends Address {}
+
+```
+
+### CustomerModel
+
+```typescript
+export interface Customer {
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+```
+
+---
+
+# Checkout Quick Start
+
+The Checkout drop-in component provides a customizable UI for the checkout process. The checkout component is designed to be integrated into your storefront and provides a seamless checkout experience for customers.
+
+<strong>Version: 3.2.0</strong>
+
+## Prerequisites
+
+Since the checkout component relies on containers from several other drop-in components, you must install and configure those components before you can use the checkout component.
+
+The https://github.com/hlxsites/aem-boilerplate-commerce includes all of the necessary drop-in components and configurations to help you get started quickly, so Adobe recommends relying on the boilerplate instead of installing, configuring, and integrating the drop-in components individually.
+
+## Admin configuration
+
+Before you can use the checkout component on your storefront, you must enable and configure https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/payments/payments and https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/point-of-purchase/checkout/checkout-process in the Adobe Commerce Admin.
+
+:::note
+The checkout [overview](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/) provides a summary of supported Adobe Commerce features.
+:::
+
+## Quick example
+
+The Checkout drop-in is included in the https://github.com/hlxsites/aem-boilerplate-commerce. This example shows the basic pattern:
+
+```js
+// 1. Import initializer (handles all setup)
+
+// 2. Import the container you need
+
+// 3. Import the provider
+
+// 4. Render in your block
+export default async function decorate(block) {
+  await provider.render(AddressValidation, {
+    // Configuration options - see Containers page
+  })(block);
+}
+```
+
+**New to drop-ins?** See the [Using drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/quick-start/) guide for complete step-by-step instructions.
+
+## Quick reference
+
+**Import paths:**
+- Initializer: `import '../../scripts/initializers/checkout.js'`
+- Containers: `import ContainerName from '@dropins/storefront-checkout/containers/ContainerName.js'`
+- Provider: `import { render } from '@dropins/storefront-checkout/render.js'`
+
+**Package:** `@dropins/storefront-checkout`
+
+**Version:** 3.2.0 (verify compatibility with your Commerce instance)
+
+**Example container:** `AddressValidation`
+
+## Learn more
+
+- [Containers](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/containers/) - Available UI components and configuration options
+- [Initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/initialization/) - Customize initializer settings and data models
+- [Functions](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/functions/) - Control drop-in behavior programmatically
+- [Events](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/events/) - Listen to and respond to drop-in state changes
+- [Slots](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/slots/) - Extend containers with custom content
+
+---
+
+# Checkout Slots
+
+The Checkout drop-in exposes slots for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/extending/).
+
+<strong>Version: 3.2.0</strong>
+
+| Container | Slots |
+|-----------|-------|
+| [`LoginForm`](#loginform-slots) | `Heading`, `Preferences`, `Title` |
+| [`PaymentMethods`](#paymentmethods-slots) | `Methods`, `Title` |
+| [`PlaceOrder`](#placeorder-slots) | `Content` |
+| [`ShippingMethods`](#shippingmethods-slots) | `ShippingMethodItem`, `Title` |
+| [`TermsAndConditions`](#termsandconditions-slots) | `Agreements` |
+
+## LoginForm slots
+
+The slots for the `LoginForm` container allow you to customize its appearance and behavior.
+
+```typescript
+interface LoginFormProps {
+  slots?: {
+    Heading?: SlotProps<{
+      authenticated: boolean;
+    }>;
+    Preferences?: SlotProps<{
+      email: string;
+      isEmailValid: boolean;
+      isAuthenticated: boolean;
+    }>;
+    Title?: SlotProps<Record<string, never>>;
+  };
+}
+```
+
+### Heading slot
+
+The Heading slot allows you to customize the heading section of the `LoginForm` container.
+
+#### Example
+
+```js
+
+await provider.render(LoginForm, {
+  slots: {
+    Heading: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Heading';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Preferences slot
+
+The Preferences slot allows you to add custom marketing preference fields within the login form. This slot enables merchants to add their own consent options (such as newsletter subscriptions, SMS updates, or promotional offers) based on their specific business needs and compliance requirements.
+
+The slot receives a context with the following properties:
+
+- `email` - The current email address entered by the user
+- `isEmailValid` - A boolean indicating whether the email address is valid
+- `isAuthenticated` - A boolean indicating whether the user is authenticated
+
+#### Example
+
+```js
+
+await provider.render(LoginForm, {
+  slots: {
+    Preferences: (ctx) => {
+      if (!ctx.isEmailValid || ctx.isAuthenticated) return;
+
+      const element = document.createElement('div');
+      element.innerHTML = `
+        <label>
+          <input type="checkbox" name="newsletter" />
+          Subscribe to our newsletter
+        </label>
+      `;
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Title slot
+
+The Title slot allows you to replace the default section heading rendered by the `LoginForm` container.
+
+#### Example
+
+```js
+
+await provider.render(LoginForm, {
+  slots: {
+    Title: (ctx) => {
+      const heading = document.createElement('h2');
+      heading.textContent = 'Sign in to continue';
+      ctx.replaceWith(heading);
+    }
+  }
+})(block);
+```
+
+## PaymentMethods slots
+
+The slots for the `PaymentMethods` container allow you to customize its appearance and behavior.
+
+```typescript
+interface PaymentMethodsProps {
+  slots?: {
+    Methods?: PaymentMethodHandlers;
+    Title?: SlotProps<Record<string, never>>;
+  };
+}
+```
+
+### Methods slot
+
+The Methods slot allows you to register custom payment method handlers, replacing or augmenting the built-in payment method UI. Pass an object whose keys are payment method codes and values are handler functions.
+
+### Title slot
+
+The Title slot allows you to replace the default section heading rendered by the `PaymentMethods` container.
+
+#### Example
+
+```js
+
+await provider.render(PaymentMethods, {
+  slots: {
+    Title: (ctx) => {
+      const heading = document.createElement('h2');
+      heading.textContent = 'How would you like to pay?';
+      ctx.replaceWith(heading);
+    }
+  }
+})(block);
+```
+
+## PlaceOrder slots
+
+The slots for the `PlaceOrder` container allow you to customize its appearance and behavior.
+
+```typescript
+interface PlaceOrderProps {
+  slots?: {
+    Content?: SlotProps<ContentSlotContext>;
+  };
+}
+```
+
+### Content slot
+
+The Content slot allows you to customize the content section of the `PlaceOrder` container.
+
+#### Example
+
+```js
+
+await provider.render(PlaceOrder, {
+  slots: {
+    Content: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Content';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+## ShippingMethods slots
+
+The slots for the `ShippingMethods` container allow you to fully replace the default shipping method UI with a custom implementation.
+
+```typescript
+interface ShippingMethodsProps {
+  slots?: {
+    ShippingMethodItem?: SlotProps<{
+      method: ShippingMethod;
+      isSelected: boolean;
+      onSelect: () => void;
+    }>;
+    Title?: SlotProps<Record<string, never>>;
+  };
+}
+```
+
+### ShippingMethodItem slot
+
+The ShippingMethodItem slot allows you to replace the default RadioButton or ToggleButton UI for each shipping method with a completely custom element. Use `ctx.replaceWith()` to provide your own UI and `ctx.onRender()` to update it when the context changes.
+
+The slot receives a `ShippingMethodItemContext` with the following properties:
+
+- `method` - The shipping method data (`ShippingMethod` model with carrier, amount, title, and so on.)
+- `isSelected` - Whether this method is currently selected
+- `onSelect` - Callback that selects this shipping method and triggers the API call to set it on the cart
+
+The internal presentation component that renders the list also accepts a `busy` flag (see the checkout drop-in `ShippingMethods` UI props) when the flow is waiting on pending checkout updates or a shipping estimate. That state is not part of `ShippingMethodItemContext`.
+
+#### Example
+
+```js
+
+function buildShippingMethodCard(ctx) {
+  const { method, isSelected } = ctx;
+  const price = method.amount.value === 0
+    ? 'FREE'
+    : `$${method.amount.value.toFixed(2)}`;
+
+  const card = document.createElement('label');
+  card.className = `custom-shipping-card ${isSelected ? 'custom-shipping-card--selected' : ''}`;
+  card.innerHTML = `
+    <input type="radio" name="shipping-method" value="${method.value}"
+      ${isSelected ? 'checked' : ''} style="display:none" />
+    
+      <strong>${method.carrier.title}</strong>
+      <span>${method.title}</span>
+      <span>${price}</span>
+    
+  `;
+
+  card.querySelector('input').addEventListener('change', () => {
+    ctx.onSelect();
+  });
+
+  return card;
+}
+
+await provider.render(ShippingMethods, {
+  slots: {
+    ShippingMethodItem: (ctx) => {
+      const card = buildShippingMethodCard(ctx);
+      ctx.replaceWith(card);
+
+      ctx.onRender((updatedCtx) => {
+        card.className = `custom-shipping-card ${updatedCtx.isSelected ? 'custom-shipping-card--selected' : ''}`;
+        card.querySelector('input').checked = updatedCtx.isSelected;
+      });
+    },
+  },
+})(block);
+```
+
+### Title slot
+
+The Title slot allows you to replace the default section heading rendered by the `ShippingMethods` container.
+
+#### Example
+
+```js
+
+await provider.render(ShippingMethods, {
+  slots: {
+    Title: (ctx) => {
+      const heading = document.createElement('h3');
+      heading.textContent = 'Choose a delivery option';
+      ctx.replaceWith(heading);
+    }
+  }
+})(block);
+```
+
+## TermsAndConditions slots
+
+The slots for the `TermsAndConditions` container allow you to customize its appearance and behavior.
+
+```typescript
+interface TermsAndConditionsProps {
+  slots?: {
+    Agreements?: SlotProps<{
+    appendAgreement: SlotMethod<{
+    name: string;
+    mode: AgreementMode;
+    translationId?: string;
+    text?: string;
+    }>;
+    }>;
+  };
+}
+```
+
+### Agreements slot
+
+The Agreements slot allows you to customize the agreements section of the `TermsAndConditions` container.
+
+#### Example
+
+```js
+
+await provider.render(TermsAndConditions, {
+  slots: {
+    Agreements: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Agreements';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+---
+
+# Checkout styles
+
+Customize the Checkout drop-in using CSS classes and design tokens. This page covers the Checkout-specific container classes and customization examples. For comprehensive information about design tokens, responsive breakpoints, and styling best practices, see [Styling Drop-In Components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/styling/).
+
+<strong>Version: 3.2.0</strong>
+
+## Customization example
+
+Add this to https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-checkout/commerce-checkout.css to customize the Checkout drop-in.
+
+For a complete list of available design tokens (colors, spacing, typography, and more), see the [Design tokens reference](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/styling/#design-tokens-reference).
+
+```css title="styles/styles.css" del={2-2} ins={3-3}
+.checkout-out-of-stock__title {
+  color: var(--color-neutral-900);
+  color: var(--color-brand-900);
+}
+```
+
+## Container classes
+
+The Checkout drop-in uses BEM-style class naming. Use the browser DevTools to inspect elements and find specific class names.
+
+```css
+/* AddressValidation */
+.checkout-address-validation {}
+.checkout-address-validation__option {}
+.checkout-address-validation__option-title {}
+.checkout-address-validation__options {}
+.checkout-address-validation__options--busy {}
+.checkout-address-validation__subtitle {}
+.checkout-address-validation__title {}
+
+/* BillToShippingAddress */
+.checkout-bill-to-shipping-address {}
+.checkout-bill-to-shipping-address__error {}
+
+/* EstimateShipping */
+.cart-order-summary__shipping {}
+.checkout-estimate-shipping {}
+.checkout-estimate-shipping__caption {}
+.checkout-estimate-shipping__label {}
+.checkout-estimate-shipping__label--bold {}
+.checkout-estimate-shipping__label--muted {}
+.checkout-estimate-shipping__price {}
+.checkout-estimate-shipping__price--bold {}
+.checkout-estimate-shipping__price--muted {}
+.dropin-skeleton {}
+
+/* LoginForm */
+.checkout-login-form__content {}
+.checkout-login-form__customer-details {}
+.checkout-login-form__customer-email {}
+.checkout-login-form__customer-name {}
+.checkout-login-form__heading {}
+.checkout-login-form__heading-label {}
+.checkout-login-form__link {}
+.checkout-login-form__sign-in {}
+.checkout-login-form__sign-out {}
+.checkout-login-form__title {}
+.dropin-field__hint {}
+
+/* OutOfStock */
+.checkout-out-of-stock {}
+.checkout-out-of-stock__action {}
+.checkout-out-of-stock__actions {}
+.checkout-out-of-stock__item {}
+.checkout-out-of-stock__items {}
+.checkout-out-of-stock__message {}
+.checkout-out-of-stock__title {}
+.dropin-card {}
+.dropin-card__content {}
+
+/* PaymentMethods */
+.checkout-payment-methods--full-width {}
+.checkout-payment-methods__content {}
+.checkout-payment-methods__error {}
+.checkout-payment-methods__methods {}
+.checkout-payment-methods__spinner {}
+.checkout-payment-methods__title {}
+.checkout-payment-methods__wrapper {}
+.checkout-payment-methods__wrapper--busy {}
+.checkout__content {}
+
+/* PaymentOnAccount */
+.checkout-payment-on-account {}
+.checkout-payment-on-account__credit {}
+.checkout-payment-on-account__credit-amount {}
+.checkout-payment-on-account__credit-label {}
+.checkout-payment-on-account__exceed-message {}
+.checkout-payment-on-account__form {}
+.dropin-field {}
+
+/* PlaceOrder */
+.checkout-place-order {}
+.checkout-place-order__button {}
+
+/* PurchaseOrder */
+.checkout-purchase-order {}
+.checkout-purchase-order__form {}
+.dropin-field {}
+
+/* ServerError */
+.checkout-server-error {}
+.checkout-server-error__icon {}
+.error-icon {}
+
+/* ShippingMethods */
+.checkout-shipping-methods__content {}
+.checkout-shipping-methods__error {}
+.checkout-shipping-methods__method {}
+.checkout-shipping-methods__options--busy {}
+.checkout-shipping-methods__options--toggleButton {}
+.checkout-shipping-methods__spinner {}
+.checkout-shipping-methods__title {}
+.dropin-price {}
+.dropin-radio-button__label {}
+.dropin-toggle-button__content {}
+
+/* TermsAndConditions */
+.checkout-terms-and-conditions {}
+.checkout-terms-and-conditions__error {}
+
+/* MergedCartBanner */
+.checkout__banner {}
+```
+
+---
+
+# Checkout utility functions
+
+This topic provides details and instructions for using the utility functions available in the checkout drop-in component. These functions were moved from the integration layer and are now publicly accessible within the checkout block from `@dropins/storefront-checkout/lib/utils.js`.
+
+### Quick imports
+
+```ts
+```
+
+## API Functions
+
+### setAddressOnCart
+
+The `setAddressOnCart` function creates a debounced handler for setting shipping or billing addresses on the cart, preventing excessive API calls when address data changes frequently.
+
+```ts
+export function setAddressOnCart({
+  type = 'shipping',
+  debounceMs = 0,
+  placeOrderBtn,
+}: {
+  type?: 'shipping' | 'billing';
+  debounceMs?: number;
+  placeOrderBtn?: RenderAPI;
+}): (change: AddressFormChange) => void;
+```
+
+```text
+[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['type', 'string', 'No', 'Address type: "shipping" or "billing". Defaults to "shipping".'],
+    ['debounceMs', 'number', 'No', 'Milliseconds to debounce API calls. Defaults to 0.'],
+    ['placeOrderBtn', 'RenderAPI', 'No', 'Place order button API to manage disabled state.'],
+  ]
+```
+
+### Returns
+
+Returns a function that accepts address form changes and updates the cart accordingly.
+
+### Usage
+
+```ts
+
+// Set up debounced shipping address handler
+const handleShippingChange = setAddressOnCart({
+  type: 'shipping',
+  debounceMs: 500,
+  placeOrderBtn: placeOrderButtonAPI
+});
+
+// Use with form change events
+shippingForm.addEventListener('input', (event) => {
+  const formData = getFormValues(event.target.form);
+  const isValid = validateForm(event.target.form);
+  
+  handleShippingChange({
+    data: formData,
+    isDataValid: isValid
+  });
+});
+```
+
+### estimateShippingCost
+
+The `estimateShippingCost` function creates a debounced handler for estimating shipping costs based on address information.
+
+```ts
+export function estimateShippingCost({ debounceMs = 0 }): (change: AddressFormChange) => void;
+```
+
+```text
+[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['debounceMs', 'number', 'No', 'Milliseconds to debounce API calls. Defaults to 0.'],
+  ]
+```
+
+### Returns
+
+Returns a function that estimates shipping costs when address data changes.
+
+### Usage
+
+```ts
+
+// Set up shipping cost estimation
+const handleEstimateShipping = estimateShippingCost({ debounceMs: 300 });
+
+// Use with address form changes
+addressForm.addEventListener('input', (event) => {
+  const formData = getFormValues(event.target.form);
+  const isValid = validateForm(event.target.form);
+  
+  handleEstimateShipping({
+    data: formData,
+    isDataValid: isValid
+  });
+});
+```
+
+## Cart Data Functions
+
+### isVirtualCart
+
+The `isVirtualCart` function checks if a cart contains only virtual products (no shipping required). If no argument is provided, it reads the latest checkout data.
+
+```ts
+export function isVirtualCart(data?: Cart | null): boolean;
+```
+
+```text
+[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['data', 'Cart | null', 'Yes', 'The cart data object to check.'],
+  ]
+```
+
+### Returns
+
+Returns `true` if the cart is virtual, `false` otherwise.
+
+### Usage
+
+```ts
+
+// Check if shipping is required using explicit data
+const cartData = await getCart();
+const skipShipping = isVirtualCart(cartData);
+
+// Or check using the latest checkout data
+const skipShippingFromState = isVirtualCart();
+
+if (skipShipping) {
+  // Hide shipping-related UI
+  document.querySelector('.shipping-section').style.display = 'none';
+}
+```
+
+### isEmptyCart
+
+The `isEmptyCart` function checks if a cart is empty or null.
+
+```ts
+export function isEmptyCart(data: Cart | null): boolean;
+```
+
+```text
+[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['data', 'Cart | null', 'Yes', 'The cart data object to check.'],
+  ]
+```
+
+### Returns
+
+Returns `true` if the cart is empty or null, `false` otherwise.
+
+### Usage
+
+```ts
+
+const cartData = await getCart();
+
+if (isEmptyCart(cartData)) {
+  // Show empty cart message
+  showEmptyCartMessage();
+  return;
+}
+
+// Proceed with checkout
+proceedToCheckout(cartData);
+```
+
+### getCartShippingMethod
+
+The `getCartShippingMethod` function retrieves the selected shipping method from cart data.
+
+```ts
+export function getCartShippingMethod(data: Cart | null): ShippingMethod | null;
+```
+
+```text
+[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['data', 'Cart | null', 'Yes', 'The cart data object.'],
+  ]
+```
+
+### Returns
+
+Returns the selected shipping method object or `null` if none is selected.
+
+### Usage
+
+```ts
+
+const cartData = await getCart();
+const shippingMethod = getCartShippingMethod(cartData);
+
+if (shippingMethod) {
+  console.log(`Shipping: ${shippingMethod.title} - $${shippingMethod.amount.value}`);
+}
+```
+
+### getCartAddress
+
+The `getCartAddress` function retrieves shipping or billing address from cart data.
+
+```ts
+export function getCartAddress(
+  data: Cart | null,
+  type: 'shipping' | 'billing' = 'shipping'
+): Record<string, any> | null;
+```
+
+```text
+[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['data', 'Cart | null', 'Yes', 'The cart data object.'],
+    ['type', 'string', 'No', 'Address type: "shipping" or "billing". Defaults to "shipping".'],
+  ]
+```
+
+### Returns
+
+Returns the address object or `null` if no address is set.
+
+### Usage
+
+```ts
+
+const cartData = await getCart();
+const shippingAddress = getCartAddress(cartData, 'shipping');
+const billingAddress = getCartAddress(cartData, 'billing');
+
+if (shippingAddress) {
+  populateAddressForm(shippingAddress);
+}
+```
+
+### getCartPaymentMethod
+
+The `getCartPaymentMethod` function retrieves the selected payment method from cart data.
+
+```ts
+export function getCartPaymentMethod(data: Cart | null): PaymentMethod | null;
+```
+
+```text
+[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['data', 'Cart | null', 'Yes', 'The cart data object.'],
+  ]
+```
+
+### Returns
+
+Returns the selected payment method object or `null` if none is selected.
+
+### Usage
+
+```ts
+
+const cartData = await getCart();
+const paymentMethod = getCartPaymentMethod(cartData);
+
+if (paymentMethod) {
+  console.log(`Payment method: ${paymentMethod.code}`);
+}
+```
+
+## DOM and Fragment Functions
+
+### createFragment
+
+The `createFragment` function creates a `DocumentFragment` from an HTML string.
+
+```ts
+export function createFragment(html: string): DocumentFragment;
+```
+
+```text
+[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['html', 'string', 'Yes', 'The HTML string to convert to a DocumentFragment.'],
+  ]
+```
+
+### Returns
+
+Returns a DocumentFragment containing the parsed HTML.
+
+### Usage
+
+```ts
+
+const html = `
+  
+    
+
+## Payment Information
+
+    <form class="payment-form">
+      <!-- form fields -->
+    </form>
+  
+`;
+
+const fragment = createFragment(html);
+document.querySelector('.checkout-container').appendChild(fragment);
+```
+
+### createScopedSelector
+
+The `createScopedSelector` function creates a scoped `querySelector` function for a DocumentFragment.
+
+```ts
+export function createScopedSelector(
+  fragment: DocumentFragment
+): (selector: string) => HTMLElement | null;
+```
+
+```text
+[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['fragment', 'DocumentFragment', 'Yes', 'The DocumentFragment to scope the selector to.'],
+  ]
+```
+
+### Returns
+
+Returns a function that queries elements within the given fragment.
+
+### Usage
+
+```ts
+
+const html = `
+  
+    <button class="next-btn">Next</button>
+    <button class="prev-btn">Previous</button>
+  
+`;
+
+const fragment = createFragment(html);
+const $ = createScopedSelector(fragment);
+
+// Query within the fragment only
+const nextButton = $('.next-btn');
+const prevButton = $('.prev-btn');
+
+nextButton?.addEventListener('click', handleNext);
+```
+
+## Form Functions
+
+### validateForm
+
+The `validateForm` function validates a form by name using form references.
+
+```ts
+export function validateForm(
+  formName: string,
+  formRef: RefObject<FormRef>
+): boolean;
+```
+
+```text
+[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['formName', 'string', 'Yes', 'The name attribute of the form to validate.'],
+    ['formRef', 'RefObject<FormRef>', 'Yes', 'Reference object to the form component.'],
+  ]
+```
+
+### Returns
+
+Returns `true` if the form is valid, `false` otherwise.
+
+### Usage
+
+```ts
+
+// Validate checkout form before submission
+const isShippingValid = validateForm('shipping-form', shippingFormRef);
+const isBillingValid = validateForm('billing-form', billingFormRef);
+
+if (isShippingValid && isBillingValid) {
+  proceedToPayment();
+} else {
+  showValidationErrors();
+}
+```
+
+## Meta Functions
+
+### createMetaTag
+
+The `createMetaTag` function creates or updates meta tags in the document head.
+
+```ts
+export function createMetaTag(property: string, content: string, type: string): void;
+```
+
+```text
+[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['property', 'string', 'Yes', 'The property/name of the meta tag.'],
+    ['content', 'string', 'Yes', 'The content value for the meta tag.'],
+    ['type', 'string', 'Yes', 'The type of meta tag: "name" or "property".'],
+  ]
+```
+
+### Returns
+
+The function does not return a value; it modifies the document head.
+
+### Usage
+
+```ts
+
+// Set checkout-specific meta tags
+createMetaTag('description', 'Complete your purchase securely', 'name');
+createMetaTag('og:title', 'Checkout - Your Store', 'property');
+```
+
+### setMetaTags
+
+The `setMetaTags` function sets standard meta tags for a drop-in component.
+
+```ts
+export function setMetaTags(dropin: string): void;
+```
+
+```text
+[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['dropin', 'string', 'Yes', 'The name of the drop-in component.'],
+  ]
+```
+
+### Returns
+
+The function does not return a value; it sets multiple meta tags.
+
+### Usage
+
+```ts
+
+// Set meta tags for checkout page
+setMetaTags('Checkout');
+```
+
+## Utility Functions
+
+### scrollToElement
+
+The `scrollToElement` function smoothly scrolls to and focuses on an HTML element.
+
+```ts
+export function scrollToElement(element: HTMLElement): void;
+```
+
+```text
+[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['element', 'HTMLElement', 'Yes', 'The element to scroll to and focus.'],
+  ]
+```
+
+### Returns
+
+The function does not return a value; it performs scrolling and focusing.
+
+### Usage
+
+```ts
+
+// Scroll to error field
+const errorField = document.querySelector('.field-error');
+if (errorField) {
+  scrollToElement(errorField);
+}
+
+// Scroll to next checkout step
+const nextStep = document.querySelector('.checkout-step.active');
+scrollToElement(nextStep);
+```
+
+## Data Transformer Functions
+
+### transformAddressFormValuesToCartAddressInput
+
+The `transformAddressFormValuesToCartAddressInput` function converts form data to cart address input format.
+
+```ts
+export const transformAddressFormValuesToCartAddressInput = (
+  data: Record<string, any>
+): ShippingAddressInput | BillingAddressInput;
+```
+
+```text
+[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['data', 'Record<string, any>', 'Yes', 'Form data object containing address information.'],
+  ]
+```
+
+### Returns
+
+Returns a formatted address input object for cart API calls.
+
+### Usage
+
+```ts
+
+// Transform form data for API
+const formData = getFormValues(addressForm);
+const addressInput = transformAddressFormValuesToCartAddressInput(formData);
+
+// Send to cart API
+await setShippingAddress(addressInput);
+```
+
+### transformCartAddressToFormValues
+
+The `transformCartAddressToFormValues` function converts cart address data to the form values format.
+
+```ts
+export const transformCartAddressToFormValues = (
+  address: CartAddress
+): Record<string, any>;
+```
+
+```text
+[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['address', 'CartAddress', 'Yes', 'Cart address object to transform.'],
+  ]
+```
+
+### Returns
+
+Returns a form-compatible object with address data.
+
+### Usage
+
+```ts
+
+// Pre-populate form with existing address
+const cartData = await getCart();
+const shippingAddress = getCartAddress(cartData, 'shipping');
+
+if (shippingAddress) {
+  const formValues = transformCartAddressToFormValues(shippingAddress);
+  populateForm(shippingForm, formValues);
+}
+```
+
+## Common Usage Patterns
+
+These utility functions work together to create robust checkout experiences:
+
+### Complete Address Handling
+
+```ts
+
+// Set up address form handling
+const handleAddressChange = setAddressOnCart({
+  type: 'shipping',
+  debounceMs: 500,
+  placeOrderBtn: placeOrderAPI
+});
+
+// Pre-populate form with existing data
+const cartData = await getCart();
+const existingAddress = getCartAddress(cartData, 'shipping');
+if (existingAddress) {
+  const formValues = transformCartAddressToFormValues(existingAddress);
+  populateAddressForm(formValues);
+}
+
+// Handle form changes
+addressForm.addEventListener('input', (event) => {
+  const formData = getFormValues(event.target.form);
+  const isValid = validateForm('shipping-address', formRef);
+  
+  handleAddressChange({ data: formData, isDataValid: isValid });
+});
+```
+
+### Cart State Management
+
+```ts
+
+function updateCheckoutUI(cartData) {
+  // Handle empty cart
+  if (isEmptyCart(cartData)) {
+    showEmptyCartMessage();
+    return;
+  }
+  
+  // Handle virtual cart (no shipping)
+  if (isVirtualCart(cartData)) {
+    hideShippingSection();
+  } else {
+    const shippingMethod = getCartShippingMethod(cartData);
+    updateShippingDisplay(shippingMethod);
+  }
+  
+  // Update payment display
+  const paymentMethod = getCartPaymentMethod(cartData);
+  updatePaymentDisplay(paymentMethod);
+}
+```
+
+### Dynamic Content Creation
+
+```ts
+
+function createCheckoutStep(stepHtml, stepName) {
+  const fragment = createFragment(stepHtml);
+  const $ = createScopedSelector(fragment);
+  
+  // Set up step-specific interactions
+  const nextButton = $('.next-step');
+  const prevButton = $('.prev-step');
+  
+  nextButton?.addEventListener('click', () => {
+    if (validateCurrentStep()) {
+      proceedToNextStep();
+    } else {
+      const errorField = $('.field-error');
+      if (errorField) scrollToElement(errorField);
+    }
+  });
+  
+  return fragment;
+}
+```

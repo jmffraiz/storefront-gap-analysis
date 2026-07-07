@@ -1,0 +1,1070 @@
+<SYSTEM>This is the Setup — go live bundle for Adobe Commerce Storefront on Edge Delivery Services</SYSTEM>
+
+# Setup — go live
+
+> Discovery, Luma Bridge, analytics, AEP, SEO, launch checklist, and data export validation
+> Generated: 2026-06-26T22:40:20.158Z
+> Source: https://experienceleague.adobe.com/developer/commerce/storefront
+
+
+---
+
+# Adobe Experience Platform
+
+## Overview
+
+Adobe Experience Platform (AEP) is a comprehensive suite of services that enables you to collect, unify, and analyze customer data from multiple touchpoints. By integrating your Adobe Commerce storefront with AEP, you can gain deeper insights into customer behavior and create more personalized experiences.
+
+![Adobe Experience Platform architecture.](https://experienceleague.adobe.com/developer/commerce/storefront/setup/analytics/aep-architecture-1024.png)
+
+*Adobe Experience Platform architecture showing data flow from various sources to unified customer profiles.*
+
+This integration allows your storefront to send commerce events (product views, purchases, cart actions) directly to the Experience Platform Edge Network, where they can be processed, stored, and used for real-time personalization and analytics.
+
+For more information about Adobe Experience Platform capabilities, see the https://experienceleague.adobe.com/docs/experience-platform/landing/home.html.
+
+## Prerequisites
+
+Before configuring your integration with Adobe Experience Platform, ensure you have the following:
+
+### Required Identifiers
+
+* **IMS Organization ID**: Your Adobe organization identifier (format: `1234567890ABCDEF7F000101@AdobeOrg`)
+* **Datastream ID**: A configured datastream for routing data (format: `12345678-1234-1234-1234-123456789012`)
+
+### How to Find Your Identifiers
+
+**IMS Organization ID:**
+To locate your IMS Organization ID, refer to the https://experienceleague.adobe.com/docs/core-services/interface/administration/organizations.html. You can typically find this in:
+
+- Adobe Admin Console
+- Developer Console
+- Any Adobe Experience Cloud application under Account Settings
+
+**Datastream ID:**
+Your datastream must be configured to route data to Adobe Experience Platform. For detailed instructions on creating and configuring a datastream, see the https://experienceleague.adobe.com/docs/experience-platform/datastreams/overview.html.
+
+## Configuration
+
+To enable data flow from your storefront to the Experience Platform Edge Network, you need to add your AEP credentials to your storefront configuration.
+
+### Method 1: Configuration File (Recommended)
+
+Add your AEP credentials to the `analytics` section of your /setup/configuration/commerce-configuration/:
+
+```json title="config.json"
+{
+  "public": {
+    "default": {
+      "analytics": {
+        "aep-ims-org-id": "1234567890ABCDEF7F000101@AdobeOrg",
+        "aep-datastream-id": "12345678-1234-1234-1234-123456789012",
+        "base-currency-code": "USD",
+        "environment": "Testing",
+        ...
+      }
+    }
+  }
+}
+```
+
+When both `aep-ims-org-id` and `aep-datastream-id` are configured, the storefront automatically:
+- Enables event forwarding to Adobe Experience Platform
+- Configures the AEP context with your credentials
+- Begins sending commerce events to the Experience Platform Edge Network
+
+### Method 2: Direct Script Configuration (Alternative)
+
+Alternatively, you can configure AEP directly in your `scripts/delayed.js` file:
+
+```js
+window.adobeDataLayer.push(
+  {
+    aepContext: {
+      imsOrgId: '1234567890ABCDEF7F000101@AdobeOrg',
+      datastreamId: '12345678-1234-1234-1234-123456789012'
+    }
+  },
+  {
+    eventForwardingContext: {
+      aep: true
+    }
+  }
+);
+```
+
+> **Recommended approach** Using the configuration file (Method 1) is recommended because it:
+- Centralizes all configuration in one place
+- Allows environment-specific settings without code changes
+- Simplifies deployment and configuration management
+
+### Configuration Parameters
+
+| Parameter | Description | Required | Example |
+|-----------|-------------|----------|---------|
+| `aep-ims-org-id` | Your Adobe IMS Organization ID | Yes | `"1234567890ABCDEF7F000101@AdobeOrg"` |
+| `aep-datastream-id` | Your configured datastream ID for routing data to AEP | Yes | `"12345678-1234-1234-1234-123456789012"` |
+
+### What This Configuration Does
+
+- **`aep-ims-org-id`**: Identifies your Adobe organization for routing events to the correct Experience Platform environment
+- **`aep-datastream-id`**: Specifies the datastream configuration that determines how events are processed and where they are sent
+- **Automatic event forwarding**: When both values are present, the storefront automatically enables `eventForwardingContext.aep` and configures the `aepContext`
+
+## Storefront events
+
+Once configured, your storefront will automatically send the following types of events to Adobe Experience Platform:
+
+- **Shopping events**: Cart updates and views (`addToCart`, `removeFromCart`, `shoppingCartView`), page views (`pageView`, `productPageView`), checkout (`startCheckout`, `completeCheckout`) and more.
+- **Customer profile events**: Customer login (`signIn`), customer logout (`signOut`), create account (`createAccount`), edit account (`editAccount`).
+- **Search events**: Search query (`searchRequestSent`) and search results (`searchResponseReceived`).
+
+> **Search events** If `LiveSearch` is not installed and configured, these search events are not sent.
+
+For a complete list of storefront events, see the https://developer.adobe.com/commerce/services/shared-services/storefront-events/.
+
+> **Debugging events** To debug events in your storefront, use the AEP Debugger Events view. See the https://experienceleague.adobe.com/docs/experience-platform/debugger/home.html for instructions.
+
+These events are processed in real-time and can be used for:
+- Customer journey analysis
+- Real-time personalization
+- Audience segmentation
+- Attribution modeling
+
+## Validation
+
+### Testing Your Integration
+
+### 1. Check browser console
+
+After implementing the configuration, open your browser's developer tools and verify that:
+
+- No JavaScript errors appear
+- Adobe Data Layer events are being fired
+- Network requests to Adobe Experience Platform Edge Network are successful
+
+### 2. Monitor data ingestion
+
+Use Adobe Experience Platform's monitoring tools to confirm data is being received:
+
+- Navigate to your AEP workspace
+- Check the **Monitoring** section for incoming data
+- Verify events appear in your configured datasets
+
+### Validate event structure
+
+Ensure events contain the expected commerce data fields and customer identifiers.
+
+### Troubleshooting
+
+If data is not flowing as expected:
+
+- **Verify credentials**: Double-check your IMS Organization ID and Datastream ID
+- **Check datastream configuration**: Ensure your datastream is properly configured to route to Adobe Experience Platform
+- **Review browser network tab**: Look for failed requests to Adobe Experience Platform endpoints
+- **Validate Adobe Data Layer**: Confirm the Adobe Data Layer is properly initialized before your AEP configuration
+
+For detailed validation procedures, refer to the https://experienceleague.adobe.com/docs/platform-learn/getting-started-for-data-architects-and-data-engineers/ingest-batch-data.html.
+
+## Next Steps
+
+After successful integration:
+
+1. **Configure schemas**: Set up XDM schemas in Adobe Experience Platform to structure your commerce data
+1. **Create audiences**: Build customer segments based on commerce behavior
+1. **Set up Real-Time CDP**: Use collected data for personalization and marketing activation
+1. **Monitor performance**: Regularly review data quality and ingestion metrics
+
+For a complete implementation example, see the https://experienceleague.adobe.com/docs/core-services/interface/administration/organizations.html and https://github.com/hlxsites/aem-boilerplate-commerce.
+
+---
+
+# Analytics instrumentation
+
+## Overview
+
+Analytics instrumentation is the process of wiring your storefront so user interaction data reaches Adobe Commerce services (for example, Live Search and Product Recommendations) in the shape those services expect. This topic covers the Adobe Client Data Layer (ACDL), `config.json` analytics settings, and validation—not Adobe Analytics reporting alone.
+
+### Why event collection matters
+
+User interaction events collected through your storefront implementation enable:
+
+- **Adobe Sensei features**: Intelligent merchandising and search result optimization in Live Search
+- **Product recommendations**: Personalized product suggestions based on user behavior
+- **Performance analytics**: Detailed dashboards showing search performance, conversion rates, and user engagement
+- **Business intelligence**: Data-driven insights for inventory management and marketing strategies
+
+> **Required for Core Features** Live Search and Product Recommendations events are not sent to AEP. For these features to function correctly, you must collect and send user interaction events to Adobe Commerce. Without proper instrumentation, these features will not work as expected.
+
+## Adobe Client Data Layer (ACDL)
+
+The https://github.com/adobe/adobe-client-data-layer is a standardized JavaScript framework that simplifies data collection on your storefront. It provides a unified approach to capturing, storing, and transmitting user interaction data.
+
+### Key Capabilities
+
+The ACDL enables your storefront to:
+
+- **Collect interaction data**: Track user behaviors like product views, searches, cart actions, and purchases
+- **Standardize data format**: Ensure consistent data structure across all events
+- **Manage event timing**: Control when and how data is sent to analytics services
+- **Support multiple integrations**: Work seamlessly with Adobe Experience Platform, Analytics, and other tools
+
+### Core API Functions
+
+| Function | Description | Use Case |
+|----------|-------------|----------|
+| `push()` | Add data or trigger events | Send product view, cart addition events |
+| `getState()` | Retrieve current data layer state | Access user session or cart information |
+| `addEventListener()` | Register event listeners | React to specific user actions |
+| `getHistory()` | View event history | Debug or audit data collection |
+
+> **Built-in Support** The Adobe Commerce boilerplate includes ACDL by default, so you don't need to install it separately. Drop-in components automatically send events to the data layer.
+
+## Configuration
+
+### Store Configuration
+
+To enable proper event collection, you need to configure your store's analytics settings. This configuration tells the instrumentation system about your store's identity and structure. The specific values depend on your Commerce environment type.
+
+Refer to the https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/ for complete details on how to configure your store.
+
+### Required Configuration Parameters
+
+The analytics configuration structure varies based on your Commerce backend type:
+
+### Adobe Commerce (PaaS) / ACCS
+
+For Adobe Commerce PaaS and Adobe Commerce as a Cloud Service environments, use standard Commerce store and website identifiers from your Commerce environment. You can obtain these values using a `storeConfig` query.
+
+```json title="config.json"
+{
+  "analytics": {
+    "aep-ims-org-id": "{{IMS_ORG_ID}}",
+    "aep-datastream-id": "{{DATASTREAM_ID}}",
+    "base-currency-code": "{{CURRENCY_CODE}}",
+    "environment": "{{ENVIRONMENT_TYPE}}",
+    "environment-id": "{{ENVIRONMENT_ID}}",
+    "store-code": "{{STORE_CODE}}",
+    "store-id": {{STORE_ID}},
+    "store-name": "{{STORE_NAME}}",
+    "store-url": "{{STORE_URL}}",
+    "store-view-code": "{{STORE_VIEW_CODE}}",
+    "store-view-id": {{STORE_VIEW_ID}},
+    "store-view-name": "{{STORE_VIEW_NAME}}",
+    "website-code": "{{WEBSITE_CODE}}",
+    "website-id": {{WEBSITE_ID}},
+    "website-name": "{{WEBSITE_NAME}}"
+  }
+}
+```
+
+**Configuration Properties:**
+
+| Parameter | Description | Example | Required |
+|-----------|-------------|---------|----------|
+| `aep-ims-org-id` | Adobe IMS Organization ID for Experience Platform integration | `"1234567890ABCDEF7F000101@AdobeOrg"` | No (required for AEP) |
+| `aep-datastream-id` | Datastream ID for routing data to Adobe Experience Platform | `"12345678-1234-1234-1234-123456789012"` | No (required for AEP) |
+| `base-currency-code` | The base currency code for the store | `"USD"`, `"EUR"` | Yes |
+| `environment` | Environment type | `"Testing"`, `"Production"` | Yes |
+| `environment-id` | Unique identifier for the Commerce environment | `"f38a0de0-764b-41fa-bd2c-5bc2f3c7b39a"` | Yes |
+| `store-code` | Code identifier for the store from your Commerce environment | `"main_website_store"` | Yes |
+| `store-id` | Numeric ID for the store | `1`, `2` | Yes |
+| `store-name` | Display name for the store | `"Main Website Store"` | Yes |
+| `store-url` | Base URL for the store | `"https://example.com"` | Yes |
+| `store-view-code` | Code identifier for the store view | `"default"` | Yes |
+| `store-view-id` | Numeric ID for the store view | `1`, `2` | Yes |
+| `store-view-name` | Display name for the store view | `"Default Store View"` | Yes |
+| `website-code` | Code identifier for the website from your Commerce environment | `"base"` | Yes |
+| `website-id` | Numeric ID for the website | `1`, `2` | Yes |
+| `website-name` | Display name for the website | `"Main Website"` | Yes |
+
+> **Adobe Experience Platform integration** To enable automatic event forwarding to Adobe Experience Platform, include both `aep-ims-org-id` and `aep-datastream-id` in your analytics configuration. When both values are present, events will automatically be sent to AEP. See the [Adobe Experience Platform integration guide](https://experienceleague.adobe.com/developer/commerce/storefront/setup/analytics/adobe-experience-platform/) for detailed setup instructions.
+
+### Adobe Commerce Optimizer (ACO)
+
+For Adobe Commerce Optimizer environments, use a simplified analytics configuration structure:
+
+```json title="config.json"
+{
+  "analytics": {
+    "aep-ims-org-id": "{{IMS_ORG_ID}}",
+    "aep-datastream-id": "{{DATASTREAM_ID}}",
+    "base-currency-code": "{{CURRENCY_CODE}}",
+    "environment": "{{ENVIRONMENT_TYPE}}",
+    "environment-id": "{{TENANT_ID}}",
+    "locale": "{{LOCALE}}",
+    "store-url": "{{STORE_URL}}",
+    "store-view-currency-code": "{{CURRENCY_CODE}}",
+    "storefront-template": "{{TEMPLATE_TYPE}}",
+    "view-id": "{{CATALOG_VIEW_ID}}"
+  }
+}
+```
+
+**Configuration Properties:**
+
+| Parameter | Description | Example | Required |
+|-----------|-------------|---------|----------|
+| `aep-ims-org-id` | Adobe IMS Organization ID for Experience Platform integration | `"1234567890ABCDEF7F000101@AdobeOrg"` | No (required for AEP) |
+| `aep-datastream-id` | Datastream ID for routing data to Adobe Experience Platform | `"12345678-1234-1234-1234-123456789012"` | No (required for AEP) |
+| `base-currency-code` | The base currency code for the store | `"USD"`, `"EUR"` | Yes |
+| `environment` | Environment type | `"Testing"`, `"Production"` | Yes |
+| `environment-id` | The tenant ID for the Adobe Commerce Optimizer instance | `"8idEEDDiVwjCEJAyB5kjfi"` | Yes |
+| `locale` | Catalog source locale (language or geography) | `"en-US"` | Yes |
+| `store-url` | Base URL for the store | `"https://example.com"` | Yes |
+| `store-view-currency-code` | Currency code for the store view | `"USD"`, `"EUR"` | Yes |
+| `storefront-template` | Storefront template type | `"Other"` | No |
+| `view-id` | The unique ID assigned to the catalog view | `"0d3eebf7-b5fb-4904-9ccf-f35fcc61862b"` | Yes |
+
+> **environment** The `environment` parameter is used to determine the type of environment your store is running in. This is important because it affects how data is collected and processed. In your storefront configuration, set the value to the JSON string `"Testing"` while you develop and `"Production"` when you deploy.
+
+### Data Services Configuration
+
+For the instrumentation to work with Adobe Commerce's data services, you'll need additional configuration parameters. The easiest way to obtain these is through the `magento/module-data-services-graphql` module, which exposes the necessary GraphQL endpoints.
+
+#### Required for Data Services
+
+- **Catalog Service credentials**: For product data synchronization
+- **SaaS environment ID**: Links your storefront to Adobe Commerce SaaS services
+- **API keys**: Authenticate with Adobe Commerce backend services
+
+## Event Collection and Validation
+
+### Automatic Event Collection
+
+The Commerce boilerplate includes the https://github.com/adobe/commerce-events/tree/main/packages/storefront-events-collector, which automatically:
+
+1. **Listens for ACDL events**: Monitors the data layer for new events
+1. **Validates event structure**: Ensures events conform to required schemas
+1. **Batches and sends data**: Efficiently transmits events to Adobe Commerce
+1. **Handles errors**: Manages network issues and retry logic
+
+### Event Types Collected
+
+Your instrumentation will automatically track:
+
+- **Shopping events**: Cart updates and views (`addToCart`, `removeFromCart`, `shoppingCartView`), page views (`pageView`, `productPageView`), checkout (`startCheckout`, `completeCheckout`) and more.
+- **Customer profile events**: Customer login (`signIn`), customer logout (`signOut`), create account (`createAccount`), edit account (`editAccount`).
+- **Search events**: Search query (`searchRequestSent`) and search results (`searchResponseReceived`).
+
+> **Search events** If `LiveSearch` is not installed and configured, these search events are not sent.
+
+> **Debugging events** To debug events in your storefront, use the AEP Debugger Events view. See the https://experienceleague.adobe.com/docs/experience-platform/debugger/home.html for instructions.
+
+### Event Schema Compliance
+
+All events must comply with the schema defined by the https://github.com/adobe/commerce-events/tree/main/packages/storefront-events-sdk. This ensures compatibility with Adobe Commerce services and analytics tools.
+
+## Validation and Testing
+
+The following sections describe how to validate and test your event implementation.
+
+### Automated Validation
+
+You can validate your event implementation using the https://github.com/adobe/adobe-client-data-layer/pull/156. This tool checks:
+
+- **Event structure**: Verifies required fields are present
+- **Data types**: Ensures values match expected formats
+- **Schema compliance**: Confirms events follow Storefront Event SDK specifications
+
+> **Performance Recommendation** For optimal performance, Adobe recommends writing events directly to ACDL rather than using the Storefront Events SDK wrapper. Drop-in components handle this automatically, but custom implementations should follow this practice.
+
+### Manual Testing Steps
+
+1. **Open browser developer tools** and navigate to the Console tab
+1. **Check for ACDL**: Verify `window.adobeDataLayer` exists and contains events
+1. **Monitor network requests**: Look for successful data transmission to Adobe services
+1. **Validate event data**: Inspect event payloads for completeness and accuracy
+1. **Confirm that event data is collected**: To confirm that data is being collected from your Commerce store, use the Adobe Experience Platform debugger to examine your Commerce site.
+
+> **Debugging events** The AEP Debugger provides an Events view that you can use to examine the events being sent from your Commerce site. See the https://experienceleague.adobe.com/docs/experience-platform/debugger/home.html for instructions.
+
+### Common Validation Issues
+
+- **Missing configuration**: Ensure all required analytics parameters are set
+- **Incorrect store IDs**: Verify store and website IDs match your Adobe Commerce setup
+- **Network connectivity**: Check that your storefront can reach Adobe Commerce endpoints
+- **Event timing**: Confirm events fire at the correct moments in the user journey
+
+## Troubleshooting Configuration Issues
+
+**Problem**: Events not being sent
+
+**Solution**:
+
+1. Verify your `config.json` contains all required analytics parameters
+1. Check that store IDs match your Adobe Commerce backend configuration
+1. Ensure the Storefront Events Collector is loading properly
+
+**Problem**: Invalid event data
+
+**Solution**:
+
+1. Use the ACDL validator to check event structure
+1. Verify custom events follow the Storefront Event SDK schema
+1. Check for JavaScript errors that might corrupt event data
+
+## Troubleshooting Integration Issues
+
+**Problem**: Live Search not receiving data
+
+**Solution**:
+
+1. Confirm your SaaS environment ID is correctly configured
+2. Verify API credentials are valid and have necessary permissions
+3. Check that product catalog is properly synchronized
+
+For additional troubleshooting, refer to the https://experienceleague.adobe.com/en/docs/commerce/product-recommendations/admin/workspace#data-collection.
+
+## Best Practices
+
+### Implementation Guidelines
+
+- **Test thoroughly**: Validate events in development before deploying to production
+- **Monitor regularly**: Set up alerts for data collection failures
+- **Follow schemas**: Always comply with Storefront Event SDK specifications
+- **Optimize performance**: Batch events when possible to reduce network overhead
+
+### Data Quality
+
+- **Validate user inputs**: Sanitize data before adding to events
+- **Handle edge cases**: Account for scenarios like network failures or missing data
+- **Maintain consistency**: Use standardized naming and formatting across all events
+- **Respect privacy**: Ensure compliance with data protection regulations
+
+---
+
+# Data export validation
+
+Data export synchronizes data between an Adobe Commerce instance and connected [Commerce services](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/commerce-services-and-backends/#commerce-services). Those services are required for drop-in components to work correctly.
+
+Validating the data export is crucial to ensure that the data is correctly synchronized and available for the storefront. You can use the https://experienceleague.adobe.com/en/docs/commerce-admin/systems/data-transfer/data-sync/data-dashboard to monitor the data sync progress for each service.
+
+:::tip[Self-service data export validation]
+See the https://experienceleague.adobe.com/en/docs/commerce/saas-data-export/overview for details and troubleshooting.
+:::
+
+Use GraphQL to validate that all products were synchronized and product lookup and search are working. See https://developer.adobe.com/commerce/webapi/graphql/schema/catalog-service/queries/products/ and https://github.com/magento/adobe-commerce-catalog-service for queries.
+
+For more complex catalogs, reach out to the Adobe team on https://discord.com/channels/1131492224371277874/1220042081209421945 to validate that the exported data is correct. This might require you to provide a database dump or direct access. Please also reach out to the Adobe team if you encounter any currently unsupported use cases, so that they can be enabled in the future.
+
+---
+
+# Luma Bridge
+
+This section provides guidance on how to implement the Luma Bridge for your Adobe Commerce on Edge Delivery Services project.
+
+PaaS only
+
+> **Supported Configuration** Luma Bridge is intended for Adobe Commerce Platform as a Service (PaaS) instances with complex cart, checkout, and account page implementations that need to be migrated progressively to Edge Delivery Services. It is only supported for the following configuration: **Edge Delivery Services (EDS) + Adobe Commerce Optimizer (ACO) + PaaS**.
+
+If you need access to the Luma Bridge package, please reach out to us at `commerce-storefront-luma-bridge@adobe.com`.
+
+## What is Luma Bridge?
+
+Luma Bridge is a session management mechanism between two storefronts:
+
+- The main storefront (headless storefront) that is built using the https://github.com/hlxsites/aem-boilerplate-commerce on Edge Delivery Services
+- The default, theme-based PHP storefront that is built using Adobe Commerce (Luma theme or another base theme)
+
+It allows you to reuse complex parts of your storefront (for example, cart, checkout, and account pages). This approach provides a path for Adobe customers currently using default, theme-based storefronts to migrate to a highly performant shopping experience in a phased manner. Using Luma Bridge, you can progressively migrate your theme-based storefront to Edge Delivery Services.
+
+:::note
+If you already have a headless storefront implementation (for example, https://github.com/magento/pwa-studio or https://vuestorefront.io/), Luma Bridge is not a suitable solution to share session and other context between Edge Delivery Services and your storefront.
+:::
+
+## Demo site
+
+The following demo site was built with Luma Bridge. You can access the full demo site at https://mcprod.eds.ecg.magento.com/.
+
+[![Adobe Commerce storefront on Edge Delivery Services boilerplate demo.](https://experienceleague.adobe.com/developer/commerce/storefront/setup/discovery/images/luma-bridge-demo.png)](https://mcprod.eds.ecg.magento.com/)
+
+## Requirements for implementation
+
+You must meet the following requirements to implement Luma Bridge:
+
+- Both the Edge Delivery Services storefront and the theme-based Adobe Commerce storefront must operate on the same top-level domain.
+- You must use the user authentication and cart drop-in components to manage your storefront authentication and cart context. This ensures that Luma Bridge works with the correct set of cookies.
+
+## How does session management work?
+
+Luma Bridge relies on cookies generated by the [user authentication](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/user-auth/) and [cart](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/) drop-in components. These components are part of your Commerce boilerplate template-based storefront on Edge Delivery Services.
+
+Luma Bridge is a PHP module installed in Adobe Commerce, as noted above. When you enable the Luma Bridge module, Adobe Commerce can recognize and create the same cookies that your storefront drop-in components generate. This enables both applications to share the same session cookies, whether the user has a guest session or a logged-in session.
+
+The cookies include:
+
+- A JWT token that represents the customer session when the user is logged in, generated as a response to the `generateCustomerToken` GraphQL mutation.
+- A cart ID that represents a masked quote ID, generated as a response to the `createGuestCart` GraphQL mutation.
+
+No changes are required on your Edge Delivery Services storefront when you use the user authentication and cart drop-in components.
+
+## Implementation considerations
+
+Before starting an implementation, clarify the following information:
+
+- Architecture of cart, checkout, and account pages
+- Complexity of implementation
+- Customization requirements
+
+This information will help you decide whether to use Luma Bridge or a headless implementation for the cart, checkout, and account pages.
+
+:::tip
+When implementing Luma Bridge, ensure that you have engineers on the project with backend PHP knowledge on Adobe Commerce.
+:::
+
+## Installation
+
+To install the Luma Bridge, use the following steps:
+
+1. Fetch the package via Composer:
+
+   ```bash
+   composer require adobe-commerce/luma-bridge
+   ```
+
+1. Enable the module and complete the standard CLI procedure:
+
+   ```bash
+   bin/magento module:enable Magento_LumaBridge
+   bin/magento setup:upgrade
+   bin/magento setup:di:compile
+   bin/magento cache:flush
+   ```
+
+After completing the installation, Luma Bridge will automatically recognize and share session cookies between your Edge Delivery Services storefront and Adobe Commerce. Test that user authentication and cart state persist correctly as customers navigate between both storefronts.
+
+---
+
+# Overview
+
+Before starting any Adobe Commerce on Edge Delivery Services project, you must conduct a setup phase to scope the project and ensure that there are no major roadblocks or risks.
+
+## Big picture
+
+In the [create your storefront](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/) tutorial, you learned how to quickly create a new project based on the https://github.com/hlxsites/aem-boilerplate-commerce. The boilerplate provides a starter storefront that uses a pre-configured Adobe Commerce environment.
+
+The next step is to plan, build, optimize, and launch a production-ready storefront connected to your own Adobe Commerce instance and storefront services. Here's an overview of the process:
+
+![Storefront project planning and delivery
+  process.](https://experienceleague.adobe.com/developer/commerce/storefront/images/implementation/implementation-overview-v2.svg)
+
+*Storefront project planning and delivery process.*
+
+1. **Discovery**: Understand the requirements and goals of the project.
+1. **Setup**: Configure the project environment and tools.
+1. **Analytics**: Instrument the storefront to collect user interaction events.
+1. **SEO**: Optimize the storefront for search engines and marketing campaigns.
+1. **Drop-in components**: Develop and integrate drop-in components to enhance the storefront experience.
+1. **Launch**: Deploy the storefront to a production environment.
+
+## Project scope
+
+The discovery phase is important because Adobe Commerce is a highly customizable platform with a large third-party extension ecosystem. Migrating an Adobe Commerce storefront to Edge Delivery Services is similar to migrating to a headless storefront (like https://developer.adobe.com/commerce/pwa-studio).
+
+:::note[Important]
+The key requirement for a headless storefront implementation is that all required data is provided by APIs.
+:::
+
+Successfully building a storefront requires a well-defined plan and a phased approach. Here are some key steps to consider:
+
+### 1. Phased launch
+
+Fast return on investment (ROI) and learnings:
+
+- Break down project scope into small milestones
+- Small milestones result in faster time-to-value (TTV), learnings, and higher quality
+- Define a rollout _and_ rollback strategy for each milestone (for example, split traffic)
+
+Adobe recommends the following launch phases:
+
+- Homepage and content pages with high-acquisition traffic that benefit from SEO improvement
+- Catalog pages (PDP and PLP) with high-conversion traffic that benefit from performance improvements
+- Checkout and account pages with high-retention traffic that benefit from personalization
+
+:::tip
+Instead of launching all features at once, start with a fresh Commerce project, launch with the minimum viable feature set, and add additional features as needed.
+
+Avoid introducing any potentially breaking changes to the existing project. For example, if you uninstall an extension required for an existing storefront when migrating to Edge Delivery Services, this could be a breaking change that prevents you from rolling back to the existing storefront if necessary.
+:::
+
+### 2. Metrics
+
+Define what success should look like in each phase:
+
+- Define measurable business and technical metrics that are impacted by launch
+- Establish a baseline for each metric before launch
+- Create a realistic forecast of what to expect over time
+
+### 3. Validation
+
+Validate the impact of changes:
+
+- Validate launch impact using your baseline and forecast
+- Prioritize fixing issues you and your team can resolve quickly
+- Rollback if issues are unclear or if a fix will take too long
+- Improve and test code before the next launch
+
+An iterative approach to launching your storefront will help you quickly identify and resolve issues, and improve the overall quality of your project. The following diagram illustrates the iterative approach:
+
+![Iterative rollout process.](https://experienceleague.adobe.com/developer/commerce/storefront/images/implementation/iterative-rollout-v1.svg)
+
+*Iterative rollout process.*
+
+### Use cases and requirements
+
+Document your use cases and requirements and create a plan for how you will implement them. Adobe offers pre-built components that accelerate development (drop-in components).
+
+Drop-in components are reusable components that define the storefront shopping experience. They are framework agnostic and can be used in any context (Edge Delivery Services, AEM, Luma). However, this documentation focuses on the use of drop-in components in Edge Delivery Services projects using the https://github.com/hlxsites/aem-boilerplate-commerce. The drop-in component development roadmap is synchronized with Adobe Commerce APIs, so new API features are automatically available in drop-in components.
+
+:::note
+See the [drop-in components overview](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/introduction/) for a list of all available drop-in components.
+:::
+
+If you see gaps in what the drop-in components support, Adobe can help with a plan to achieve your scenarios. For example:
+
+- Identify if drop-in components can solve your use cases and requirements
+- Identify what use cases are already supported, what is a gap, and what needs to be implemented differently from what is available out-of-the-box
+- Reach out to the Adobe team early to share your use cases and get recommendations on how to fulfill them: [commerce-storefront-compatibility@adobe.com](mailto:commerce-storefront-compatibility@adobe.com)
+
+The Live Search Popover and PLP have two integration paths:
+
+- Using the out-of-the-box hosted option where Adobe hosts the JavaScript file
+
+  - Automatic updates for fixes and small features
+  - Small upgrades available for major or breaking features
+  - Can change some styling
+
+- Using the customized option where Adobe provides a reference implementation for the components
+
+  - Full control of customization and look and feel
+  - You host the library and own the total cost of ownership
+
+### Extensions
+
+Before starting the project, use the following list to create an inventory of the Adobe Commerce extensions that are actively being used. This will help you understand which extensions can be replaced by out-of-the-box Adobe Commerce functionality.
+
+- What extensions are currently in use?
+
+- What type of data do the extensions provide (for example, reviews)?
+
+- Is the data required on the frontend?
+- How do the extensions expose the data (for example, GraphQL, REST API)?
+
+- Do the extensions expose an API to access data (for example, a product labels module from https://commercemarketplace.adobe.com/)? If not, create an action item to expose the required data through an API. Options include:
+
+  - Customize the Adobe Commerce Catalog Service exporter to export additional custom data to Catalog Service
+  - Create a custom Adobe Commerce GraphQL query
+  - Use https://developer.adobe.com/graphql-mesh-gateway/
+
+- Are any of the extensions for delivery options (for example, shipping/BOPIS), payments, or tax providers? If you use third-party solutions, clarify if they expose APIs on the frontend and if they provide their own set of drop-in components for the frontend integration.
+
+## Existing storefronts
+
+There are a couple of options for modernizing your existing storefront with Edge Delivery Services:
+
+- **Progressive implementation**: Rebuild selected parts of the commerce funnel on Edge Delivery Services and reuse the rest from your existing storefront.
+- **Full implementation**: Rebuild your entire storefront on Edge Delivery Services and retire your existing storefront.
+
+A progressive implementation enables you to unlock business value with Edge Delivery Services sooner, minimizing the risks associated with migration. You can start by implementing the home page only and reusing the rest of your existing storefront. The next step could be implementing catalog with product listing, search, and product details and reusing cart, checkout, and account from your existing storefront.
+
+This approach comes with the cost of maintaining two storefronts in parallel, so before you choose, assess which approach is right for you. These are the key factors to consider:
+
+- **Business metrics to improve**:
+
+  - What areas of your existing storefront drive business performance?
+  - What are the challenges based on the site analytics that you see?
+
+- **Level of storefront customization**:
+
+  - How many experiences are built with custom code on your storefront?
+  - Do these experiences rely on custom business logic?
+
+- **Third-party extensions**:
+
+  - How many third-party extensions are you using on your existing storefront?
+  - Do you need to connect to third-party services?
+
+- **B2B**:
+  - Are there any Adobe Commerce B2B modules enabled on your existing storefront?
+
+Adobe recommends the progressive implementation if any of the following are true:
+
+- The main business metrics are brand visibility in search engines, customer acquisition cost, and customer engagement.
+- The existing storefront is heavily customized in the areas of checkout and user account.
+- There are many third-party integrations in the existing storefront that affect transactional flow.
+- The existing storefront supports B2B use cases with Adobe Commerce modules.
+
+The full implementation is a better option if any of the following are true:
+
+- Your business objectives include improving customer conversion and re-engagement.
+- The current checkout flow only relies on a few third-party integrations (for example, payments, shipping, taxes).
+- No Adobe Commerce B2B modules are enabled on the existing storefront.
+
+| Criteria                        | Progressive Implementation                                                                                                | Full Implementation                                                                                |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| **Description**                 | Rebuild selected parts of the commerce funnel on Edge Delivery Services and reuse the rest from your existing storefront. | Rebuild your entire storefront on Edge Delivery Services and retire your existing storefront.      |
+| **Business Metrics to Improve** | Brand visibility in search engines, customer acquisition cost, customer engagement.                                       | Customer conversion, customer re-engagement.                                                       |
+| **Level of Customization**      | Heavily customized in areas like checkout and user account.                                                               | Minimal customization, relies on a few third-party integrations (e.g., payments, shipping, taxes). |
+| **Third-Party Integrations**    | Many third-party integrations affecting transactional flow.                                                               | Few third-party integrations.                                                                      |
+| **B2B Modules**                 | Supports B2B use cases with Adobe Commerce modules.                                                                       | No Adobe Commerce B2B modules enabled.                                                             |
+| **Project Scope**               | Identify use cases for new and existing storefronts (e.g., catalog, product detail, cart, checkout, customer account).    | Verify use cases are available through Adobe Commerce GraphQL APIs.                                |
+| **Third-Party Extensions**      | Identify necessary extensions and their reliance on third-party services.                                                 | Identify necessary extensions and their reliance on third-party services.                          |
+| **Storefront Bridge Options**   | Plan to connect existing storefront with the new one (e.g., using Luma Bridge).                                           | Not applicable.                                                                                    |
+
+### Progressive implementation
+
+For the progressive implementation, you'll need to look into the following:
+
+- **Project scope**: Identify which use cases the new storefront will handle and which ones the existing storefront will continue to manage, such as catalog, product detail, cart, checkout, and customer account.
+- **Third-party extensions**: Identify the list of extensions you will need on your new storefront and determine if they rely on integrating third-party services.
+- **Storefront bridge options**: Plan to connect the existing storefront with the new one. If you are using Adobe Commerce native storefront with Luma, you can use the Luma Bridge.
+
+### Full implementation
+
+For the full implementation, the list of considerations is similar to the progressive implementation:
+
+- **Project scope**: Identify which use cases the new storefront will handle and verify that they are available through Adobe Commerce GraphQL APIs.
+- **Third-party extensions**: Identify the list of extensions you will need on your new storefront and determine if they rely on integrating third-party services.
+
+---
+
+# Launch checklist
+
+Adobe’s launch resources are designed to help you achieve a seamless and successful rollout of your Adobe Commerce storefront powered by Edge Delivery Services.
+
+Adobe Commerce projects usually require much more than a simple content delivery network (CDN) switch to launch. You must ensure that the launch activities are well defined and planned. You should also prepare a rollback plan in case you encounter any issues during the launch.
+
+## Launch checklist
+
+Completing all pre-work and tasks required to launch a new storefront can be overwhelming. This checklist helps ensure that you complete and track all necessary work before going live.
+
+As you develop, carefully track all changes made in development or staging environments to ensure that they can be applied and deployed when you migrate to production.
+
+### SEO and indexing
+
+* [ ] Add document title metadata for key pages (especially PDPs and PLPs). See the [SEO metadata](https://experienceleague.adobe.com/developer/commerce/storefront/setup/seo/metadata/) documentation for details.
+* [ ] Ensure that your PDPs have [metadata and structured data](https://experienceleague.adobe.com/developer/commerce/storefront/setup/seo/metadata/) (for example, JSON-LD is configured).
+* [ ] Standardize URL formats for products (example: `domain/product-name`).
+* [ ] Redirect all vanity URLs to canonical URLs.
+* [ ] Add a `robots.txt` file to your project, which allows your site to be indexed by search
+      engines. Ensure that your sitemaps are referenced and that you add rules to block indexing
+      of any content that you do not want to be indexed (for example, the `/drafts` folder).
+* [ ] Add one or multiple https://www.aem.live/docs/redirects files to ensure that
+      URLs that were changed as part of the migration still work (for example, when you remove the
+      `.html` file extension).
+* [ ] Generate a sitemap for your site and catalog. To speed up the indexing process, Adobe
+      recommends adding the sitemap to Google Search Console.
+
+### Enable pre-rendering
+
+* [ ] Add pre-rendering for key pages. See the [pre-rendering documentation](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/aem-prerender/) for details.
+* [ ] Verify that all URLs are lowercase to support pre-rendering without breaking any links.
+* [ ] Validate HTML source for metadata and enriched body content (to ensure pre-rendering is working).
+* [ ] Check availability of page translations for locales with different languages.
+
+### Performance and monitoring
+
+* [ ] Ensure you have followed all [Performance best practices](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/performance/).
+* [ ] (Optional) Configure Google Analytics and Google Tag Manager.
+* [ ] Validate your https://github.com/adobe/commerce-events/tree/main/examples/events/snowplow-debugger
+      implementation and ensure that data is displayed in your Live Search and Product
+      Recommendation dashboards in the Adobe Commerce Admin.
+* [ ] Ensure that the `environment` analytics config parameter is set appropriately in your [Commerce configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/). Use the JSON strings `"Testing"` (development) and `"Production"` (production) in your storefront configuration. See [Analytics](https://experienceleague.adobe.com/developer/commerce/storefront/setup/analytics/instrumentation/).
+* [ ] Ensure that the site's Lighthouse score is green; targeting `100` on every page (taking into
+      account previous considerations mentioned in this document).
+
+### Security and access
+
+* [ ] Verify that you have configured permissions for DA content and EDS sites. See https://da.live/docs/administration/permissions and https://www.aem.live/docs/authentication-setup-authoring.
+* [ ] Ensure that the product visuals integration has been provisioned. See https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/accessing/overview#.
+* [ ] Verify/update password reset links. Match the Edge Delivery Services implementation in the Adobe Commerce Admin. See the [FAQ](https://experienceleague.adobe.com/developer/commerce/storefront/troubleshooting/faq/#what-should-i-do-if-my-email-template-links-are-broken-after-migrating-to-edge-delivery-services-or-helix) for details.
+* [ ] Provide and configure production keys for integrations and payment providers.
+* [ ] Verify that the new domains/subdomains are `allowlisted` and potential backend webhooks are working.
+
+### CDN and caching
+
+* [ ] Update your CDN configuration with your production GraphQL endpoint (`yourproject.com/graphql`). Use that endpoint for all Sidekick extensions and scripts (for example, sitemap generation and the image importer).
+* [ ] Request a new CDN purge token for your Adobe Commerce production environment when using Adobe Commerce Fastly. Then update your https://tools.aem.live/tools/cdn-setup/index.html by adding the authToken and serviceId values.
+* [ ] Validate your [CDN configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/content-delivery-network/) and ensure that caching
+      and cache invalidation work as expected.
+* [ ] Add a store-specific cache buster to the Catalog Service and Live Search requests for [multi-store setups](https://experienceleague.adobe.com/developer/commerce/storefront/setup/seo/indexing/#multi-store-setups) (for example, a query parameter or proxy through your CDN configuration).
+
+### Catalog service
+
+* [ ] Switch to the Catalog Service production endpoint (`https://catalog-service.adobe.io/graphql`).
+* [ ] Ensure a production environment is configured in the Service Connector (will result in a new `environmentId`).
+* [ ] Sync the production catalog to the new production environment.
+* [ ] Create a new Commerce production API key-pair and use the public key as the `x-api-key` value.
+* [ ] Verify category IDs and ensure all category pages reference the correct category.
+* [ ] Update `environmentId` and `x-api-key` values in the `config.json` code file.
+* [ ] Notify the Catalog Service team about the new production environment and launch date.
+
+### Project management and updates
+
+* [ ] Notify Adobe early about your planned launch date to ensure that the Adobe Commerce team is
+      available to support you during the launch.
+* [ ] Check for the latest boilerplate changes and update your project accordingly.
+
+## Documentation
+
+For complete documentation on launching your storefront, visit the https://www.aem.live/docs/#launch on the Adobe Experience Manager site or select the direct links below. You should also review the Commerce-specific [launch checklist](#launch-checklist).
+
+| Topic | Description |
+| ----- | ----------- |
+| https://www.aem.live/docs/go-live-checklist | Summary of best practices to consider when launching a website. |
+| https://www.aem.live/docs/setup-byo-cdn-push-invalidation | Automatically purge content on your production CDN whenever an author publishes content changes. |
+| https://www.aem.live/docs/byo-cdn-cloudflare-worker-setup | Configure Cloudflare to deliver content. |
+| https://www.aem.live/docs/byo-cdn-akamai-setup | Use the Akamai Property Manager to configure a property to deliver content. |
+| https://www.aem.live/docs/byo-cdn-fastly-setup | Configure Fastly to deliver content. |
+| https://www.aem.live/docs/byo-cdn-cloudfront-setup | Set up Amazon Web Services CloudFront to deliver your AEM site with push invalidation. |
+| https://www.aem.live/docs/byo-dns | Custom domain without having to set up a content delivery network. |
+| https://www.aem.live/docs/redirects | Manage redirects as a spreadsheet from the `redirects` document in the root of your project folder. |
+
+---
+
+# SEO overview
+
+Search optimization on this storefront depends on two coordinated layers: how Edge Delivery Services serves HTML to crawlers, and how your Commerce catalog URLs and metadata stay consistent across stores.
+
+## Two layers to coordinate
+
+### Edge Delivery Services (platform)
+
+Edge Delivery Services (EDS) shapes the first HTML response: document-based pages (for example, marketing or editorial pages) usually ship most of their text there, while many catalog product detail pages (PDPs) load product details after that response for performance unless you publish server-side metadata or use prerender. Search engines and large language model (LLM) crawlers still rely heavily on that first payload, so Adobe publishes shared SEO and GEO guidance on https://www.aem.live/docs/seo-geo. GEO sits alongside SEO on that page. For example, some bots do not fully render every page, so they lean on the initial HTML.
+
+- [SEO and GEO best practices on AEM.live](https://www.aem.live/docs/seo-geo) — How EDS treats canonical content, server rendering versus rendering in the browser, sitemaps, robots rules, structured data, and how performance ties to discoverability. Read this alongside your Commerce configuration.
+
+### Adobe Commerce storefront (catalog)
+
+Your Commerce layer adds URL patterns, folder mapping, canonical choices, structured metadata, and multi-store rules on top of those EDS defaults. Document-based routes and catalog routes behave differently, so search crawlers and social previews can treat thin or duplicate first HTML as low-value unless [SEO indexing](https://experienceleague.adobe.com/developer/commerce/storefront/setup/seo/indexing/) and [SEO metadata](https://experienceleague.adobe.com/developer/commerce/storefront/setup/seo/metadata/) stay aligned. SKUs, configurable products, and store-specific URLs all influence which URL should win and what appears in that first response.
+
+The [SEO indexing](https://experienceleague.adobe.com/developer/commerce/storefront/setup/seo/indexing/) and [SEO metadata](https://experienceleague.adobe.com/developer/commerce/storefront/setup/seo/metadata/) pages spell out storefront-specific checks. They extend the platform baseline on https://www.aem.live/docs/seo-geo.
+
+### Keep both layers aligned
+
+Use the same story in the platform response and the catalog: one clear URL per indexable product context, metadata that matches that URL, and enough useful text in the first HTML when a bot stops after the first response.
+
+- Match Edge Delivery Services expectations for sitemaps, robots, performance, and primary content in the first HTML. Treat https://www.aem.live/docs/seo-geo as the baseline for your mix of document-based and catalog routes.
+- Implement URL rules, folder mapping, canonicals, hreflang, and store-specific crawling behavior from [SEO indexing](https://experienceleague.adobe.com/developer/commerce/storefront/setup/seo/indexing/) so the URLs you publish are the URLs you want indexed.
+- Publish titles, descriptions, and structured data for catalog pages from [SEO metadata](https://experienceleague.adobe.com/developer/commerce/storefront/setup/seo/metadata/) so those fields line up with the URLs above.
+- Before go-live, verify with [Launch checklist — SEO and indexing](https://experienceleague.adobe.com/developer/commerce/storefront/setup/launch/#seo-and-indexing). If validators or feeds still see thin PDP HTML, use [AEM Commerce prerender](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/aem-prerender/).
+
+## Related links in this documentation
+
+Use these pages when you implement indexing, metadata, launch checks, or prerender for your storefront:
+
+- [SEO indexing](https://experienceleague.adobe.com/developer/commerce/storefront/setup/seo/indexing/) — canonical URLs, folder mapping, sitemaps, hreflang, and multi-store considerations.
+- [SEO metadata](https://experienceleague.adobe.com/developer/commerce/storefront/setup/seo/metadata/) — titles, descriptions, structured data, and PDP metadata workflows.
+- [Launch checklist — SEO and indexing](https://experienceleague.adobe.com/developer/commerce/storefront/setup/launch/#seo-and-indexing) — tasks to verify before go-live.
+- [AEM Commerce prerender](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/aem-prerender/) — server-rendered HTML when catalog pages rely heavily on client-side data.
+
+> **If validators show empty PDP HTML** Start with [SEO metadata](https://experienceleague.adobe.com/developer/commerce/storefront/setup/seo/metadata/) and [folder mapping](https://experienceleague.adobe.com/developer/commerce/storefront/setup/seo/indexing/#folder-mapping). If you still need full product markup in the initial HTML for crawlers, configure [AEM Commerce prerender](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/aem-prerender/).
+
+---
+
+# SEO indexing
+
+This page covers URL and crawling concerns so search engines index the right Adobe Commerce storefront pages on Edge Delivery Services. For how indexing fits with platform SEO and metadata on first-load HTML, start with [SEO overview](https://experienceleague.adobe.com/developer/commerce/storefront/setup/seo/).
+
+These recommendations come from customer and partner storefront projects on Edge Delivery Services. Use them to keep URLs, canonical signals, and crawlers aligned.
+
+### Canonical URLs
+
+- When product detail pages (PDPs) have multiple URLs, set a consistent canonical URL for each product.
+- Make sure that canonical URLs do not point to redirects (301).
+
+### Configurable products
+
+For configurable products, ensure that the canonical URL is set to the parent product URL. This is important because Google might index the child product URLs, which can lead to duplicate content issues.
+
+### Folder mapping
+
+When using https://www.aem.live/developer/folder-mapping for Commerce pages (PDP, PLP), ensure that the server-side rendered response contains metadata that allows Google to differentiate pages.
+
+Folder-mapped pages (without using https://www.aem.live/docs/bulk-metadata) all look the same and Google might classify them as duplicate and not index them, despite different canonical URLs as Google considers canonical URLs a hint and not an absolute value.
+
+#### URL format of catalog pages
+
+By default, the boilerplate uses https://www.aem.live/developer/folder-mapping for product detail pages (PDP) and dedicated pages for product list pages (PLP). If your catalog has a large amount of PLPs, it might make sense to also use folder mapping for PLPs. A low number of PDPs or PLPs could justify creating dedicated pages for each.
+
+The URL format for folder-mapped PDPs looks like this:
+
+```plaintext
+/products/{urlKey}/{sku}
+```
+
+This is to include the SEO relevant `urlKey` parameter and the `SKU` which is needed to perform Catalog Service queries. Feel free to customize the format as needed. You might need to do advanced customization on the CDN.
+
+> **Lowercase SKUs in URLs** The Commerce boilerplate enforces lowercase SKUs in all product URLs to ensure canonical consistency and comply with Edge Delivery Services https://www.aem.live/docs/limits#document-naming-restrictions; SKUs must contain only `a-z`, `0-9`, `-`, and `.` (whitespace and other characters are not supported).
+
+- All product URLs now use lowercase SKUs by default
+- A centralized `getProductLink(urlKey, sku)` function ensures consistent URL generation
+- Sites with uppercase SKUs must either publish metadata or modify the URL generation function
+- See the [SEO metadata](https://experienceleague.adobe.com/developer/commerce/storefront/setup/seo/metadata/) documentation for implementation details
+
+### Multi-store setups
+
+For [multi-store setups](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/multistore-setup/) or stores supporting multiple locales:
+
+- Verify a https://www.aem.live/developer/sitemap#specifying-the-primary-language-manually. You can validate using the https://technicalseo.com/tools/hreflang/.
+
+- Verify that the `Magento-Store-Code` header value defined in your [storefront configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/) is part of the URL for every Catalog Service or Live Search request.
+
+  
+
+> **Store code in URLs** This is required because Google caches responses without considering headers. Not adding the store code to the URL might lead to Google indexing the wrong data. You can ensure this by adding a cache-busting query parameter.
+
+### Cache-busting Query Parameter
+
+The https://github.com/hlxsites/aem-boilerplate-commerce/tree/main includes a built-in way to prevent stale data from being served. It does this by adding a dynamic cache-busting parameter to Catalog Service requests.
+
+When your configuration headers change, the browser fetches fresh data instead of using cached responses. This helps keep your storefront content up to date.
+
+Here's how the boilerplate handles it:
+
+1. It collects headers from your [storefront configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/)—`public.headers.all.*` and `public.headers.cs.*`
+1. It creates a short hash (5 characters by default) based on those headers.
+1. It adds the hash to the Catalog Service URL using the format `?cb=<hash>`.
+1. When the headers change, it generates a new hash automatically.
+
+This ensures that any change—like a new store code or view code—triggers a fresh fetch and bypasses CDN-cached GET requests to the Catalog Service.
+
+You don't need to enable or configure anything. The Commerce boilerplate handles everything automatically when:
+
+- The PDP drop-in component initializes.
+- Any component sends a request to the Catalog Service.
+- Your configuration headers update.
+
+The boilerplate always manages the `cb` parameter for you.
+
+### Redirects
+
+Ensure proper redirects are set up using the redirects sheet or through your [CDN](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/content-delivery-network/).
+
+- Fallbacks for any potential URL changes (for example, product URLs or missing .html suffixes)
+- Redirects that are set up in Adobe Commerce
+
+### Sitemaps
+
+- Submit new sitemaps through Google Search Console (Google takes a while to detect new sitemaps).
+- If your site is using more than one sitemap, reference all sitemaps in your site's `robots.txt` file.
+- Validate sitemap XML (structure and URLs) with a dedicated sitemap or XML validator before you rely on it for discovery—not the hreflang tester, which checks language alternates only.
+
+> **Generate sitemaps on Edge Delivery Services** See https://www.aem.live/developer/sitemap in the Edge Delivery Services documentation for more information on how to generate sitemaps.
+
+### Other
+
+- You can validate indexing using Google Search Console by inspecting the markup of the crawl to see if all important information was tracked.
+- Transactional pages (for example, cart, checkout, and account) should not be indexed.
+- Staging or any non-production environments must not be indexed. Once indexed, URLs from a staging environment can reduce traffic to the production environment. It might take a significant amount of time to remove staging URLs from the Google index.
+
+---
+
+# SEO metadata
+
+Adobe recommends uploading product metadata into Edge Delivery Services so that it can be rendered server-side on product detail pages. This is important so that Google Merchant Center can reliably verify entries from your product sheet. Also, social media sites, which don't usually parse JavaScript, can leverage this metadata to display rich previews of your product page links.
+
+For how metadata fits with Edge Delivery Services crawling behavior and URLs, read [SEO overview](https://experienceleague.adobe.com/developer/commerce/storefront/setup/seo/) and [SEO indexing](https://experienceleague.adobe.com/developer/commerce/storefront/setup/seo/indexing/).
+
+> **Breaking Change** For consistency and canonicalization, mixed-case URLs are not supported. The boilerplate automatically lowercases SKUs in product URLs to comply with Edge Delivery Services, which requires lowercase paths.
+
+Extra attention should be given to sites that use uppercase SKUs. See below for more information.
+
+Verify that all pages, especially catalog pages (PDP and PLP), contain the following metadata:
+
+| Type                      | Properties                                                                                                                                                              |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Document title            | `title`                                                                                                                                                                 |
+| Meta tags                 | `description`, `keywords`, `og:type`, `og:title`, `og:description`, `og:url`, `og:image`, `og:image:secure_url`, `og:product:price:amount`, `og:product:price:currency` |
+| Schema.org data (JSON-LD) | `WebSite`, `Product`, `AggregateRating`, `Rating`, `BreadcrumbList`                                                                                                     |
+
+> **SKU in metadata** Metadata should contain a `SKU` field for each product.
+
+> **Non-empty metadata fields** When importing pages, ensure that when a metadata block is present on a page, it does not contain any empty fields. This might lead to pages with missing titles, which Google penalizes.
+
+## Schema.org data (JSON-LD)
+
+JavaScript Object Notation for Linked Data (JSON-LD) is a structured data format that helps search engines understand the content of your web pages more explicitly. It is typically added as a script tag in the `<head>` of your HTML document.
+
+Adobe Commerce storefronts on Edge Delivery Services should include https://schema.org/ annotations to expose product data to search engines. This data should be included on all Commerce pages, especially PDPs and PLPs.
+
+You should compare the data available on the site before migrating to Edge Delivery Services to ensure that SKUs for all product variants are included. Use the https://search.google.com/test/rich-results to validate the schema.org annotations. The PDP drop-in component in the boilerplate contains an example for JSON-LD data.
+
+> **Google Shopping and JSON-LD** If you are using Google Shopping features (for example, products available on `shopping.google.com`), consider schema.org annotations with critical priority. If a single JSON-LD annotation on the page is invalid, Google considers all annotations invalid.
+
+## Generate metadata
+
+You can use the https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/tools/pdp-metadata tool to automate the process of generating all recommended metadata. The tool fetches product data from the Catalog Service, processes it, and generates a metadata spreadsheet in `.xlsx` format. The spreadsheet can be used for the https://www.aem.live/docs/bulk-metadata feature in Edge Delivery Services.
+
+> **Prerequisites** - Node.js installed on your machine
+  - Access to the Catalog Service with the necessary API keys and configuration
+  - Commerce boilerplate repository cloned to your local machine
+
+To generate metadata using the PDP Metadata Generator tool:
+
+1. Navigate to the `tools/pdp-metadata/` directory in your local project.
+1. Install dependencies.
+
+   ```bash
+   npm install
+   ```
+
+   
+
+> **Configure Catalog Service access** Before running the tool, you must ensure that the `configFile` variable in the `pdp-metadata.js` file points to the correct configuration JSON file URL. This file contains the required parameters to access the Catalog Service API and should have been set up as part of your [project onboarding](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/).
+
+1. Run the tool and generate metadata files in the project directory.
+
+   ```bash
+   npm start
+   ```
+
+The resulting `metadata.xlsx` and `metadata.json` files contain all recommended metadata for all of your products based on your site's [commerce configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/).
+
+See the https://www.aem.live/docs/bulk-metadata documentation for instructions on how to upload the generated metadata file to Edge Delivery Services.
+
+## SKU Casing
+
+Due to a requirement in Edge Delivery Services, all product URLs must use lowercase SKUs. The boilerplate will enforce this by default.
+
+#### Product link generation
+
+A centralized `getProductLink(urlKey, sku)` function has been implemented to ensure consistent URL generation across all commerce components. This function is used to generate product page links at runtime in the correct casing.
+
+#### Metadata generation
+
+Metadata applied through https://www.aem.live/docs/bulk-metadata only applies metadata for lowercase URLs. The PDP Metadata Generation tool has been updated to produce output in the correct format.
+
+### Implementation Requirements
+
+For sites with SKUs containing uppercase letters, you have two options:
+
+#### Option A: Publish Metadata (Recommended)
+
+Upload a `metadata.json` file to Edge Delivery Services that maps your product paths to the correct metadata. This approach ensures optimal SEO performance. See https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/tools/pdp-metadata/README.md for more information.
+
+#### Option B: Remove Lowercase Enforcement
+
+If you prefer to maintain uppercase SKUs in URLs, you can modify the `getProductLink` function in your boilerplate to remove the `.toLowerCase()` call, but metadata will not be applied.
+
+```javascript
+// In scripts/commerce.js
+export function getProductLink(urlKey, sku) {
+  return `/products/${urlKey}/${sku}`; // Remove .toLowerCase()
+}
+```
+
+> **SEO Impact** Removing lowercase enforcement may impact SEO performance. Adobe recommends using Option A for optimal results.
+
+### Migration Guide
+
+If you're upgrading from a previous version of the boilerplate:
+
+1. Review your SKUs and identify any products with uppercase SKUs.
+1. Choose an implementation strategy between metadata publishing or removing lowercase enforcement.
+1. Update product links so all commerce components use the centralized `getProductLink` function.
+1. Test thoroughly: validate metadata generation and URL consistency.
+1. Monitor performance: track SEO metrics and page load times.
+
+> **Best Practice** For new implementations, always use lowercase SKUs from the start to avoid migration complexity and ensure optimal SEO performance.

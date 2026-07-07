@@ -1,0 +1,1200 @@
+<SYSTEM>This is the Get started bundle for Adobe Commerce Storefront on Edge Delivery Services</SYSTEM>
+
+# Get started
+
+> Onboarding, architecture, backend options, performance, Lighthouse, and browser compatibility
+> Generated: 2026-06-26T22:40:20.158Z
+> Source: https://experienceleague.adobe.com/developer/commerce/storefront
+
+
+---
+
+# Blocks and the repository
+
+This page shows where your Git repository sits between merchant-authored documents and shopper cart, checkout, or product flows. It also explains how content blocks differ from Commerce blocks and which boilerplate folders hold the wiring. `blocks/` and `scripts/initializers/` are not sample folders. They are the files you edit when a Commerce region on the page breaks or shows the wrong data.
+
+[How a page loads](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/how-a-page-loads/) shows the timeline from document to API call.
+
+This page focuses on ownership: authors work in documents, EDS converts tables into block `div`s, and your repository provides decorators, initializers, styles, and configurations so Commerce blocks load the correct drop-ins.
+
+## Comparing blocks and drop-in components
+
+Each document table becomes a block `div` that EDS and your JavaScript identify. Your repo connects Commerce blocks to drop-ins through decorators, `scripts/initializers/`, styles, and storefront configuration, then pushes to GitHub to drive Edge Delivery builds.
+
+Authoring references: https://docs.da.live/, [Document Authoring](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/quick-start/document-authoring/) and [Universal Editor](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/quick-start/universal-editor/) Quick Starts, https://www.aem.live/docs/authoring-guide, https://www.aem.live/docs/. For packages and shared vocabulary, see [Drop-ins at a glance](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/drop-ins-at-a-glance/) and [Boilerplate getting started](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/getting-started/).
+
+| | Content blocks | Commerce blocks | Drop-in components |
+|---|----------------|-----------------|---------------------|
+| Role | Layout and marketing UI (cards, heroes, columns, headers, footers) | Interactive Commerce experiences (cart, checkout, account, PDP, …) | Packaged UI and logic that Commerce blocks load and initialize |
+| Where it comes from | Block Collection and custom blocks in `blocks/` | Commerce blocks in `blocks/`, mapped in the boilerplate | npm (Node's package manager. You use it to install drop-in packages — for example, `npm install @dropins/storefront-cart` — in your storefront repository.) packages such as `@dropins/storefront-cart` |
+| Authored as document tables | Yes | Yes | No — developers add packages and wire initializers in code |
+| Typical tie to Adobe Commerce | None — no Commerce GraphQL for most blocks | Yes — GraphQL, REST, and services through the boilerplate | Direct — Commerce API calls (GraphQL, REST, services) are built into each package |
+| Learn more | https://www.aem.live/developer/block-collection | [Key files and folders](#key-files-and-folders) · [Blocks reference](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/blocks-reference/) | [Drop-ins introduction](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/introduction/) |
+
+### Commerce Storefront SDK
+
+Drop-in components are built on shared Commerce Storefront SDK (The Drop-in SDK used to build custom drop-ins and related integration logic.) patterns (initialization, rendering, slots, and extension hooks) so behavior and structure stay consistent across cart, checkout, product discovery, and the rest of the set.
+
+- [Commerce Storefront SDK](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/) — Reference for APIs, design components, and utilities used across drop-in components  
+- [Drop-ins introduction](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/introduction/) — Full map of B2C and B2B drop-in components and how they install into the boilerplate  
+
+### Content blocks and Commerce blocks
+
+Both kinds are document tables EDS turns into HTML. The split is what runs next. Content blocks are layout and marketing (cards, columns, headers, footers from the https://www.aem.live/developer/block-collection). They contain no drop-ins or Commerce GraphQL. Commerce blocks load interactive cart, checkout, account, PDP, and similar flows via initializers and `@dropins/*` calling Commerce GraphQL and related APIs. Prefer plain JavaScript for Commerce blocks. React can make achieving a top Lighthouse score hard. See [Libraries](https://experienceleague.adobe.com/developer/commerce/storefront/troubleshooting/faq/#libraries) and the boilerplate blocks as patterns.
+
+### Key files and folders
+
+The https://github.com/hlxsites/aem-boilerplate-commerce is your project's Git repository. It separates core AEM block delivery from Commerce-specific code (`scripts/commerce.js`, `scripts/initializers/`, and storefront configuration) so both sides stay maintainable independently.
+
+Here is what the top-level layout looks like when you clone the boilerplate.
+
+```
+aem-boilerplate-commerce/
+├── blocks/
+│   ├── commerce-cart/
+│   │   ├── commerce-cart.js      # block decorator — loads and mounts the Cart drop-in
+│   │   └── commerce-cart.css
+│   └── commerce-checkout/
+│       ├── commerce-checkout.js  # block decorator — loads and mounts the Checkout drop-in
+│       └── commerce-checkout.css
+├── scripts/
+│   ├── scripts.js                # page orchestration (eager, lazy, delayed phases)
+│   ├── commerce.js               # Commerce-specific loading and configuration
+│   └── initializers/
+│       ├── cart.js               # sets the GraphQL endpoint and labels for the Cart drop-in
+│       └── checkout.js           # sets the GraphQL endpoint and labels for the Checkout drop-in
+├── styles/
+└── config.json                   # storefront configuration (endpoints, locale, and so on)
+```
+
+The table below explains each key file or folder in detail. For the full https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/scripts and `blocks/`:
+
+| File/Folder | Role |
+|-------------|------|
+| `scripts/scripts.js` | Page load, block decoration, fonts, and orchestration of eager, lazy, and delayed loading phases. Imports from `scripts/aem.js` and `scripts/commerce.js`. Also the extension point for global DOM decorators, third-party plugins (such as experimentation tools), and any code that must run eagerly on page load. |
+| `scripts/commerce.js` | Commerce-specific loading, templates, page type detection, Adobe Client Data Layer (ACDL) initialization, and storefront configuration. ACDL is a JavaScript library that captures shopper behavior for analytics — you will see it again when you read about drop-in coordination and analytics. Centralizes all commerce features and keeps them distinct from core AEM logic. |
+| `scripts/initializers/` | One file per drop-in. Each initializer (A JavaScript module that configures a drop-in when imported, such as setting endpoints, registering dictionaries, and preparing runtime behavior.) sets the GraphQL endpoint, loads UI string translations, and registers the drop-in for rendering. All of that runs at import time, before any block decorates. See [Using drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/quick-start/) for the code pattern. |
+| `blocks/` | Commerce and content blocks. See [Content blocks and Commerce blocks](#content-blocks-and-commerce-blocks) above and [Getting started](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/getting-started/) for the repo layout. |
+
+Customize and connect: [Blocks reference](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/blocks-reference/), [Blocks configuration](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/configuration/), [Storefront configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/).
+
+## What's next
+
+[Drop-ins at a glance](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/drop-ins-at-a-glance/) explains packages, browser runtime, and npm install.
+
+---
+
+# Commerce services and backends
+
+Shoppers get pages from Edge Delivery Services. Drop-ins call Adobe Commerce for cart, checkout, and account. Optional hosted services accelerate catalog reads.
+
+The diagram shows the full stack. Without that picture, Catalog Service, Live Search, or the Storefront Compatibility package can feel like surprise add-ons. [Backend options](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/) lists them for Commerce PaaS so you can plan installs in the right order.
+
+Start by configuring your Commerce connection in [Commerce configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/). Then check [Backend options](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/) to confirm your setup is supported.
+
+## Coming from Luma or a classic Commerce theme?
+
+If you know Luma or another Adobe Commerce theme, focus on one idea: who builds the page the shopper sees. In the classic model, Commerce builds storefront pages with PHP. In this model, Edge Delivery Services sends HTML and JavaScript, and drop-ins call Adobe Commerce APIs from the shopper's browser. You are not replacing the Commerce Admin, catalog, or order tools. You are choosing a different way to assemble the shopper-facing experience.
+
+If you still run Luma while you move content and marketing to Edge Delivery, use [Luma Bridge](https://experienceleague.adobe.com/developer/commerce/storefront/setup/discovery/luma-bridge/). It is a PHP module that shares the shopper's cart and sign-in session between Luma and EDS drop-ins so both storefronts stay in sync during the migration. For diagrams that include Luma Bridge and the Adobe Commerce Optimizer Connector, read [Backend topology](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/#backend-topology). Those topics cover phased migration.
+
+## How the pieces connect
+
+Commerce blocks, drop-ins, the boilerplate, your backend, and shared Commerce Services all work together on the page.
+
+The storefront uses GraphQL (A query language that drop-in components use to request and update data from Adobe Commerce APIs. Catalog Service, Live Search, and the core Commerce API all expose GraphQL endpoints.) for both reads and writes.
+
+Commerce Services include Catalog Service (Adobe's fast, read-only GraphQL API for product data. Drop-ins call it instead of core Commerce GraphQL for product pages, search results, and category listings — up to ten times faster.), Live Search (Adobe's AI-powered search service. It returns results instantly as shoppers type and adjusts rankings and facets based on browsing and click signals in the current session.), Product Recommendations, and core GraphQL on your instance for carts, checkout, accounts, and other flows not covered by the hosted catalog layer.
+
+All three backend options—Commerce PaaS, Adobe Commerce as a Cloud Service, and Adobe Commerce Optimizer—connect to these services. To compare them, see [Backend options](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/).
+
+```mermaid
+graph TB
+    EDS["<b>Edge Delivery Services</b>
+Hosting & CDN"]
+    AEMBlocks["<b>Content blocks</b>
+Cards, columns, headers"]
+    CommerceBlocks["<b>Commerce blocks</b>
+Author in DA.live"]
+    EDS --> AEMBlocks
+    EDS --> CommerceBlocks
+    CommerceBlocks --> B2CGroup["<b>B2C Drop-ins</b>
+Cart, Checkout, Account, and more"]
+    CommerceBlocks --> B2BGroup["<b>B2B Drop-ins</b>
+Company, Quote, PO, and more"]
+    B2CGroup --> Boilerplate["<b>Commerce boilerplate</b>
+Storefront configuration + API clients"]
+    B2BGroup --> Boilerplate
+    Boilerplate --> BackendChoice{Backend}
+    BackendChoice --> CloudService["<b>Adobe Commerce as a Cloud Service</b>
+Fully managed"]
+    BackendChoice --> Optimizer["<b>Adobe Commerce Optimizer</b>
+Fully managed SaaS"]
+    BackendChoice --> PaaS["<b>Commerce PaaS</b>
+Your Adobe Commerce instance"]
+    subgraph Services["Commerce Services"]
+        direction TB
+        CS["<b>Catalog Service</b>"]
+        LS["<b>Live Search</b>"]
+        PR["<b>Product Recommendations</b>"]
+        GraphQL["<b>Core GraphQL</b>"]
+    end
+    CloudService -.-> Services
+    Optimizer -.-> Services
+    PaaS -.-> Services
+    style Services fill:#FFF9C4,stroke:#827717,stroke-width:2px
+    classDef storefront fill:#e8f5e9,stroke:#4caf50
+    classDef cloudService fill:#f3e5f5,stroke:#9c27b0
+    classDef optimizer fill:#fff3e0,stroke:#ff9800
+    classDef paas fill:#fce4ec,stroke:#e91e63
+    classDef commerceSvcBlock fill:#EDE7F6,stroke:#7E57C2
+    class EDS,AEMBlocks,CommerceBlocks,Boilerplate storefront
+    class CloudService cloudService
+    class Optimizer optimizer
+    class PaaS paas
+    class CS,LS,PR,GraphQL commerceSvcBlock
+```
+
+> **API Mesh (advanced)** https://developer.adobe.com/graphql-mesh-gateway/ is an option when your project needs to combine multiple backend sources behind a single GraphQL endpoint. Most new storefronts do not need it. You can add it later if the requirement arises.
+
+<a id="commerce-services"></a>
+
+## Commerce Services and integrations
+
+This section covers the services and packages that connect your storefront to Commerce data, hosted Adobe services, and other Adobe platforms. Most rows below describe calls that go from the storefront into Adobe: drop-in components call hosted services or core GraphQL to get or update Commerce data. Data Connection (An optional Commerce extension that sends storefront and order event data to Adobe Experience Platform for use in personalization, segmentation, and cross-channel campaigns.), later on this page, is different. It sends shopper event data from your storefront out to Adobe Experience Platform.
+
+Not all of these are required for every project. What you need depends on your backend and which drop-ins you use. For a checklist of prerequisites (especially on Commerce PaaS), use [Backend options](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/#prerequisites-by-backend) and [PaaS: required packages and services](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/#paas-required-packages-and-services).
+
+### Services Connector
+
+The Services Connector links your Commerce instance to the hosted catalog and search services in this section: Catalog Service, Live Search, and Product Recommendations. On Commerce PaaS, you configure that link once in the Commerce Admin using production and sandbox API keys from your Commerce license owner. All three services share the same key pair and data space after you save that configuration.
+
+On Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer, Adobe sets up the hosted side of those services for you as part of the managed model in [Backend options](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/). You do not repeat the same manual Commerce Services Connector steps that Commerce PaaS administrators use in the Admin. The Experience League topic in the quick reference table below still explains how API keys and data spaces work if you need the full background for PaaS or for troubleshooting.
+
+### Catalog Service
+
+Catalog Service gives your storefront fast, read-only access to product data through a dedicated GraphQL API. Instead of querying your Commerce application each time a shopper opens a product page or browses a category, drop-in components call this API, which Adobe designed specifically for storefront reads. It is built to return catalog reads faster than routing every read through the core Commerce GraphQL API alone. The Product Details drop-in requires Catalog Service, and the Product Discovery drop-in uses it for search results and category pages.
+
+### Live Search
+
+Live Search replaces the default Commerce catalog search with an AI-powered experience. When a shopper types in the search field, Live Search returns results instantly and adjusts facets and ranking based on what shoppers are browsing and clicking in that session. It powers the Product Discovery drop-in, which gives you customizable search and product listing pages with filtering. For storefronts that do not use the classic PHP theme, Live Search needs storefront events so it can learn what shoppers click and view. You need to turn on event collection before the AI models have data to work with. See [Analytics](https://experienceleague.adobe.com/developer/commerce/storefront/setup/analytics/instrumentation/) for details.
+
+### Product Recommendations
+
+Product Recommendations uses Adobe Sensei, Adobe's AI engine, to show shoppers products they are likely to want. Examples include units like "Customers who bought this also bought" and "Most viewed." You configure and place recommendation units in the Commerce Admin, and they can appear on product pages, the cart page, or anywhere else on your site. A storefront can run without Product Recommendations, but Adobe recommends turning it on when you want AI-driven merchandising blocks on the site.
+
+Without the classic PHP theme, Product Recommendations needs the same storefront event collection as Live Search before models have signal. See [Analytics](https://experienceleague.adobe.com/developer/commerce/storefront/setup/analytics/instrumentation/).
+
+### Core GraphQL
+
+Core GraphQL is the GraphQL API on your Adobe Commerce backend (the address you set in the boilerplate for drop-ins). Cart, checkout, account, orders, and many other reads and writes still go here. Hosted services such as Catalog Service sit beside that API and speed up specific product reads. They do not remove core GraphQL from your architecture.
+
+Adobe Commerce as a Cloud Service can offer one combined GraphQL layer that merges core Commerce fields with the hosted service fields storefronts need. When you run Adobe Commerce yourself, whether on Adobe-managed cloud infrastructure or on your own servers (on-premises), you use the long-standing core and service schemas described in Adobe's web API documentation. For a full overview, see the https://developer.adobe.com/commerce/webapi/graphql/ on developer.adobe.com.
+
+### Data Connection
+
+Data Connection sends shopper behavior and order data from your storefront to the Adobe Experience Platform, where other Adobe tools can use it for personalization and segmentation. For example, Adobe Journey Optimizer (a cross-channel marketing automation tool) can use that data to trigger an abandoned cart email. This service is optional for most storefront builds. You only need it if your project uses Adobe Experience Platform features like real-time audience segmentation or cross-channel personalization. According to the https://experienceleague.adobe.com/en/docs/commerce/data-connection/overview on Experience League, the Data Connection extension applies to Adobe Commerce on cloud infrastructure and on-premises projects. It does not apply to Adobe Commerce as a Cloud Service (the fully managed SaaS product), where integrations with Experience Platform follow a different model.
+
+The drawing below shows only this optional path so it does not compete with the main stack diagram above. Data Connection is a Commerce extension on your Adobe Commerce instance. It receives storefront activity from the shopper session (for example, through the Adobe Client Data Layer) and back office events from the Commerce application, then forwards compatible data to Experience Platform. For installation and configuration, see the https://experienceleague.adobe.com/en/docs/commerce/data-connection/overview on Experience League.
+
+```mermaid
+flowchart TB
+    Storefront["<b>Storefront</b>
+Edge Delivery + browser"]
+    DC["<b>Adobe Commerce</b>
+Data Connection extension"]
+    AEP["<b>Adobe Experience Platform</b>"]
+    Storefront -->|"Storefront events"| DC
+    DC -->|"Forwarded data"| AEP
+    classDef storefront fill:#e8f5e9,stroke:#4caf50
+    classDef commerce fill:#fff3e0,stroke:#ff9800
+    classDef platform fill:#e3f2fd,stroke:#2196f3
+    class Storefront storefront
+    class DC commerce
+    class AEP platform
+```
+
+### Storefront Compatibility package
+
+The Storefront Compatibility package extends the Commerce GraphQL schema with the reads and writes that cart, checkout, account, and order drop-ins require. Without it on the Commerce deployment that serves those flows, the drop-ins cannot talk to your backend as they expect. On Adobe Commerce as a Cloud Service and on Adobe Commerce Optimizer, Adobe manages this package for you as part of the fully managed model in [Backend options](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/). On Commerce PaaS (your own Adobe Commerce on cloud infrastructure or on-premises instance), you install it manually on that instance before you finish storefront settings in your GitHub project.
+
+## Quick reference
+
+| Service | One-line job | Where to find it |
+|---|---|---|
+| Services Connector | On Commerce PaaS, connects Catalog Service, Live Search, and Product Recommendations using Admin API keys. On Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer, Adobe sets up the hosted side for you (see [Backend options](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/)). | https://experienceleague.adobe.com/en/docs/commerce-merchant-services/user-guides/integration-services/saas |
+| Catalog Service | Fast read-only catalog data for product pages, list pages, search, and navigation; required by the Product Details drop-in. | https://experienceleague.adobe.com/en/docs/commerce/catalog-service/guide-overview |
+| Live Search | AI-powered search that powers the Product Discovery drop-in. It needs storefront event collection when you do not use the classic PHP theme. | https://experienceleague.adobe.com/en/docs/commerce/live-search/overview |
+| Product Recommendations | Optional (recommended). Adobe Sensei units in the Commerce Admin. It needs storefront event collection when you do not use the classic PHP theme. | https://experienceleague.adobe.com/en/docs/commerce/product-recommendations/getting-started/headless 
+ /merchants/content-customizations/product-recommendations/ |
+| Core GraphQL | Required. GraphQL API on your Commerce instance for cart, checkout, account, orders, and other flows; hosted catalog services do not replace it. | https://developer.adobe.com/commerce/webapi/graphql/ |
+| Data Connection | Optional. Sends storefront and order event data to Adobe Experience Platform for personalization. Applies to Adobe Commerce on cloud infrastructure or on-premises, not Adobe Commerce as a Cloud Service. | https://experienceleague.adobe.com/en/docs/commerce/data-connection/overview |
+| Storefront Compatibility package (A PHP package you install on Commerce PaaS that extends the GraphQL schema so cart, checkout, account, and order drop-ins can communicate with your backend as expected.) | Required on Commerce PaaS (manual install on your Commerce instance). Managed automatically on Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer. | [Install page](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/storefront-compatibility/install/) |
+
+> **Adobe Commerce Services on Experience League** For a complete list of merchandising services for your Adobe Commerce storefront, see the https://experienceleague.adobe.com/en/docs/commerce-merchant-services/user-guides/home on Experience League. The table above links to the services you will use most often with this storefront.
+
+## What's next
+
+[Backend options](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/) explains how to confirm your backend type, required installations, and service connections before configuring your storefront.
+
+---
+
+# Drop-ins at a glance
+
+A drop-in is a packaged piece of UI and logic for one Commerce job, such as cart, checkout, or sign-in. It loads Commerce data through APIs, often GraphQL.
+
+To use a drop-in, you need three things: the npm package, initializer settings in your repo, and a mount point on the page.
+
+For setup steps, see [Using drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/quick-start/).  
+For a full package map, see [Drop-ins introduction](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/introduction/).
+
+## One drop-in: what you provide and what it does
+
+In this model, your project provides the npm package, initializer configuration, and DOM mount point. The drop-in then renders the UI and calls Commerce APIs from the browser. For the full path from document to mount, see [How a page loads](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/how-a-page-loads/).
+
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'edgeLabelBackground':'#ffffff'}}}%%
+flowchart TB
+    subgraph provides["Your storefront project provides"]
+        npm["npm dependency
+<small>@dropins/storefront-*</small>"]
+        cfg["Initializer settings
+<small>GraphQL endpoint, language labels</small>"]
+        dom["Mount target
+<small>Commerce block region in the DOM</small>"]
+    end
+    di["Drop-in component
+<small>Packaged UI and logic for one Commerce job (cart, checkout, sign-in, ...)</small>"]
+    subgraph outcomes["At runtime"]
+        ui["Shopper-facing UI
+<small>Interactive areas for that job</small>"]
+        api["Commerce traffic
+<small>GraphQL and related calls from this browser only</small>"]
+    end
+    npm --> di
+    cfg --> di
+    dom --> di
+    di --> ui
+    di --> api
+    style di fill:#dbeafe,stroke:#1d4ed8,stroke-width:4px
+    style provides fill:#f8fafc,stroke:#64748b,stroke-width:1px
+    style outcomes fill:#fffbeb,stroke:#d97706,stroke-width:1px
+    style npm fill:#f1f5f9,stroke:#475569,stroke-width:2px
+    style cfg fill:#f1f5f9,stroke:#475569,stroke-width:2px
+    style dom fill:#f1f5f9,stroke:#475569,stroke-width:2px
+    style ui fill:#fff7ed,stroke:#ea580c,stroke-width:2px
+    style api fill:#fff7ed,stroke:#ea580c,stroke-width:2px
+```
+
+## Where drop-ins run
+
+After load, drop-ins run in the browser. EDS delivers HTML, CSS, and JS. Commerce requests go straight from the drop-in to your endpoints, not through EDS in the middle.
+
+> **If data never loads in the cart or checkout** If your Commerce environment is only reachable on a VPN or a strict IP allow list, remember that the shopper's device must be able to reach the same endpoints you configured. A setup that works for your laptop behind VPN may still fail for a shopper on a normal network.
+
+## How you add drop-ins to a project
+
+Install the drop-in via npm (Node's package manager. You use it to install drop-in packages — for example, `npm install @dropins/storefront-cart` — in your storefront repository.) (for example, `@dropins/storefront-cart`). Packages are published on npm. Adobe publishes source for many packages in public repositories under `github.com/adobe-commerce`.
+
+Commerce blocks and `scripts/initializers/` load each drop-in using your configured endpoint and labels.
+
+For setup steps, see [Using drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/quick-start/).  
+For a reference implementation, see the https://github.com/hlxsites/aem-boilerplate-commerce.  
+To go deeper, see [Extending drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/extending/).
+
+## How much can you customize?
+
+More than you might expect. Each drop-in exposes several customization layers so you can change behavior without editing the package source.
+
+- CSS variables and stylesheet overrides control colors, spacing, typography, and layout.
+- Label overrides change UI text (button labels, errors, placeholders) without opening the package code.
+- Slots add custom content (for example, a banner or promo message) in named regions of the drop-in layout.
+- Extension hooks replace logic for specific actions, such as what runs when a shopper clicks `Add to cart`.
+
+Most projects stop at CSS and labels. Slots and hooks are there when configuration alone is not enough. See [Extending drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/extending/) for patterns and examples.
+
+## B2C, B2B, and the package list
+
+B2C means business-to-consumer (a typical shopper storefront). B2B means business-to-business (accounts, quotes, purchase orders, and similar flows).
+
+The [Drop-ins introduction](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/introduction/) lists B2C and shared packages. If you build B2B experiences, you will use extra packages and pages under [Drop-ins B2B](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/) (company, quotes, purchase orders, requisition lists, and related topics).
+
+These names show the pattern for consumer-facing drop-ins. Treat the per-drop-in install pages as the source of truth if a name or version changes. B2B installs are covered in [Drop-ins B2B](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/).
+
+- `@dropins/storefront-account`
+- `@dropins/storefront-auth`
+- `@dropins/storefront-cart`
+- `@dropins/storefront-checkout`
+- `@dropins/storefront-order`
+- `@dropins/storefront-payment-services`
+- `@dropins/storefront-pdp`
+- `@dropins/storefront-recommendations`
+- `@dropins/storefront-wishlist`
+- `@dropins/storefront-personalization`
+- `@dropins/storefront-product-discovery`
+
+## What's next
+
+[How drop-ins coordinate on a page](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/drop-ins-on-a-page/) explains how multiple drop-ins work together using a shared event bus.
+
+---
+
+# How drop-ins coordinate on a page
+
+Multiple drop-ins on one page (for example, Cart and Auth) share a single event bus (A shared in-memory channel that lets drop-in components on the same page publish and subscribe to events without depending directly on each other.) (`@dropins/tools/event-bus.js`). They publish and listen for small messages so each package can react without importing the others directly. Read this page before you rely on [Events](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/events/) alone. Otherwise it is easy to mix up in-page bus messages with analytics data or calls to Commerce services.
+
+> **Same tab and document** The bus is an in-memory channel for one loaded HTML document in one tab. Code that imports `@dropins/tools/event-bus.js` in that same JavaScript context can emit and listen together. A full navigation to another URL, a new tab, or a separate cross-origin iframe loads a different context, so those environments do not share the same bus instance unless you build an explicit bridge (not part of the default Commerce boilerplate pattern).
+
+If you wondered how cart and checkout work when they are different pages: the next document does not inherit the previous page's bus. Commerce keeps the cart on the server, and storefront bootstrap code loads the cart again on the new page so events such as `cart/initialized` occur in that new context. The full walk-through, with Commerce boilerplate file links, is in [Multiple storefront routes](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/events/) on the [Events](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/events/) page. Patterns such as `getCartDataFromCache` are in [Using drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/quick-start/). API details are in the [Event Bus API reference](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/events/).
+
+Each colored box is a drop-in package on the same page. Solid arrows show events emitted to the bus; dashed arrows show events consumed from the bus. Pink is your custom code alongside those drop-ins.
+
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'edgeLabelBackground':'#ffffff'}, 'flowchart': {'nodeSpacing': 72, 'rankSpacing': 96, 'curve': 'basis'}}}%%
+flowchart LR
+    subgraph side [Other emitters]
+        direction TB
+        Auth[Auth drop-in]
+        Order[Order drop-in]
+        YourCode[Your code]
+    end
+    subgraph core [Cart, bus, checkout]
+        direction LR
+        Cart[Cart drop-in]
+        EB[Event Bus]
+        Checkout[Checkout drop-in]
+    end
+
+    Auth -->|"authenticated"| EB
+    Order -->|"order/placed, cart/reset"| EB
+    YourCode -->|"locale, authenticated"| EB
+    Cart -->|"cart/updated, cart/data"| EB
+    Checkout -->|"checkout/updated"| EB
+
+    EB -.->|"authenticated"| Cart
+    EB -.->|"order/placed"| Cart
+    EB -.->|"authenticated"| Checkout
+    EB -.->|"cart/updated, cart/data"| Checkout
+    EB -.->|"cart/initialized"| Checkout
+
+    linkStyle 0,1,2,3,4 stroke:#3b82f6,stroke-width:2px
+    linkStyle 5,6,7,8,9 stroke:#6366f1,stroke-width:1.5px,stroke-dasharray:5
+
+    style EB fill:#fef3c7,stroke:#f59e0b,stroke-width:3px
+    style Auth fill:#f3e8ff,stroke:#a855f7,stroke-width:2px
+    style Cart fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+    style Checkout fill:#e0e7ff,stroke:#6366f1,stroke-width:2px
+    style Order fill:#e0e7ff,stroke:#6366f1,stroke-width:2px
+    style YourCode fill:#fce7f3,stroke:#ec4899,stroke-width:2px
+    style side fill:#fafafa,stroke:#cbd5e1,stroke-width:1px,stroke-dasharray:4
+    style core fill:#f8fafc,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:4
+```
+
+- `events.on(name, handler, options)` — subscribe. Returns a subscription handle.
+- `events.emit(name, payload)` — publish an event
+- `subscription.off()` — unsubscribe (call on the handle returned from `events.on`)
+
+Each drop-in component documents which events it emits and listens to. See the [event bus API reference](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/events/) and the [drop-in events overview](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/events/) for details.
+
+> **Events vs. analytics** The event bus handles internal communication between drop-in components on the page. It is separate from behavioral data for Adobe Commerce Services (Live Search, Product Recommendations) sent through the Adobe Client Data Layer (a JavaScript library that captures shopper behavior from the storefront for analytics). See [Analytics](https://experienceleague.adobe.com/developer/commerce/storefront/setup/analytics/instrumentation/).
+
+## What's next
+
+[Commerce services and backends](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/commerce-services-and-backends/) explains Edge Delivery, the boilerplate, backends, hosted catalog and search services, and prerequisites.
+
+---
+
+# How a page loads
+
+The diagram shows six stages from a merchant-authored document to a Commerce API call in the browser. The steps below follow the same order. Use them to decide whether a preview problem comes from authoring, HTML delivery, your block code, or Commerce endpoints instead of assuming every empty UI is only a GraphQL issue.
+
+```mermaid
+graph LR
+    A["Author
+<small>Creates document</small>"]
+    B["Edge Delivery Services
+<small>Publishes page</small>"]
+    C["Browser
+<small>Loads HTML</small>"]
+    D["Block decorator
+<small>initializer (top level) · decorate(block) · mount UI</small>"]
+    E["Drop-in
+<small>Renders UI</small>"]
+    F["Commerce API
+<small>Data</small>"]
+    A -->|"Document"| B
+    B -->|"HTML with divs"| C
+    C -->|"Decorates blocks"| D
+    D -->|"Renders"| E
+    E -->|"Fetch"| F
+    F -->|"Response"| E
+    style A fill:#E3F2FD,stroke:#2196F3,stroke-width:2px
+    style B fill:#F3E5F5,stroke:#9C27B0,stroke-width:2px
+    style C fill:#FFF9C4,stroke:#FBC02D,stroke-width:2px
+    style D fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px
+    style E fill:#FFE0B2,stroke:#FF9800,stroke-width:2px
+    style F fill:#FFCDD2,stroke:#F44336,stroke-width:2px
+```
+
+1. The merchant creates a document in DA.live, Google Docs, or SharePoint. In document-based authoring, a table in the document defines a block on the page — for example, a "Commerce Cart" table becomes the cart block. In the Universal Editor, the merchant edits blocks visually on the rendered page and no document tables are involved.
+
+1. Edge Delivery Services converts the document into an HTML page. Each table becomes a `div` with a class name that matches the block, for example, ``. EDS serves this HTML from servers close to the shopper, which is what makes pages load fast.
+
+1. The shopper's browser requests and loads that HTML.
+
+1. The block decorator (The JavaScript module that runs for a block after the page loads. It imports the initializer, then calls provider.render() to mount the drop-in UI into the block region of the page.) runs for each block on the page. A block decorator is the JavaScript file in your repository for that block, for example, `blocks/commerce-cart/commerce-cart.js`. Edge Delivery Services finds each block's `div` in the HTML, loads the matching file from your repository, and runs its default export. That file imports the drop-in's initializer (A JavaScript module that configures a drop-in when imported, such as setting endpoints, registering dictionaries, and preparing runtime behavior.) at the top level of the file, outside `decorate(block)`, so the Commerce API endpoint and translated labels are configured before `decorate(block)` runs. Inside `decorate(block)`, your code mounts the shopper-facing UI, such as `provider.render()` to render the cart block UI.
+
+1. The drop-in component renders the shopper-facing UI — the cart, checkout form, product detail page, or whichever Commerce experience that block delivers.
+
+1. The drop-in sends requests to your Commerce API endpoints and renders the data it gets back. For example, the Cart drop-in calls Commerce GraphQL to load the shopper's cart items and totals. This call goes from the shopper's browser directly to Commerce. Edge Delivery Services is not in the middle of it.
+
+## What's next
+
+[Blocks and the repository](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/blocks-and-repo/) compares content and Commerce blocks and points at the repo folders that wire them to drop-ins.
+
+---
+
+# Storefront Architecture
+
+These short topics give you a working map of documents, delivery, blocks, drop-ins, events, and Commerce services. You will also see which layer to check first when a block will not render, a drop-in shows no data, or Commerce calls fail.
+
+## How the pieces fit together
+
+Merchants create pages as documents. Edge Delivery Services (Adobe's hosting and delivery infrastructure that turns authored documents into fast HTML pages served from servers close to the shopper. You push code to GitHub; Edge Delivery Services builds and publishes automatically.) turns those documents into HTML. Your Git repository runs JavaScript in the shopper's browser to load the right Commerce UI for each block on the page. Drop-in components (NPM packages that provide core Commerce storefront features such as cart, checkout, product details, and account flows.) inside those blocks call Adobe Commerce APIs to load real product, cart, and account data.
+
+If you are new to this stack, think of it in three layers: an authoring layer (how merchants create pages), a delivery and logic layer (how pages load and run code), and a data layer (where live Commerce information comes from). The diagram below shows all three at once.
+
+```mermaid
+%%{init: {'flowchart': {'rankSpacing': 45, 'nodeSpacing': 30}}}%%
+flowchart TB
+    Doc["Document"]
+    EDS["Edge Delivery Services"]
+    Doc -->|"published by"| EDS
+    EDS -->|"HTML blocks"| ContentPath["Content block"]
+    EDS -->|"HTML blocks"| CommercePath["Commerce block"]
+    CommercePath -->|"loads"| DropIn["Drop-in component"]
+    DropIn -->|"calls"| API["Commerce APIs"]
+    Repo["Commerce boilerplate"]
+    CommercePath -.->|"connects to"| Repo
+    Repo -.->|"configures"| DropIn
+    classDef eds fill:#e8f5e9,stroke:#4caf50
+    classDef commerce fill:#e3f2fd,stroke:#2196f3
+    classDef api fill:#fff3e0,stroke:#ff9800
+    class Doc,EDS,ContentPath eds
+    class CommercePath,DropIn,Repo commerce
+    class API api
+```
+
+> **How this differs from a classic Commerce storefront** In a classic storefront, Adobe Commerce often builds shopper-facing pages with PHP. On this storefront, Edge Delivery Services delivers the HTML and JavaScript. Drop-in components call Commerce APIs from the shopper's browser when they need live cart, product, or account data. The Commerce Admin, catalog, and order tools stay on the server. You change how the storefront page is assembled, not how Commerce stores data.
+
+## Key concepts
+
+### Edge Delivery Services
+
+Edge Delivery Services (EDS) is Adobe's cloud delivery network for storefront pages. It turns authored documents into HTML and serves those pages from servers close to the shopper, so pages load fast. You do not manage servers or deployments. When you push code to GitHub, EDS builds and publishes automatically.
+
+### Document Authoring and DA.live
+
+Document Authoring is the way merchants create and update storefront pages without writing code. Pages are written as documents in Google Docs, SharePoint, or directly in https://da.live (Document Author). Tables in those documents define the blocks on the page. Site Creator (App in Document Author (DA.live) that creates and initializes a storefront by setting up content, optional code, theme choice, and storefront configuration values.), the tool you use to set up a new storefront, also runs inside DA.live.
+
+### Content blocks
+
+A content block is a named section of a page that displays layout and marketing content, such as heroes, card rows, columns, headers, or footers. Merchants create them as document tables. EDS converts each table into a `div` with a matching class name. Your repository holds the JavaScript and CSS that renders that `div` on the page. Content blocks do not call Adobe Commerce APIs.
+
+### Commerce blocks
+
+A Commerce block is a named page region for interactive Commerce experiences such as cart, checkout, product detail, sign-in, and account. Merchants create Commerce blocks the same way as content blocks, using a table in a document. The difference is what runs in the browser. The block's JavaScript loads a drop-in component and initializes it with your Commerce endpoint and configuration.
+
+### Commerce boilerplate
+
+The Commerce boilerplate is a starter template for your storefront repository. It starts from Adobe's https://github.com/hlxsites/aem-boilerplate-commerce and holds everything your storefront needs to run: block decorators (one JavaScript file per block under `blocks/`), initializer scripts that configure each drop-in (`scripts/initializers/`), styles, and your storefront configuration file. This is the code you own, customize, and push to GitHub.
+
+### Drop-in components
+
+A drop-in component is an npm package (`@dropins/storefront-*`) that ships a ready-made interactive slice of the Commerce UI, such as cart, checkout, sign-in, or product details. In the diagram above, drop-ins sit between Commerce blocks and Adobe Commerce APIs. A Commerce block loads its drop-in first, then that drop-in calls the APIs for live data. You install drop-ins with npm, configure them in `scripts/initializers/`, and extend or style them when the defaults are not enough.
+
+### Adobe Commerce APIs
+
+Adobe Commerce APIs are the endpoints that drop-in components use to read and write live Commerce data like product details, cart contents, orders, account information, and so on. They include GraphQL and REST. Adobe also provides hosted Commerce Services, including Catalog Service, Live Search, and Product Recommendations. These services return catalog data to the storefront faster than the core GraphQL APIs alone.
+
+## Quick reference
+
+| Piece | One-line job | Where to find it |
+|---|---|---|
+| Document | Where merchants create and edit pages | Google Docs, SharePoint, DA.live, or https://experienceleague.adobe.com/developer/commerce/storefront/merchants/universal-editor/ (a visual editor for rendered pages) |
+| Edge Delivery Services | Turns documents into fast HTML pages | Adobe-hosted; see https://www.aem.live/docs/ for how it builds and deploys pages |
+| Content block (Edge Delivery Services blocks used for non-commerce page content and layout, such as cards, columns, headers, and footers.) | Displays text and media layout on a page | `blocks/<name>/<name>.js` in your repo |
+| Commerce block (JavaScript blocks that integrate drop-in components into Edge Delivery Services pages to power storefront commerce experiences.) | Loads a drop-in for interactive Commerce UI | `blocks/<name>/<name>.js` in your repo |
+| Commerce boilerplate (Pre-configured storefront with the components and services you need to get started.) | Starter code for your storefront GitHub repository that connects blocks to drop-ins | https://github.com/hlxsites/aem-boilerplate-commerce |
+| Drop-in component (NPM packages that provide core Commerce storefront features such as cart, checkout, product details, and account flows.) | Ready-made Commerce UI package | `@dropins/storefront-*` on npm |
+| Adobe Commerce APIs | Endpoints drop-ins call for live Commerce data | Your Commerce backend — Commerce PaaS, Adobe Commerce as a Cloud Service, or Adobe Commerce Optimizer |
+
+## Go deeper
+
+Read in order the first time through. Each topic builds on the previous one. After you have run the boilerplate once, you can jump ahead for lookup. If you open [Events](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/events/) on day one with no context, it can feel out of order; the architecture pages above prepare you for that topic.
+
+  
+
+- [1. How a page loads](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/how-a-page-loads/) — The step-by-step timeline from an authored document to a Commerce API call in the browser.
+
+  
+
+- [2. Blocks and the repository](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/blocks-and-repo/) — How documents, blocks, your Git repo, and drop-ins connect, plus which boilerplate folders to open first.
+
+  
+
+- [3. Drop-ins at a glance](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/drop-ins-at-a-glance/) — What a drop-in package contains, how you install one with npm, and where to go when you need to extend or customize.
+
+  
+
+- [4. Drop-in coordination](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/drop-ins-on-a-page/) — How multiple drop-ins on the same page communicate through a shared event bus so cart, checkout, and auth stay in sync.
+
+  
+
+- [5. Commerce services and backends](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/commerce-services-and-backends/) — The full system stack: hosted Commerce Services, core GraphQL, and how your backend type affects what you install.
+
+---
+
+# Backend options
+
+The storefront supports three backend types. Each type has its own prerequisites, so follow only the path that matches your project. Choosing the wrong type can lead to misleading signals—GitHub and DA.live may look healthy while previews or drop-ins fail—and may result in installing packages your license does not require.
+
+For authoring storefront pages (Document Authoring, Universal Editor), see [Document Authoring Quick Start](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/quick-start/document-authoring/). This page covers the Commerce backend the storefront connects to.
+
+Drop-in components — B2C (business-to-consumer, meaning typical shopper experiences) and B2B (business-to-business, including company accounts, negotiable quotes, and purchase orders) — require an Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer license. PaaS customers who add an Adobe Commerce Optimizer license are covered, and that license includes drop-in usage. There is no separate “B2B backend” type.
+
+Backends fall into three categories:
+
+- Commerce PaaS — Existing Adobe Commerce on Cloud infrastructure or on-premises deployment without an Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer license
+- Adobe Commerce as a Cloud Service — Cloud Service deployment whose license includes Storefront
+- Adobe Commerce Optimizer — New Adobe Commerce Optimizer deployment, or an existing PaaS deployment that added Adobe Commerce Optimizer
+
+> **Related documentation** This page covers Commerce backends only. For Adobe Commerce product help (Admin, deployments, merchandising services, integrations), start from https://experienceleague.adobe.com/en/docs/commerce on Experience League.
+
+For pages and blocks on da.live, see https://docs.da.live/ or [Document Authoring Quick Start](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/quick-start/document-authoring/).
+
+## Which backend do you have?
+
+| Feature | Commerce PaaS | Adobe Commerce as a Cloud Service | Adobe Commerce Optimizer |
+|---------|---------------|-----------------------------------|--------------------------|
+| License includes Storefront | No | Yes | Yes |
+| Setup | Manual install required | Fully automated | Fully automated |
+| Version | v2.4.7+ (self-managed Commerce) | Commerce managed by Adobe (SaaS) | Optimizer managed by Adobe (SaaS) |
+
+{/* TODO: Update Link href when ACO Connector (PaaS-to-ACO) documentation is published. */}
+
+> **PaaS + Adobe Commerce Optimizer Connector** The Adobe Commerce Optimizer Connector (PaaS-to-Adobe Commerce Optimizer) syncs your PaaS catalog and pricing into Adobe Commerce Optimizer. You install a PHP extension on the PaaS platform and configure the Adobe Commerce Optimizer UI. See the https://experienceleague.adobe.com/en/docs/commerce/optimizer/get-started for connector setup.
+
+## Backend topology
+
+This diagram focuses on the backend layer. It adds two optional pieces you might use during a phased move: Luma Bridge (A PHP module on your Commerce instance that reads session cookies from EDS drop-ins, letting Luma pages share the same shopper cart and sign-in session during a phased migration to Edge Delivery Services.) and the Adobe Commerce Optimizer Connector. Luma is Adobe's classic server-side Commerce storefront theme. If you run a Luma (Adobe Commerce's classic server-side storefront theme, built with PHP. If you run a Luma storefront today, Luma Bridge can help share cart and sign-in sessions with EDS drop-ins while you migrate.) storefront today and are moving to Edge Delivery Services, Luma Bridge is a PHP module on Commerce that enables Luma pages and EDS drop-ins to share the same cart and sign-in session during the transition. For the full stack (drop-ins, boilerplate, and how services connect), see [Commerce services and backends](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/commerce-services-and-backends/).
+
+```mermaid
+graph TB
+    subgraph Storefronts["Storefronts"]
+        EDS["<b>Edge Delivery Services</b>
+Drop-ins, boilerplate"]
+        Luma["<b>Luma / PHP</b>
+Cart, checkout, account
+PaaS only"]
+    end
+    subgraph Bridge["Session bridge (optional)"]
+        LB["<b>Luma Bridge</b>
+PHP on Commerce · session only
+Same domain"]
+    end
+    subgraph Backends["Backends"]
+        PaaS["<b>Commerce PaaS</b>
+Catalog, pricing, orders"]
+        ACCS["<b>Adobe Commerce as a Cloud Service</b>
+Fully managed, license includes Storefront"]
+        ACO["<b>Adobe Commerce Optimizer</b>
+Catalog Service, merchandising"]
+    end
+    Connector["<b>ACO Connector</b>
+PaaS-to-ACO sync
+Catalog, pricing"]
+    EDS -->|"session cookies"| LB
+    LB <--> Luma
+    EDS --> PaaS
+    EDS --> ACCS
+    EDS --> ACO
+    Luma --> PaaS
+    PaaS -->|"Manual install"| Connector
+    Connector --> ACO
+    classDef storefront fill:#e8f5e9,stroke:#4caf50
+    classDef bridge fill:#fff3e0,stroke:#ff9800
+    classDef backend fill:#e3f2fd,stroke:#2196f3
+    classDef connector fill:#f3e5f5,stroke:#9c27b0
+    class EDS,Luma storefront
+    class LB bridge
+    class PaaS,ACCS,ACO backend
+    class Connector connector
+```
+
+## Prerequisites by backend
+
+Open only the tab for your backend and read it end to end. Commerce PaaS includes a manual checklist that the two managed backends do not.
+
+### Commerce Platform-as-a-Service (PaaS)
+
+#### Product license
+
+Adobe Commerce on cloud infrastructure or on-premises. The Magento Open Source edition (Adobe's open-source e-commerce platform, which is a separate product from Adobe Commerce) is not supported. A PaaS license alone does not include drop-in components. To use drop-ins on PaaS, you must also hold an Adobe Commerce Optimizer license (see [Adobe Commerce Optimizer](#adobe-commerce-optimizer)).
+
+#### Version
+
+v2.4.7 or later
+
+#### Required packages and services
+
+Manual installation is required. See [PaaS: required packages and services](#paas-required-packages-and-services) below for step-by-step instructions.
+
+> **Luma Bridge and Adobe Commerce Optimizer** Luma Bridge is a PHP module on Commerce (PaaS). It reads session cookies that EDS drop-ins set, so Luma pages can share cart and sign-in state with EDS. It does not connect directly inside drop-in code. It works with or without Adobe Commerce Optimizer. If you use the Adobe Commerce Optimizer Connector, Luma Bridge can still share sessions while you migrate. See [Luma Bridge](https://experienceleague.adobe.com/developer/commerce/storefront/setup/discovery/luma-bridge/).
+
+### Adobe Commerce as a Cloud Service
+
+#### Product license
+
+Adobe Commerce as a Cloud Service (license includes Storefront)
+
+#### Requirements
+
+Adobe manages all requirements automatically. No manual installation is required.
+
+### Adobe Commerce Optimizer
+
+#### Product license
+
+Adobe Commerce Optimizer (license includes Storefront)
+
+#### Requirements
+
+Adobe manages all requirements in a fully managed SaaS model. No manual installation is required.
+
+> **Adobe Commerce Optimizer + PaaS** If you are on Commerce PaaS with an existing Luma storefront and add Adobe Commerce Optimizer, you can use [Luma Bridge](https://experienceleague.adobe.com/developer/commerce/storefront/setup/discovery/luma-bridge/) to share sessions between EDS and Luma's cart, checkout, and account pages while content and marketing move to Edge Delivery first.
+
+## PaaS: required packages and services
+
+Install and configure the following on Commerce PaaS before you create your storefront. Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer manage these automatically. Skip this section if you are not on Commerce PaaS.
+
+### Minimum checklist before you create a storefront
+
+Before Site Creator (App in Document Author (DA.live) that creates and initializes a storefront by setting up content, optional code, theme choice, and storefront configuration values.), manual configuration, or local preview can rely on Commerce APIs, confirm these items on Commerce PaaS:
+
+1. You are on Adobe Commerce v2.4.7 or later (Magento Open Source is not supported for this storefront path).
+1. You installed the Storefront Compatibility package (A PHP package you install on Commerce PaaS that extends the GraphQL schema so cart, checkout, account, and order drop-ins can communicate with your backend as expected.) ([Install page](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/storefront-compatibility/install/)), which fills gaps in the core Commerce GraphQL schema that drop-ins require.
+1. You connected the storefront services your project needs (at minimum, plan for Services Connector and Catalog Service, then add Live Search, Product Recommendations, and Data Connection per your rollout). Use the [service documentation table](#storefront-services) below for links.
+
+### Storefront Compatibility package
+
+The Storefront Compatibility package installs on Adobe Commerce with Composer. Your storefront repo still uses npm for JavaScript drop-ins, but these modules run as PHP on the Commerce server. Use [Install the Storefront Compatibility package](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/storefront-compatibility/install/) to pick the branch that matches Adobe Commerce 2.4.7 or 2.4.8, and read [Commerce services](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/commerce-services-and-backends/#commerce-services) for how Commerce services fit together.
+
+### Storefront services
+
+Catalog Service, Services Connector, Live Search, and Product Recommendations are covered on Experience League and in [Commerce services](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/commerce-services-and-backends/#commerce-services). Data Connection is optional and separate (Adobe Experience Platform).
+
+Headless storefronts must send the required https://developer.adobe.com/commerce/services/shared-services/storefront-events/ for Live Search and Product Recommendations. Use the Experience League topics in the table for setup and headless data requirements. On Edge Delivery Services, implement storefront events with the Adobe Client Data Layer and /setup/analytics/instrumentation/.
+
+| Service | Documentation |
+|---------|---------------|
+| Data Connection | https://experienceleague.adobe.com/en/docs/commerce/data-connection/overview |
+| Services Connector | https://experienceleague.adobe.com/en/docs/commerce-merchant-services/user-guides/integration-services/saas |
+| Catalog Service | https://experienceleague.adobe.com/en/docs/commerce/catalog-service/guide-overview |
+| Live Search | https://experienceleague.adobe.com/en/docs/commerce/live-search/overview; https://experienceleague.adobe.com/en/docs/commerce/live-search/workspace#data-collection |
+| Product Recommendations | https://experienceleague.adobe.com/en/docs/commerce/product-recommendations/guide-overview; https://experienceleague.adobe.com/en/docs/commerce/product-recommendations/getting-started/headless · /merchants/content-customizations/product-recommendations/ |
+
+> **Multiple stores in one Commerce environment** If you are migrating only one store to Edge Delivery Services in a shared Commerce environment, contact Adobe Commerce Support to ensure that Live Search stays active without disabling Elasticsearch for your other stores.
+
+## Next steps
+
+After confirming your prerequisites, create your storefront and connect it to Commerce.
+
+  
+
+- [Create a storefront](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/create-storefront/) — Site Creator in DA.live first; manual template and Code Sync when required.
+
+  
+
+- [Commerce configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/) — Endpoints, headers, and config.json for your backend.
+
+---
+
+# Before you start
+
+By the end of this page, you will know what to have ready before you create a storefront, whether you use Site Creator (App in Document Author (DA.live) that creates and initializes a storefront by setting up content, optional code, theme choice, and storefront configuration values.) or the manual GitHub path. If anything here is unfamiliar, follow the link in the table before continuing.
+
+This page assumes you are comfortable with JavaScript, HTML, CSS, and basic npm workflows. You do not need to know Adobe Commerce, PHP, or React to get started.
+
+## What you need
+
+These tools help you build and deploy a storefront on Edge Delivery Services (Adobe's hosting and delivery infrastructure that turns authored documents into fast HTML pages served from servers close to the shopper. You push code to GitHub; Edge Delivery Services builds and publishes automatically.) (EDS). EDS is Adobe's hosting and delivery layer: it turns authored documents into fast HTML pages. You will need Adobe accounts, common developer tools, and access to your Commerce environment.
+
+| What | Why you need it | How to get it |
+|------|-----------------|---------------|
+| Adobe ID | Document Author (DA.live) and other Adobe experiences in this workflow expect you to sign in with an Adobe ID. | Open https://www.adobe.com/, then use the account menu in the header to sign in or create an Adobe ID. |
+| GitHub account | Site Creator creates or links a GitHub repository for your storefront code. | https://github.com/signup (personal or enterprise). |
+| Document Author (DA.live) access | Site Creator creates your starter content in DA.live. This applies to the default Document Authoring path. If your project uses AEM Sites as the content source, DA.live access is not required. | https://da.live and sign in with the Adobe ID from the first row. For workspace and authoring concepts, see https://docs.da.live/. If your organization uses enterprise access, ask your admin for an invitation. |
+| Adobe Commerce backend | Every drop-in component (NPM packages that provide core Commerce storefront features such as cart, checkout, product details, and account flows.) — a ready-made Commerce UI package for cart, checkout, account, or product pages — connects to an Adobe Commerce backend. You need to know which backend type you have before you can configure the storefront. | See [Backend options](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/) to pick Commerce PaaS, Adobe Commerce as a Cloud Service, or Adobe Commerce Optimizer. |
+| Commerce Admin access and API values | Site Creator can read from your Commerce APIs when they are reachable. After the repo exists, [Storefront configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/) asks for base URLs, GraphQL endpoints (Commerce's query language for reading and writing data), and credentials for a headless storefront (the storefront UI runs in the shopper's browser, not on the Commerce server). The exact fields depend on your backend. | Work with your Commerce administrator or solution partner to gather values before you paste them into tools. [Backend options](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/) lists services and limits per platform. When you have API access and a repository, the https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator in DA.live can build a starter storefront configuration from your inputs. Use [Storefront configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/) to learn what each field means. |
+| Node.js | You need Node.js before you run the Commerce boilerplate locally (`npm install`, `npm start`, and drop-in updates). Adobe lists which Node.js release to install in the Prerequisites section of https://experienceleague.adobe.com/developer/commerce/storefront/get-started/create-storefront/. Adobe updates that Prerequisites line when the recommendation changes. The Commerce boilerplate on GitHub does not declare a Node version in `package.json` (there is no `engines` field), so match whatever Prerequisites shows when you read it. | Open Prerequisites on https://experienceleague.adobe.com/developer/commerce/storefront/get-started/create-storefront/, install the Node.js release listed there from https://nodejs.org/en/download, then run `node -v` to confirm. |
+| npm | The Commerce boilerplate on GitHub uses npm (Node's package manager. You use it to install drop-in packages — for example, `npm install @dropins/storefront-cart` — in your storefront repository.) (Node's package manager) for installs and scripts (`npm install`, `npm start`, `npm run postinstall`). npm ships with Node.js. | Run `npm -v` in a terminal after you install Node.js. |
+| AEM CLI | The boilerplate `start` script runs `aem up`, so local preview uses the AEM command line client. AEM (Adobe Experience Manager) is the platform underlying Edge Delivery Services. Experience League lists the CLI with Node in the storefront prerequisites for https://experienceleague.adobe.com/developer/commerce/storefront/get-started/create-storefront/. | After Node.js and npm are installed, run `npm install -g @adobe/aem-cli`. See https://www.aem.live/developer/cli-reference. Run `aem --version` to confirm. |
+| Git | Cloning and pushing to your repository requires Git. | https://git-scm.com/downloads, or run `git --version` to check if it is already installed. |
+
+## Extra steps for some teams
+
+The table above is the common baseline. The sections below only matter when that situation applies to you. If you are not yet sure which backend type you have, read [Backend options](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/) after the Architecture section — it explains the three types (Commerce PaaS, Adobe Commerce as a Cloud Service, and Adobe Commerce Optimizer) and what each one requires.
+
+If your backend is Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer, you can skip the Commerce PaaS section below. Adobe manages most storefront service requirements for those backends.
+
+### Commerce PaaS backends
+
+If your backend is Commerce PaaS, you can still use Site Creator or the manual GitHub path to create the repository and starter content in Document Author. Those paths are not reserved for other backend types. The difference is your Commerce instance.
+
+On Commerce PaaS, finish the [PaaS: required packages and services](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/#paas-required-packages-and-services) checklist so storefront APIs and drop-ins match what the boilerplate expects. That checklist includes the Storefront Compatibility package, Services Connector, Catalog Service, and any other storefront services your rollout needs (for example, Live Search, Product Recommendations, or Data Connection). [Commerce services and backends](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/commerce-services-and-backends/) explains what each service does.
+
+Until that Commerce-side work is done, steps that read live data (previewing a product page or running the boilerplate locally) can fail or look incomplete. Install and configure the required pieces on Commerce first, or drop-ins will not work. Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer handle these requirements for you.
+
+Using drop-in components requires a license that covers drop-ins: Adobe Commerce as a Cloud Service, Adobe Commerce Optimizer, or Commerce PaaS with Adobe Commerce Optimizer added. Read [Licensing requirements](https://experienceleague.adobe.com/developer/commerce/storefront/licensing/) for who can use drop-ins and how access works. If your backend type is Commerce PaaS as defined on [Backend options](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/), confirm your situation against both topics before you invest in drop-in work.
+
+### Site Creator, manual GitHub setup, and enterprise policies
+
+Site Creator walks you through the repository and starter content in the browser. If you skip it and start from the https://github.com/hlxsites/aem-boilerplate-commerce on GitHub, install the https://github.com/apps/aem-code-sync on that repository. Code Sync redeploys your storefront when you push to `main` and connects Edge Delivery Services to your repo. Follow [Step-by-step setup](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/create-storefront/#step-by-step) for the full GitHub and Code Sync sequence.
+
+Some organizations block repository creation or GitHub App installs until an administrator approves them. If you use the manual path, plan time for that approval, or use Site Creator when your organization allows it.
+
+### Sidekick browser extension
+
+Sidekick (Browser extension that helps creators edit, preview, and publish content from a content folder, and helps developers open source documents from published pages.) is the browser extension authors use to preview, publish, and open source documents from a storefront page. You do not need it before you create your first site — Site Creator sets up Sidekick project wiring automatically. Authors install the extension from the Chrome Web Store when they are ready to use the toolbar. For setup details and the Edge browser path, see https://www.aem.live/docs/sidekick on AEM Docs. For a walkthrough that fits this page, see the optional Sidekick step in [Create a storefront](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/create-storefront/#optional-use-sidekick-for-content-editing).
+
+## What you do not need right now
+
+The table above lists Node.js, npm, and the AEM CLI because you will need them once you clone the repository and run the boilerplate locally. You do not need them yet. You do not need a code editor, a cloned repository, or a local server to create a storefront. Site Creator and DA.live run entirely in the browser. Install and use those tools when you clone the repository and run the boilerplate on your machine. Follow [Create a storefront](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/create-storefront/) for the full sequence (including the https://www.aem.live/developer/cli-reference for local preview). Then use [Run it locally](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/getting-started/) for day-to-day commands after your site exists.
+
+## Documentation hubs
+
+These links open related documentation sites outside this storefront collection. You do not read them end to end before you start. Open them when a step names Edge Delivery, Document Authoring, or the Commerce Admin and you want the official reference next to this page.
+
+- Edge Delivery Services (blocks, CDN, redirects, authoring concepts): https://www.aem.live/docs/.
+- Document Authoring (DA.live workspace, tools, admin API): https://docs.da.live/.
+- Adobe Commerce merchant documentation (Admin configuration, catalog, B2B, upgrades): https://experienceleague.adobe.com/en/docs/commerce.
+- Adobe Commerce developer documentation (APIs, App Builder, extensibility hub): https://developer.adobe.com/commerce/docs/.
+
+## What's next
+
+When every row in the table above is confirmed, you are ready to move on. You should be able to sign in with your Adobe ID, verify your Node.js version, and know which Commerce backend your project uses.
+
+1. [Storefront Architecture](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/) — learn about pages, blocks, drop-ins, events, and services before you lock backend work or create a site.
+1. [Backend options](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/) — confirm backend type and prerequisites.
+1. [Create a storefront](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/create-storefront/) — use Site Creator in DA.live to create your repository and starter content.
+
+---
+
+# Browser compatibility
+
+Supported browsers depend on your boilerplate suite. Open `package.json` and find the `@dropins/tools` line, then match it to a row below before you spend time on layout testing. That way you do not report a storefront bug for a browser this suite never supported.
+
+## Which boilerplate suite do I have?
+
+Match `@dropins/tools` in `package.json` to the corresponding suite below.
+
+- March 2026 suite: `@dropins/tools@~1.8.0`
+- February 2026 suite: `@dropins/tools@~1.7.0`
+- January 2026 suite: `@dropins/tools@~1.6.0`
+- October 2025 suite: `@dropins/tools@~1.5.0`
+- August 2025 suite: `@dropins/tools@~1.4.0`
+- June 2025 suite: `@dropins/tools@1.3.0`
+- April 2025 suite: `@dropins/tools@0.42.0`
+- December 2024 suite: `@dropins/tools@0.38.0`
+
+## Browser support by suite
+
+### Desktop browsers
+
+| Browser | `@dropins/tools` ~1.5.0 and later (October 2025-March 2026 suites) | `@dropins/tools` ~1.4.0 and earlier (August 2025 suite and older) |
+|---------|-------------------------------------------------------------------|---------------------------------------------------------------------|
+| Chrome  | 105 - 141         | 98 - 136                  |
+| Edge    | 105 - 141         | 98 - 136                  |
+| Safari  | 16 - 18.4         | 16 - 18.4                 |
+| Firefox | 110 - 143         | 108 - 138                 |
+| Opera   | 92 - 122          | 85 - 118                  |
+
+### Mobile browsers
+
+| Platform | Browser          | `@dropins/tools` ~1.5.0+ (Oct 2025-Mar 2026) | `@dropins/tools` ~1.4.0 and earlier |
+|----------|------------------|---------------------------------------------|-------------------------------------|
+| Android  | Chrome           | 141               | 136                       |
+| Android  | Edge             | 141               | 136                       |
+| Android  | Firefox          | 143               | 138                       |
+| Android  | Samsung Internet | 28                | 26                        |
+| Android  | UC Browser       | Not Supported     | Not Supported             |
+| iOS 16+  | Safari           | Default supported version | Default supported version |
+| iOS 16+  | Chrome           | Default supported version | Default supported version |
+
+## Known issues
+
+For the following browsers, the product listing page loads in a single product column and does not support responsiveness:
+
+- Chrome: 100 - 104
+- Firefox: 108 and 109
+- Opera: 91 or less
+
+## Test URL
+
+You can test browser compatibility using the Commerce boilerplate test site: https://www.aemshop.net/
+
+## Browser testing recommendations
+
+When you test your storefront, try the following:
+
+- Run checks on the oldest supported version of each major browser you care about.
+- Run checks on the newest version of each major browser.
+- Test on real phones and tablets as well as desktop.
+- Resize the window and confirm layouts still make sense at common widths.
+- On product listing pages, confirm multi-column grids render as you expect.
+
+---
+
+# Create a storefront
+
+By the end of this page, you will have a new GitHub repository from the Commerce boilerplate, the Code Sync app on that repo, a storefront configuration for your Commerce backend, starter content in Document Authoring on DA.live, and a local clone.
+
+Use the [Which backend do you have?](#which-backend-do-you-have) table and finish prerequisites before the tasks below. When Commerce data or services are missing, the fix is usually the backend checklist, not a broken repository.
+
+For `npm install`, `npm start`, and local preview, use [Boilerplate getting started](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/getting-started/). If accounts and tools are not ready, read [Before you start](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/before-you-start/) first.
+
+You can return later for optional steps such as Sidekick (Browser extension that helps creators edit, preview, and publish content from a content folder, and helps developers open source documents from published pages.) or the Universal Editor.
+
+## Site Creator or this walkthrough
+
+This page walks through repository creation, Code Sync, configuration, content, and local setup in order. When your organization allows it, use https://da.live/app/adobe-commerce/storefront-tools/tools/site-creator/site-creator in https://da.live/ so one flow can create the GitHub repo, add starter content, and fill most storefront configuration. If you cannot use Site Creator, follow GitHub, Code Sync, and the DA.live config generator as separate tasks below.
+
+### Which should you use?
+
+Use Site Creator first when you want the fastest path and your organization allows it.
+
+Stay on this page when you need to see how the pieces connect, or when Site Creator is not an option. Typical cases include the following:
+
+- You are new to the stack and want to see what each step does before you run it in a live project.
+- Your organization limits who can create repositories or install GitHub Apps, so you follow an approved process step by step.
+- You are fixing a store that is only partly configured, or you must run steps in a fixed order for automation.
+- You already have a repository and you use Site Creator only to connect content. You may still run some tasks by hand, and the sections below explain what each part is for.
+
+## Big picture
+
+This tutorial uses Edge Delivery Services (Adobe's hosting and delivery infrastructure that turns authored documents into fast HTML pages served from servers close to the shopper. You push code to GitHub; Edge Delivery Services builds and publishes automatically.) (EDS) to host the storefront, the Commerce boilerplate for code, and Document Authoring (DA.live) for page content. You create a new EDS storefront from the https://github.com/hlxsites/aem-boilerplate-commerce. After you connect your own backend, the same repo holds local preview, demo content, and a path to production.
+
+The diagram caption and the numbered list below describe the same flow, so you can skim either one first.
+
+![Steps to create and configure your starter storefront.](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/images/CreateStorefrontSteps.png)
+
+*Steps to create and configure your starter storefront.*
+
+<Callouts columnCount={1}>
+
+1. Create the site repository — Generate a storefront repository from the https://github.com/hlxsites/aem-boilerplate-commerce.
+1. Add the Code Sync app — The app redeploys your storefront when you push to the `main` branch. It connects Edge Delivery Services to your repository so code and content stay aligned, and it sets where your site's content is registered in the Edge Delivery configuration.
+1. Link the repository to Commerce data — Add a storefront `config.json` (or equivalent) in the repo with values for your backend.
+1. Add content — In https://da.live/, use the https://da.live/app/adobe-commerce/storefront-tools/tools/site-creator/site-creator app to create or attach a content folder.
+1. (Optional) Universal Editor — Edit content in context on the rendered page.
+1. (Optional) Sidekick — Preview, publish, and open source documents from the live site.
+1. Set up a local environment — Clone the repo, install dependencies, and run the boilerplate on your computer.
+1. Secure the storefront — Tighten access to content, the repository, and the site before production or a wide audience.
+
+</Callouts>
+
+> **Document Authoring content source** This walkthrough uses Document Authoring (The tooling for creating storefront pages as documents in Google Docs, SharePoint, or DA.live without writing code. Tables in documents define the blocks that appear on each page.) on https://da.live/, the default for new EDS storefronts. For AEM Sites content (for example, Commerce drop-ins on an existing AEM as a Cloud Service site), content setup and Universal Editor steps differ. See the https://github.com/adobe-rnd/aem-boilerplate-xcom and https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/edge-delivery/overview.
+
+## Which backend do you have?
+
+| Scenario | Description | Prerequisites |
+|----------|-------------|---------------|
+| [Commerce PaaS](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/#commerce-platform-as-a-service-paas) | Existing Adobe Commerce on cloud or on-premises without an Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer license (see [Backend options](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/)) | Manual installation: Storefront Compatibility package, Services Connector, Catalog Service, and other storefront services your project needs. See [PaaS: required packages and services](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/#paas-required-packages-and-services). |
+| [Adobe Commerce as a Cloud Service](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/#adobe-commerce-as-a-cloud-service) | Fully managed Commerce SaaS. License includes Storefront. | Skip the Commerce PaaS storefront install checklist. Adobe runs the Commerce backend and storefront services for your license. See [Adobe Commerce as a Cloud Service](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/#adobe-commerce-as-a-cloud-service) for details. |
+| [Adobe Commerce Optimizer](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/#adobe-commerce-optimizer) | Fully managed Optimizer SaaS for catalog and merchandising. License includes Storefront. | Skip the Commerce PaaS storefront install checklist. Adobe runs the Optimizer services your license includes. See [Adobe Commerce Optimizer](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/#adobe-commerce-optimizer) for details. |
+
+Before you continue, confirm prerequisites on [Backend options](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/) for whichever scenario in the table above matches your Commerce backend.
+
+On Commerce PaaS, finish [PaaS: required packages and services](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/#paas-required-packages-and-services) on the Commerce instance first. On Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer, skip the Commerce PaaS storefront install checklist because your licensed environment already includes the services the storefront expects.
+
+The steps below apply to every backend unless a note says otherwise. Backend-specific detail starts at [Link your repository to Commerce data](#link-your-repository-to-commerce-data).
+
+On Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer, run [Link your repository to Commerce data](#link-your-repository-to-commerce-data) only after [Commerce services and integrations](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/commerce-services-and-backends/#commerce-services) shows catalog data in sync. If you are unsure, use [Data export validation](https://experienceleague.adobe.com/developer/commerce/storefront/setup/discovery/data-export-validation/) first.
+
+If you already have an Edge Delivery site for this Commerce project, skip creating a brand-new site and use the https://da.live/docs/operations/import for code and content.
+
+## Example site
+
+The CitiSignal demo site was built from the same boilerplate you will set up to develop your own storefront. You can open the full demo site at https://main--citisignal-one--adobedevxsc.aem.live/.
+
+[![CitiSignal demo storefront homepage showing navigation, hero banner, and product categories.](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/images/citisignal-demo.png)](https://main--citisignal-one--adobedevxsc.aem.live/us/en/)
+
+## Manual setup without Site Creator
+
+The [Site Creator or this walkthrough](#site-creator-or-this-walkthrough) section explains when to use this long-form path. The tasks below assume you create the GitHub repository from the https://github.com/hlxsites/aem-boilerplate-commerce, install the https://github.com/apps/aem-code-sync, and use Site Creator for content (including attaching an existing repository), as in [Before you start](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/before-you-start/). If your organization only allows Site Creator for brand-new sites, work with your administrator, then pick up at the Add content task with the repo Site Creator already created.
+
+## Step-by-step
+
+The tasks below follow the same order most teams use: GitHub repository, Code Sync, Commerce data, Document Authoring content, optional tooling, local clone, then security. Run them in order unless a note tells you to wait or skip. Open [Storefront Architecture](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/) or [Before you start](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/before-you-start/) when a label or step does not make sense.
+
+### 1. Create the site repository
+
+This task requires a GitHub account with access to the organization or account where you want to create the new repository. All three backends use the same boilerplate template.
+
+### Personal GitHub account
+
+Create the repo under your personal account. When you select Owner, choose your username. Install the Code Sync app on the repository in the next step.
+
+### GitHub Enterprise (organization)
+
+Create the repo under your organization. When you select Owner, choose the organization. You may need organization admin approval to install the Code Sync app on a repository. Ensure you have permission to create repositories and install GitHub Apps in the organization.
+
+> **Trouble with organization access?** If you have trouble with your organization access, you can create your repo from a personal account first, then migrate that repo to a https://www.aem.live/docs/repoless Edge Delivery Services site after you learn more about EDS and repoless.
+
+![Create your storefront repo](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/images/create-repo.webp)
+
+*Create your storefront repo.*
+
+> **Sign in to GitHub first** Sign in to your GitHub account before you open the repository's **Use this template** control. If you are not signed in, that control does not appear.
+
+1. Navigate to https://github.com/hlxsites/aem-boilerplate-commerce.
+
+1. Select the **Use this template** button.
+
+1. Select **Create a new repository** when GitHub shows that option. The repository creation form opens.
+
+1. Complete the form with the following details:
+
+   - Repository template: `hlxsites/aem-boilerplate-commerce` (default).
+   - Include all branches: Do not include all branches (default).
+   - Owner: Your organization or account (required).
+   - Repository name: A unique name for your new repo (required). GitHub allows letters, numbers, hyphens, and underscores. For Commerce on Edge Delivery Services, use lowercase letters, numbers, and hyphens only so preview and live URLs match the usual `main--your-repo--your-org` pattern.
+   - Description: A brief description of your repo (optional).
+   - Public or Private: We recommend public (default).
+
+1. Select the Create repository button and watch GitHub create your new storefront repo.
+
+1. After a few seconds, you should be redirected to the home page of your new repo.
+
+> **Managed backends** Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer use the same repo creation steps above. The only difference is in the next step when you configure the storefront to point to your managed environment.
+
+### 2. Add the Code Sync app
+
+Install the Code Sync app on your repository (it cannot be installed globally on a user or org). It redeploys your storefront site whenever you push or merge changes to the `main` branch. That behavior is the same for every backend in the table above.
+
+![Add AEM Code Sync to your repository.](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/images/code-sync.webp)
+
+*Add AEM Code Sync to your repository.*
+
+> **Slightly different UIs** A gray background on an organization or account indicates that at least one repository within it
+  has the Code Sync app installed. In such cases, you are redirected to the Code Sync configuration page for that org or account, where you choose which repositories have the app. There are no differences in the steps, but the UI differs slightly from the one shown in the diagram (Install versus Save buttons), which shows the Code Sync page when installing on a repository for the first time.
+
+### Personal GitHub account
+
+Select your username when choosing where to install. You will see your personal repositories in the selector.
+
+### GitHub Enterprise (organization)
+
+Select your organization. You may need admin approval to install the Code Sync app on repositories. If your organization uses SAML SSO, you may need to authorize the app for SAML SSO access.
+
+1. Navigate to the https://github.com/apps/aem-code-sync.
+
+1. Select the **Configure** button (top right). GitHub opens the page where you choose which repository receives the app.
+
+1. Select the organization or account that owns the repo you just created.
+
+1. In the form, choose **Only select repositories**.
+
+1. Open the **Select repositories** selector and choose your repo from the list.
+
+1. Select **Install** (or **Save**; see the note above) to install Code Sync on your repository.
+
+1. You should see a success screen if the installation completed without errors. Your repo is now connected to the Edge Delivery Services code bus.
+
+1. (_Optional_) If you return to the https://github.com/apps/aem-code-sync/installations/select_target, your repo's organization or account will now be gray with **Configure** added. Select your organization or account again to access the Code Sync configuration page, where you can see which repositories have Code Sync installed and add it to more repositories.
+
+### 3. Link your repository to Commerce data
+
+To connect your Commerce backend to the storefront repository, use the https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator. It generates a [storefront configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/) file for your site. The file differs by backend type. Follow only the tab for your backend in the config generator and in the reference.
+
+Add or update the storefront configuration for your project:
+
+1. Open the https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator.
+
+1. Select your backend type so the tool generates the correct storefront configuration structure.
+
+1. Enter the values for your project. See the [Storefront configuration reference](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/) for field descriptions (select the tab for your backend).
+
+1. Save the generated JSON as `config.json` at the repository root. The storefront runtime requests `/config.json` from your site.
+
+1. The template includes `demo-config.json` as a sample, not a committed `config.json`. After your root `config.json` matches your backend, remove `demo-config.json` or leave it unused so one file stays authoritative.
+
+1. Commit and push the new or updated `config.json` to the repo.
+
+### 4. Add content
+
+In this task, you create and initialize the content side of your storefront in the Document Authoring environment. The steps are the same for all backends.
+
+> **Demo Content** If you do not want demo content, you can create a file in https://da.live/ replacing `{org}` and `{site}` with your own. This reserves the org and site for you to add your own content.
+
+1. Open the https://da.live/app/adobe-commerce/storefront-tools/tools/site-creator/site-creator in DA.live.
+
+1. Select **Use existing repository**.
+
+1. Copy the GitHub owner and site values into the input fields.
+
+1. Select **Create site**.
+
+1. Follow the prompts until Site Creator finishes copying starter content into your content folder.
+
+1. If prerequisites were incomplete, you may need to preview or publish the content manually.
+
+![Initialize your storefront content](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/images/site-creator.png)
+
+*Initialize your storefront content*
+
+### 5. (Optional) Use Universal Editor for content editing
+
+Use this path when authors need in-context editing beyond what Site Creator sets up by default. For workflows and documentation links, see [Using the Universal Editor](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/quick-start/universal-editor/).
+
+<a id="optional-sidekick-content-editing"></a>
+
+### 6. (Optional) Use Sidekick for content editing
+
+> **Sidekick setup** Site Creator wires your project for Sidekick so the toolbar can recognize preview and live URLs. Authors install the browser extension from the Chrome Web Store, or follow Edge steps on https://www.aem.live/docs/sidekick, when they are ready. That page covers install steps, site config, preview, and publish. For prerequisites that line up with this page, see [Before you start](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/before-you-start/#sidekick-browser-extension).
+
+### 7. Set up local environment
+
+Clone the repository to your computer so you can work on the code and run a local preview. On GitHub, open your storefront repository, select the Code button, and copy the clone URL (HTTPS or SSH). In a terminal, run `git clone` with that URL, then `cd` into the folder GitHub created. For example, if the clone URL is `https://github.com/my-org/my-storefront.git`, you would run:
+
+```bash frame="none"
+git clone https://github.com/my-org/my-storefront.git
+cd my-storefront
+```
+
+Use your own organization, repository, and folder names from GitHub. The commands for `npm install`, `npm start`, and opening the preview in a browser all live on [Running locally](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/getting-started/#running-locally) in Boilerplate getting started so this page stays shorter. That page also explains what to do if a command fails or port `3000` is already in use.
+
+### 8. (Optional) Secure your storefront
+
+The storefront works at this point, but the site is not protected by default. We recommend securing your content, repository, and site access before you deploy to production or share the site with external users. See [Security and access](https://experienceleague.adobe.com/developer/commerce/storefront/setup/launch/#security-and-access) in the Launch checklist for step-by-step instructions.
+
+<SecurityNotice />
+
+> **What you have now** You have a Commerce storefront project on GitHub, starter content in Document Authoring, and a local clone of the repository. Next, use [Boilerplate getting started](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/getting-started/) to run and explore the code, then customize the boilerplate and drop-in components (NPM packages that provide core Commerce storefront features such as cart, checkout, product details, and account flows.) to match your project.
+
+## What's next
+
+- [Boilerplate getting started](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/getting-started/) — Install paths, `npm` scripts, and a typical local loop after your repository exists.
+- [Boilerplate configuration](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/configuration/) — Storefront configuration, `headers.xlsx`, and paths for preview versus production.
+- [Introduction to drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/introduction/) and [Using drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/quick-start/) — Initializer flow, slots, and styling when you are ready to change Commerce UI.
+- [Launch checklist](https://experienceleague.adobe.com/developer/commerce/storefront/setup/launch/) — Security, performance, and go-live items when you move past learning.
+
+---
+
+# Storefront developer guide
+
+## What is Adobe Commerce Storefront?
+
+Adobe Commerce Storefront lets you build a fast online store on Adobe Commerce, with full control over your brand's layout and shopping experience.
+
+Edge Delivery Services (Adobe's hosting and delivery infrastructure that turns authored documents into fast HTML pages served from servers close to the shopper. You push code to GitHub; Edge Delivery Services builds and publishes automatically.), Adobe's global delivery network, turns merchant-authored documents into HTML and serves pages from servers near shoppers around the world. Merchants keep editing in a document-style workflow while you own the storefront code, so content changes and code changes stay out of each other's way.
+
+Your job is to connect Commerce data to the page. You start from the Adobe Commerce boilerplate (Pre-configured storefront with the components and services you need to get started.), a Git repository that already contains a working storefront. The boilerplate already includes drop-in components (NPM packages that provide core Commerce storefront features such as cart, checkout, product details, and account flows.) for Commerce experiences such as cart, checkout, product details, search, and accounts. You configure and customize them to match your storefront requirements. Drop-ins call the Adobe Commerce GraphQL (A query language that drop-in components use to request and update data from Adobe Commerce APIs. Catalog Service, Live Search, and the core Commerce API all expose GraphQL endpoints.) API from the shopper's browser, so cart and catalog data stay current without any server-side code from you. You customize how drop-ins look and behave instead of writing every Commerce screen from scratch.
+
+With accounts and a backend in place, you can have a working storefront preview in less than a day.
+
+> **About drop-in licensing** Drop-in components are included with an Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer license. If you use Adobe Commerce on Cloud, you need a separate Adobe Commerce Optimizer license to use drop-ins. Read [Backend options](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/) to match your backend type to prerequisites, and [Licensing requirements](https://experienceleague.adobe.com/developer/commerce/storefront/licensing/) to confirm what your license covers.
+
+## New here? Start here
+
+You can start with [Create a storefront](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/create-storefront/) if your team already has accounts and a chosen backend. If not, the numbered path below helps you sort out Commerce access, choose the right backend, and confirm the services that drop-ins need.
+
+<Callouts columnCount={1}>
+1. [Before you start](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/before-you-start/) — Gather your tools, accounts, and Commerce access before you open Site Creator (App in Document Author (DA.live) that creates and initializes a storefront by setting up content, optional code, theme choice, and storefront configuration values.).
+1. [Storefront Architecture](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/) — Five short topics: how pages load, what blocks and drop-ins are, how drop-ins coordinate, and how Commerce services connect. Get a clear picture of how the pieces fit together before you start coding.
+1. [Backend options](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/backends/) — Identify your Commerce backend (Adobe Commerce on Cloud, Adobe Commerce as a Cloud Service, or Adobe Commerce Optimizer) and confirm what you need before you create a site.
+1. [Create a storefront](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/create-storefront/) — Provision your repo and preview URL with Site Creator in DA.live (The tooling for creating storefront pages as documents in Google Docs, SharePoint, or DA.live without writing code. Tables in documents define the blocks that appear on each page.). This is where your first working preview comes from.
+1. [Boilerplate getting started](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/getting-started/) — Run the Commerce boilerplate on your machine. After it finishes, you'll have a local storefront with Commerce blocks already connected.
+1. [Boilerplate configuration](https://experienceleague.adobe.com/developer/commerce/storefront/boilerplate/configuration/) — Set up your storefront configuration, headers, and paths to match your production environment.
+1. [Introduction to drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/introduction/) and [Using drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/quick-start/) — Learn what drop-in components are, how the initializer import pattern works, and what slots, styling, and labels do. Read them before you customize any Commerce UI.
+1. [Storefront configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/) — Connect the storefront to Commerce endpoints and services.
+1. [Get to know SEO](https://experienceleague.adobe.com/developer/commerce/storefront/setup/seo/) — Learn how Edge Delivery Services SEO and generative engine optimization (GEO) apply to Commerce storefront indexing, metadata, and launch checks.
+1. [Launch Checklist](https://experienceleague.adobe.com/developer/commerce/storefront/setup/launch/) — Finish these steps before you treat the site as production-ready.
+</Callouts>
+
+If you already know your task, use the sidebar for the full catalog (Commerce Boilerplate, Commerce Drop-Ins, Storefront Configuration, Go Live, Playgrounds, and Reference). If you are building a B2B storefront, this path still applies. B2B-specific drop-ins and configuration are in the B2B Drop-Ins section in the sidebar after you complete these steps.
+
+> **When something goes wrong** Start with [Storefront Architecture](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/architecture/). It shows whether the problem is in content authoring, Edge Delivery Services, or Commerce, so you know where to look instead of searching only under `blocks/`.
+
+## Reference and tutorials
+
+When you need technical details — API methods, props (configuration options), slots (customization points), events, or version notes — for any of Adobe's shipped drop-ins, open the matching drop-in page under B2C Drop-Ins or B2B Drop-Ins in the sidebar.
+
+Most storefront projects extend those shipped drop-ins (styling, slots, labels, and behavior). That work lives in [the Commerce Drop-Ins overview](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/introduction/) and each drop-in's reference pages. The Drop-In SDK section is for a smaller set of cases: use it when you write new drop-in packages from scratch or need to work directly with the framework that initializes and manages drop-ins — not for typical customization of Adobe's packages.
+
+After you complete the numbered path, see the Tutorials section for step-by-step pages covering federated search, Luma storefront migration (Luma Bridge), cart, checkout, and user account flows.
+
+---
+
+# Performance best practices
+
+If your storefront feels slow or your mobile scores look low, start here.
+
+You'll walk through `delayed.js`, CSS load order, and `head.html` next to https://www.aem.live/developer/keeping-it-100, the Edge Delivery guide many teams keep open while they tune loading. After you change how things load, run [Lighthouse audits](#run-lighthouse-audits) for a fresh readout. Before launch, review [Performance and monitoring](https://experienceleague.adobe.com/developer/commerce/storefront/setup/launch/#performance-and-monitoring) on the launch checklist.
+
+When you already have the project from [Create a storefront](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/create-storefront/), leave the repo open in your editor so you can open files such as `scripts/delayed.js` and `styles/styles.css` when this page points to them.
+
+The Commerce boilerplate uses the same Edge Delivery Services (Adobe's hosting and delivery infrastructure that turns authored documents into fast HTML pages served from servers close to the shopper. You push code to GitHub; Edge Delivery Services builds and publishes automatically.) pattern as other Edge storefronts: eager, lazy, and delayed loading, fonts, and LCP (Largest Contentful Paint, how fast the main content shows).
+
+- [Start with Keeping it 100 on AEM.live](https://www.aem.live/developer/keeping-it-100) — The canonical Keeping it 100 page covers eager, lazy, and delayed loading, Largest Contentful Paint (LCP), fonts, and mistakes such as overusing <code>preload</code> and early hints. Read it before you edit <code>head.html</code> or split CSS.
+
+## Run Lighthouse audits
+
+PageSpeed Insights runs Lighthouse on Google's hardware instead of on your computer, so you can compare one test run to the next more fairly than if you only tested locally. It reports Web Vitals, Google's standard scores for how fast and stable the page feels. The fix list follows Google's performance guidance. When you change load order or assets, compare those suggestions with https://www.aem.live/developer/keeping-it-100 so resource hints, fonts, and load phases still match what Edge Delivery Services expects.
+
+- [PageSpeed Insights](https://pagespeed.web.dev/) — Enter your storefront production URL (typically <code>*.aem.live</code>) for accurate results. That hostname sits on CDNs close to your customers, on the edge.
+
+### Step-by-step
+
+The following steps run a PageSpeed Insights audit on a URL you choose.
+
+1. Go to the https://pagespeed.web.dev/.
+
+1. Paste your storefront URL into the PageSpeed Insights input field.
+
+1. If you use the default `main` branch pattern on Edge Delivery, typical preview and production hosts look like this (replace `{repo}` and `{owner}` with your GitHub repository name and owner):
+   - Preview: `https://main--{repo}--{owner}.aem.page/`
+   - Production: `https://main--{repo}--{owner}.aem.live/`
+
+1. Click the **Analyze** button to run the audit.
+
+1. You'll see full Web Vitals reports for mobile and desktop. Scores are often high on tuned Edge Delivery storefronts, but they vary with page content, third-party scripts, and test conditions, so treat the report as a snapshot, not a guarantee of 100 on every run.
+
+## Performance in the Commerce boilerplate
+
+### Delayed phase
+
+https://www.aem.live/developer/keeping-it-100 describes a delayed phase for third-party tags, marketing tooling, extended analytics, consent, chat, and similar scripts. Load them through `delayed.js` so they do not compete with LCP or the rest of the experience.
+
+In the Commerce boilerplate, implement that path in https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/delayed.js. Keep it off the eager path. For Adobe Experience Platform and related patterns, see [Adobe Experience Platform analytics](https://experienceleague.adobe.com/developer/commerce/storefront/setup/analytics/adobe-experience-platform/).
+
+### Eager vs lazy styles
+
+Keeping it 100 treats styles in two phases so LCP stays predictable.
+
+#### Eager phase
+
+The eager phase covers the markup, CSS, and JavaScript that must load first so the main content can appear quickly and your LCP score can settle. Stay within the network and payload limits the Keeping it 100 page describes.
+
+> **Preload and early hints** Too many <code>preload</code> tags, early hints, and <code>preconnect</code> entries can steal bandwidth from what the visitor needs first and hurt mobile LCP. Keeping it 100 explains how to stay inside safe limits instead of adding every hint you can think of.
+
+#### Lazy phase
+
+The lazy phase is for styles (and related assets) that can load after the main content and LCP finish so they do not slow the first screen.
+
+In the Commerce boilerplate, eager, site-wide tokens and styles usually start in https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/styles/styles.css. For deferred styles (for example, `lazy-styles.css`), use the folder-and-import patterns in [Branding and styles](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/branding/) instead of merging them into the eager file.
+
+After your split matches that guidance, align `head.html` and load order with Keeping it 100 so you are not maintaining a second rule set. Keeping it 100 also explains why preloading every web font often backfires. Keep the boilerplate font fallbacks unless you have a clear measurement that says to change them.
+
+> **Related storefront docs** For tips on catalog pages (images, APIs, loading order), see the [FAQ](https://experienceleague.adobe.com/developer/commerce/storefront/troubleshooting/faq/#how-can-i-improve-the-performance-of-my-catalog-pages).

@@ -1,0 +1,3413 @@
+<SYSTEM>This is the Order drop-in bundle for Adobe Commerce Storefront on Edge Delivery Services</SYSTEM>
+
+# Order drop-in
+
+> Order management, order confirmation, and returns drop-in reference
+> Generated: 2026-06-26T22:40:20.158Z
+> Source: https://experienceleague.adobe.com/developer/commerce/storefront
+
+
+---
+
+# OrderStatus container
+
+The `OrderStatus` container displays the current order status and a service message about the order’s condition. It supports three actions: Return, Cancel, and Reorder. The availability of these actions is defined by the backend, based on the order status, individual items, and global configurations.
+
+To display all information, you must enable the following features:
+
+- https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/order-management/returns/rma-configure
+- https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/shopper-tools/reorders-allow
+- https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/shopper-tools/cancel-allow
+
+![OrderStatus container](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/order/order-status.png)
+
+*OrderStatus container*
+
+## Configurations
+
+The `OrderStatus` container provides the following configuration options:
+
+```text
+[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['slots.OrderActions', 'slot', 'No', 'Provides the ability to customize / extend available order actions.'],
+        ['orderData', 'OrderDataModel', 'No', 'Contains order information, including the order ID and a list of items.'],
+        ['className', 'string', 'No', 'Allows custom CSS classes to be applied to the form for styling.'],
+        ['statusTitle', 'string', 'No', 'Provides the ability to manually input a custom title for the status section.'],
+        ['status', 'StatusEnumProps', 'No', 'Displays one of the predefined statuses, such as Pending, Shipping, Complete, Processing, On Hold, Canceled, Suspected Fraud, or Payment Review.'],
+        ['routeCreateReturn', 'function', 'No', 'A function that returns the URL to redirect the user to create return page.'],
+        ['onError', 'function', 'No', 'A function executed when an error occurs. It receives an errorInformation object with details about the error.'],
+    ]
+```
+
+## Example
+
+The following example demonstrates how to render the `OrderStatus` container:
+
+```javascript
+export default async function decorate(block) {
+  await orderRenderer.render(OrderStatus, {
+    routeCreateReturn: ({ token, number: orderNumber }) => {
+      const isAuthenticated = checkIsAuthenticated();
+
+      const { searchParams } = new URL(window.location.href);
+      const orderRefFromUrl = searchParams.get('orderRef');
+      const newOrderRef = isAuthenticated ? orderNumber : token;
+
+      const encodedOrderRef = encodeURIComponent(orderRefFromUrl || newOrderRef);
+
+      return checkIsAuthenticated() ? `${CUSTOMER_CREATE_RETURN_PATH}?orderRef=${encodedOrderRef}` : `${CREATE_RETURN_PATH}?orderRef=${encodedOrderRef}`;
+    },
+    routeOnSuccess: () => '/cart',
+  })(block);
+}
+```
+
+---
+
+# CreateReturn container
+
+The `CreateReturn` container manages the creation of return requests. It supports custom return attributes and configurable validation through the Adobe Commerce Admin. This container consists of three sequential screens that guide users through the item return process:
+
+1. **Select Items.** The first screen displays a list of items eligible for return. The user can select items by checking the boxes next to them and specifying the quantity of each item they wish to return. Once the selection is complete, the user can click the **Continue** button to proceed to the next step.
+
+  
+
+![CreateReturn container](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/order/create-return1.png)
+
+*CreateReturn container*
+
+1. **Return Reasons.** The second screen shows the selected items. Below each item, an additional form is displayed that allows the customer to specify the reason for the return. This step helps gather information on why each item is being returned, which can be valuable for analytics and improving customer experience.
+
+  
+
+![CreateReturn container, return reasons screen](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/order/create-return2.png)
+
+*CreateReturn container — Return reasons*
+
+1. **Success Screen.** The final screen displays a success message confirming the return process. It also includes a customizable button that allows redirection to any specified page on the website.
+
+  
+
+![CreateReturn container, success screen](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/order/create-return3.png)
+
+*CreateReturn container — Success*
+
+## Prerequisites
+
+- https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/order-management/returns/rma-configure. The **Stores** > Configuration > **Sales** > **Sales** > **RMA Settings** in the Adobe Commerce Admin.
+
+- If you need to add custom return attributes, add them at **Stores** > **Attributes** > **Returns**. You can optionally use the Input Validation field to define custom validation rules.
+
+## Configurations
+
+The `CreateReturn` container provides the following configuration options:
+
+```text
+[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['className', 'string', 'No', 'Allows custom CSS classes to be applied to the container for styling purposes.'],
+        ['orderData', 'OrderDataModel', 'No', 'A structured object containing order-related data. It can be used as an initial value if data is not fetched from the backend, serving as a fallback.'],
+        ['slots.ReturnOrderItem', 'function', 'No', 'Enables integration of additional elements or functionality, allowing customization to meet specific requirements. This can include adding new components, modifying existing ones, or inserting custom content.'],
+        ['slots.ReturnFormActions', 'function', 'No', 'Provides the ability to add custom events or replace existing actions with tailored functionality. Examples include adding unique buttons, setting up custom redirects, or modifying interface elements.'],
+        ['onSuccess', 'function', 'No', 'A callback function executed after the form is successfully submitted.'],
+        ['onError', 'function', 'No', 'A callback function executed when an error occurs during submission. The error is passed as a parameter for handling.'],
+        ['routeReturnSuccess', 'function', '', 'Defines a custom URL to redirect users upon successful return submission.'],
+        ['showConfigurableOptions', 'function', 'No', 'Allows rendering additional product parameters during container integration by defining key-value pairs for further customization.'],
+    ]
+```
+
+## Example
+
+The following example demonstrates how to render the `CreateReturn` container:
+
+```javascript
+export default async function decorate(block) {
+  await orderRenderer.render(CreateReturn, {
+    routeReturnSuccess: (orderData) =>
+      checkIsAuthenticated()
+        ? `${CUSTOMER_ORDER_DETAILS_PATH}?orderRef=${orderData.number}`
+        : `${ORDER_DETAILS_PATH}?orderRef=${orderData.token}`,
+  })(block);
+}
+```
+
+---
+
+# CustomerDetails container
+
+The `CustomerDetails` container organizes customer and order information into the following sections:
+
+- Contact details
+- Shipping address
+- Billing address
+- Shipping method
+- Payment method
+- Return details:
+
+The return details section is available exclusively on return pages. It provides information about the return.
+
+![CustomerDetails container](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/order/customer-details.png)
+
+*CustomerDetails container*
+
+## Configurations
+
+The `CustomerDetails` container provides the following configuration options:
+
+```text
+[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['paymentIconsMap', 'Record', 'No', 'Configures the icon list by specifying key-value pairs to set custom icons where value can be either the name of SDK icon or custom SVG icon.'],
+        ['orderData', 'OrderDataModel', 'No', 'A structured object containing transformed order data. It can be used as an initial value if data is not fetched from the backend, serving as a fallback.'],
+        ['title', 'string', 'No', 'Enables setting a custom title to replace the default one during container interaction.'],
+        ['className', 'string', 'No', 'Allows custom CSS classes to be applied to the form.'],
+        ['slots.OrderReturnInformation', 'SlotProps', 'No', 'Allows adding or expanding the return information details section by including additional data or attributes.'],
+    ]
+```
+
+## Example
+
+The following example demonstrates how to integrate the `CustomerDetails` container:
+
+```javascript
+export default async function decorate(block) {
+  await orderRenderer.render(CustomerDetails, {})(block);
+}
+```
+
+---
+
+# Order Containers
+
+The **Order** drop-in provides pre-built container components for integrating into your storefront.
+
+<strong>Version: 3.2.0</strong>
+
+## What are Containers?
+
+Containers are pre-built UI components that combine functionality, state management, and presentation. They provide a complete solution for specific features and can be customized through props, slots, and CSS.
+
+## Available Containers
+
+| Container | Description |
+| --------- | ----------- |
+| [CreateReturn](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/containers/create-return/) | Learn about the `CreateReturn` container. |
+| [CustomerDetails](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/containers/customer-details/) | Learn about the `CustomerDetails` container. |
+| [OrderCancelForm](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/containers/order-cancel-form/) | Learn about the `OrderCancelForm` container. |
+| [OrderComments](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/containers/order-comments/) | Learn about the `OrderComments` container. |
+| [OrderCostSummary](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/containers/order-cost-summary/) | Learn about the `OrderCostSummary` container. |
+| [OrderHeader](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/containers/order-header/) | *Enrichment needed - add description to `_dropin-enrichments/order/containers.json`* |
+| [OrderProductList](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/containers/order-product-list/) | Learn about the `OrderProductList` container. |
+| [OrderReturns](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/containers/order-returns/) | Learn about the `OrderReturns` container. |
+| [OrderSearch](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/containers/order-search/) | Learn about the `OrderSearch` container. |
+| [OrderStatus](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/containers/order-status/) | *Enrichment needed - add description to `_dropin-enrichments/order/containers.json`* |
+| [ReturnsList](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/containers/returns-list/) | Learn about the `ReturnsList` container. |
+| [ShippingStatus](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/containers/shipping-status/) | Learn about the `ShippingStatus` container. |
+
+> Each container is designed to work independently but can be composed together to create comprehensive user experiences.
+
+---
+
+# OrderCancelForm container
+
+The `OrderCancelForm` container provides a cancellation form that allows users to select reasons for canceling an order and perform the cancellation operation.
+
+![OrderCancelForm container](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/order/order-cancel-form.png)
+
+* OrderCancelForm container*
+
+## Configurations
+
+The `OrderCancelForm container provides the following configuration options:
+
+```text
+[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['orderRef', 'string', 'Yes', 'ID of the order to be canceled.'],
+        ['pickerProps', 'PickerProps', 'No', 'Configuration for the picker used to display and select the reason for order cancellation.'],
+        ['submitButtonProps', 'ButtonProps', 'No', 'Configuration for the button used to submit the order cancellation.'],
+        ['cancelReasons', 'PickerOption[]', 'Yes', 'An array of reasons available for order cancellation.'],
+    ]
+```
+
+## Example
+
+The `OrderCancelForm` container is not directly integrated within the boilerplate, but it is delivered as part of the `OrderStatus` container. However, the `OrderCancelForm` container can also be used independently to create custom implementations.
+
+Here’s an integration example from the drop-in component development environment:
+
+```javascript
+provider.render(OrderCancelForm, {
+ orderRef: "",
+ pickerProps: {} <PickerProps>,
+ submitButtonProps: {} <ButtonProps>,
+ cancelReasons: [] <PickerOption[]>,
+})(containerWrapper);
+```
+
+---
+
+# OrderComments container
+
+The `OrderComments` container displays order-level comments on the Order Details page. It renders a read-only list of comments associated with the order, each showing a timestamp and message.
+
+- **Comment list**: Displays all comments from the `CustomerOrder.comments` GraphQL field in a chronological list, with each entry showing a formatted date and time alongside the comment message.
+- **Empty state**: When there are no comments for the order, the container displays an empty state message ("No order comments.").
+- **Loading state**: While order data is being fetched, the container displays a skeleton loader.
+
+The container listens to the `order/data` event to receive order data. When order data becomes available, it extracts the `comments` array and renders the comment list.
+
+## Configurations
+
+The `OrderComments` container provides the following configuration options:
+
+```text
+[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['orderData', 'OrderDataModel', 'No', 'A structured object containing transformed order data. It can be used as an initial value if data is not fetched from the backend, serving as a fallback.'],
+        ['className', 'string', 'No', 'Allows custom CSS classes to be applied to the container.'],
+    ]
+```
+
+## Example
+
+The following example demonstrates how to render the `OrderComments` container:
+
+```javascript
+
+export default async function decorate(block) {
+  await orderRenderer.render(OrderComments, {})(block);
+}
+```
+
+---
+
+# OrderCostSummary container
+
+The `OrderCostSummary` container displays detailed order costs on the Order Details and Return Details pages. It includes the following sections:
+
+- **Subtotal**: Displays the total cost of all items in the order before applying discounts, taxes, or additional charges.
+- **Shipping**: Displays the shipping cost, which depends on the shipping method, location, and weight of the order.
+- **Discount**: Displays any applicable discounts, such as promotional or volume-based offers, subtracted from the subtotal.
+- **Coupon**: Displays the value of any applied coupons and their impact on the final cost.
+- **Tax**: Displays the tax amount added to the order, calculated based on jurisdiction and item type.
+- **Total**: Displays the final payable amount, including all adjustments such as discounts, shipping, and taxes.
+
+If a value is not provided for any section (such as no discount or coupons are applied), the corresponding line is hidden. This ensures the container only displays relevant information.
+
+The settings for displaying tax amounts can be configured at **Stores** > Configuration > **Sales** > **Tax** > **Order, Invoices, Credit Memos Display Settings**.
+
+![OrderCostSummary container](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/order/order-cost-summary.png)
+
+*OrderCostSummary container*
+
+## Configurations
+
+The `OrderCostSummary` container provides the following configuration options:
+
+```text
+[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['withHeader', 'boolean', 'Yes', 'Enables showing or hiding the container header.'],
+        ['orderData', 'OrderDataModel', 'No', 'A structured object containing transformed order data. It can be used as an initial value if data is not fetched from the backend, serving as a fallback.'],
+        ['className', 'string', 'No', 'Allows custom CSS classes to be applied to the form.'],
+    ]
+```
+
+## Example
+
+The following example demonstrates how to render the `OrderCostSummary` container:
+
+```javascript
+export default async function decorate(block) {
+  await orderRenderer.render(OrderCostSummary, {})(block);
+}
+```
+
+---
+
+# OrderHeader Container
+
+<strong>Version: 3.2.0</strong>
+
+## Configuration
+
+The `OrderHeader` container provides the following configuration options:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `handleEmailAvailability` | `function` | No | Callback to check whether a given email is available (not yet registered). Used to conditionally offer sign-up during guest order lookup. |
+| `handleSignUpClick` | `function` | No | Callback invoked when the sign-up action is triggered from the order header. |
+| `orderData` | `OrderDataModel` | No | A structured object containing order data used to pre-populate the header. |
+
+## Slots
+
+This container does not expose any customizable slots.
+
+## Usage
+
+The following example demonstrates how to use the `OrderHeader` container:
+
+```js
+
+await provider.render(OrderHeader, {
+  handleEmailAvailability: handleEmailAvailability,
+  handleSignUpClick: handleSignUpClick,
+  orderData: orderData,
+})(block);
+```
+
+---
+
+# OrderProductList container
+
+The `OrderProductList` container displays a list of products associated with a specific order or return. Each item in the list is represented by a product card containing details such as the price, applied discounts, tax information, final amount, and product attributes.
+
+The settings for displaying tax amounts can be configured at **Stores** > Configuration > **Sales** > **Tax** > **Order, Invoices, Credit Memos Display Settings**.
+
+![OrderProductList container](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/order/order-product-list.png)
+
+*OrderProductList container*
+
+## Configurations
+
+The `OrderProductList` container provides the following configuration options:
+
+```text
+[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['className', 'string', 'No', 'Allows custom CSS classes to be applied to the form.'],
+        ['orderData', 'OrderDataModel', 'No', 'A structured object containing transformed order data. It can be passed as an initial value and used as a fallback if data is not received from the backend.'],
+        ['withHeader', 'boolean', 'No', 'Controls the visibility of the container header, allowing it to be shown or hidden.'],
+        ['showConfigurableOptions', 'function', 'No', 'Allows rendering additional product parameters during container integration by defining key-value pairs for further customization.'],
+        ['routeProductDetails', 'function', 'No', 'A function that returns the URL for the product details page. Receives the product data as an argument.'],
+    ]
+```
+
+## Example
+
+The following example demonstrates how to render the `OrderProductList` container:
+
+```javascript
+export default async function decorate(block) {
+  await orderRenderer.render(OrderProductList, {
+    routeProductDetails: (product) => `/products/${product.productUrlKey}/${product.product.sku}`,
+  })(block);
+}
+```
+
+---
+
+# OrderReturns container
+
+The `OrderReturns` container displays the list of returns associated with a specific order. Each return is presented with relevant details, such as return status and associated items. If no returns have been created for the order, the container is not rendered, ensuring that the interface remains clean and free of unnecessary placeholders.
+
+![OrderReturns container](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/order/order-returns.png)
+
+*OrderReturns container*
+
+## Configurations
+
+The `OrderReturns` container provides the following configuration options:
+
+```text
+[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['slot.ReturnItemsDetails', 'slot', 'No', 'Provides the ability to expand information for a specific card. Allows adding additional data or attributes to make the card more detailed and customizable, adapting it to specific product or interface requirements.'],
+        ['slot.DetailsActionParams', 'slot', 'No', 'Enables customization of actions by adding elements, buttons, or links to replace the default setup. This allows for tailored functionality to meet specific user tasks or requirements.'],
+        ['className', 'string', 'No', 'Allows custom CSS classes to be applied to the form for styling.'],
+        ['orderData', 'OrderDataModel', 'No', 'A structured object containing transformed order data. It can be passed as an initial value and used as a fallback if data is not received from the backend.'],
+        ['withHeader', 'boolean', 'No', 'Controls the visibility of the container header, allowing it to be shown or hidden.'],
+        ['withThumbnails', 'boolean', 'No', 'Enables or disables the display of product thumbnails on order cards.'],
+        ['routeReturnDetails', 'function', 'No', 'Specifies the URL where the return number link redirects the customer.'],
+        ['routeProductDetails', 'function', 'No', 'A function that returns the URL for the product details page.'],
+        ['routeTracking', 'function', 'No', 'Specifies the URL where the tracking number link redirects the customer.'],
+    ]
+```
+
+## Example
+
+The following example demonstrates how to render the `OrderReturns` container:
+
+```javascript
+export default async function decorate(block) {
+  const isAuthenticated = checkIsAuthenticated();
+  const returnDetailsPath = isAuthenticated
+    ? CUSTOMER_RETURN_DETAILS_PATH
+    : RETURN_DETAILS_PATH;
+
+  await orderRenderer.render(OrderReturns, {
+    routeTracking: ({ carrier, number }) => {
+      if (carrier?.toLowerCase() === 'ups') {
+        return `${UPS_TRACKING_URL}?tracknum=${number}`;
+      }
+      return '';
+    },
+    routeReturnDetails: ({ orderNumber, returnNumber, token }) => {
+      const { searchParams } = new URL(window.location.href);
+      const orderRefFromUrl = searchParams.get('orderRef');
+      const newOrderRef = isAuthenticated ? orderNumber : token;
+
+      const encodedOrderRef = encodeURIComponent(orderRefFromUrl || newOrderRef);
+
+      return `${returnDetailsPath}?orderRef=${encodedOrderRef}&returnRef=${returnNumber}`;
+    },
+    routeProductDetails: (productData) => (productData ? `/products/${productData.product.urlKey}/${productData.product.sku}` : '#'),
+  })(block);
+}
+```
+
+---
+
+# OrderSearch container
+
+The `OrderSearch` container enables order searches using email, last name, and order number. It is available to both guest and registered users for quick access to order details.
+
+![OrderSearch container](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/order/order-search.png)
+
+*OrderSearch container*
+
+## Configurations
+
+The `OrderSearch` container provides the following configuration options:
+
+```text
+[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['className', 'string', 'No', 'Allows custom CSS classes to be applied to the form for styling.'],
+        ['isAuth', 'boolean', 'No', 'Indicates whether the user is authenticated.'],
+        ['renderSignIn', 'function', 'No', 'A function responsible for rendering the sign-in form for the user.'],
+        ['routeGuestOrder', 'function', 'No', 'A function that returns the URL for the guest (unauthenticated user) order route.'],
+        ['routeCustomerOrder', 'function', 'No', 'A function that returns the URL for an authenticated customer order details page.'],
+        ['onError', 'function', 'No', 'A function executed when an error occurs. It receives an errorInformation object containing details about the error.'],
+    ]
+```
+
+## Example
+
+The following example demonstrates how to render the `OrderSearch` container:
+
+```javascript
+const renderSignIn = async (element, email, orderNumber) => authRenderer.render(SignIn, {
+  initialEmailValue: email,
+  renderSignUpLink: false,
+  labels: {
+    formTitleText: email
+      ? 'Enter your password to view order details'
+      : 'Sign in to view order details',
+    primaryButtonText: 'View order',
+  },
+  routeForgotPassword: () => 'reset-password.html',
+  routeRedirectOnSignIn: () => `${CUSTOMER_ORDER_DETAILS_PATH}?orderRef=${orderNumber}`,
+})(element);
+
+export default async function decorate(block) {
+  block.innerHTML = '';
+
+  events.on('order/data', async (order) => {
+    if (!order) return;
+
+    block.innerHTML = '';
+
+    await orderRenderer.render(OrderSearch, {
+      isAuth: checkIsAuthenticated(),
+      renderSignIn: async ({ render, formValues }) => {
+        if (render) {
+          renderSignIn(
+            block,
+            formValues?.email ?? '',
+            formValues?.number ?? '',
+          );
+
+          return false;
+        }
+        return true;
+      },
+      routeCustomerOrder: () => CUSTOMER_ORDER_DETAILS_PATH,
+      routeGuestOrder: () => ORDER_DETAILS_PATH,
+      onError: async (errorInformation) => {
+        console.info('errorInformation', errorInformation);
+      },
+    })(block);
+  });
+
+  await orderRenderer.render(OrderSearch, {
+    isAuth: checkIsAuthenticated(),
+    renderSignIn: async ({ render, formValues }) => {
+      if (render) {
+        renderSignIn(block, formValues?.email ?? '', formValues?.number ?? '');
+
+        return false;
+      }
+
+      return true;
+    },
+    routeCustomerOrder: () => CUSTOMER_ORDER_DETAILS_PATH,
+    routeGuestOrder: () => ORDER_DETAILS_PATH,
+    onError: async (errorInformation) => {
+      console.info('errorInformation', errorInformation);
+    },
+  })(block);
+}
+```
+
+---
+
+# OrderStatus Container
+
+<strong>Version: 3.2.0</strong>
+
+## Configuration
+
+The `OrderStatus` container provides the following configuration options:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `className` | `string` | No | Additional CSS classes to apply to the container |
+| `orderData` | `OrderDataModel` | No | A structured object containing order data. Used as an initial value or fallback if data is not fetched from the backend. |
+| `statusTitle` | `string` | No | Custom title text to display above the order status indicator. |
+| `status` | `StatusEnumProps` | No | The current order status value used to display the status indicator. |
+| `routeCreateReturn` | `function` | No | Function that returns the URL for the create return page. |
+| `routeOnSuccess` | `function` | No | Function that returns the URL to redirect to after a successful action. |
+| `onError` | `function` | No | Callback function triggered when error |
+
+## Slots
+
+This container exposes the following slots for customization:
+
+| Slot | Type | Required | Description |
+|------|------|----------|-------------|
+| `OrderActions` | `SlotProps` | Yes |  |
+
+## Usage
+
+The following example demonstrates how to use the `OrderStatus` container:
+
+```js
+
+await provider.render(OrderStatus, {
+  className: "Example Name",
+  orderData: orderData,
+  statusTitle: "Example Title",
+  slots: {
+    // Add custom slot implementations here
+  }
+})(block);
+```
+
+## Administrator-assisted orders
+
+When the seller-assisted buying feature is in use, the `OrderStatus` container shows an "Order placed by an administrator" label when `adminAssistedOrder` is set on the order. The label renders with the CSS class `.order-order-status-content__admin-assisted` and appears automatically. No configuration is required.
+
+![Order status page showing the administrator label](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/SAB-OrderStatus.png)
+
+*Order status page showing the administrator label*
+
+To customize the label text, override the `Order.OrderStatusContent.adminAssistedLabel` dictionary key in the order initializer. See the [Order dictionary](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/dictionary/) for the key and [Seller-assisted buying](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/user-account/containers/seller-assisted-buying/) for the end-to-end flow.
+
+{/* Verified against adobe-commerce/storefront-order src/components/OrderStatusContent/OrderStatusContent.tsx: adminAssistedOrder (boolean), label key Order.OrderStatusContent.adminAssistedLabel, CSS class .order-order-status-content__admin-assisted; src/i18n/en_US.json (Order.OrderStatusContent.adminAssistedLabel = "Order placed by an administrator"). */}
+
+---
+
+# ReturnsList container
+
+The `ReturnsList` container displays a complete list of all created returns available to the user. Each return card follows the same structure as the `OrderReturns` container, allowing consistent presentation of return details. It provides an overview of all return requests, enabling users to manage and track their status in one place.
+
+![ReturnsList container](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/order/returns-list.png)
+
+*ReturnsList container*
+
+## Configurations
+
+The `ReturnsList` container provides the following configuration options:
+
+```text
+[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['slot.ReturnItemsDetails', 'slot', 'No', 'Provides the ability to expand information for a specific return card. Allows adding additional data or attributes to make the card more detailed and customizableto specific requirements.'],
+        ['slot.DetailsActionParams', 'slot', 'No', 'Enables customization of actions by adding elements, buttons, or links to replace the default setup. This allows for tailored functionality to meet specific user tasks or requirements.'],
+        ['withReturnsListButton', 'boolean', 'No', 'Determines whether the button at the bottom of the container is visible (applies only in minified view).'],
+        ['className', 'string', 'No', 'Allows custom CSS classes to be applied to the form for styling.'],
+        ['minifiedView', 'boolean', 'No', 'Enables or disables the minified view of the container.'],
+        ['withHeader', 'boolean', 'No', 'Controls the visibility of the container header.'],
+        ['withThumbnails', 'boolean', 'No', 'Enables or disables the display of product thumbnails on order cards.'],
+        ['returnPageSize', 'number', 'No', 'Specifies the number of items displayed on a single page of the returns list.'],
+        ['returnsInMinifiedView', 'number', 'No', 'Defines the number of returns visible in the minified view (default is 1).'],
+        ['routeReturnDetails', 'function', 'No', 'Specifies the URL where the return number link redirects the customer.'],
+        ['routeOrderDetails', 'function', 'No', 'Specifies the URL where the customer should be redirected when clicking the order number link (number and token).'],
+        ['routeTracking', 'function', 'No', 'Specifies the URL where the tracking number link redirects the customer.'],
+        ['routeReturnsList', 'function', 'No', 'Defines the URL for the button click at the bottom of the container.'],
+        ['routeProductDetails', 'function', 'No', 'A function that returns the URL for the product details page.'],
+    ]
+```
+
+## Example
+
+The following example demonstrates how to render the `ReturnsList` container:
+
+```javascript
+export default async function decorate(block) {
+  const {
+    'minified-view': minifiedViewConfig = 'false',
+  } = readBlockConfig(block);
+
+  if (!checkIsAuthenticated()) {
+    window.location.href = CUSTOMER_LOGIN_PATH;
+  } else {
+    await orderRenderer.render(ReturnsList, {
+      minifiedView: minifiedViewConfig === 'true',
+      routeTracking: ({ carrier, number }) => {
+        if (carrier?.toLowerCase() === 'ups') {
+          return `${UPS_TRACKING_URL}?tracknum=${number}`;
+        }
+        return '';
+      },
+      routeReturnDetails: ({ orderNumber, returnNumber }) => `${CUSTOMER_RETURN_DETAILS_PATH}?orderRef=${orderNumber}&returnRef=${returnNumber}`,
+      routeOrderDetails: ({ orderNumber }) => `${CUSTOMER_ORDER_DETAILS_PATH}?orderRef=${orderNumber}`,
+      routeReturnsList: () => CUSTOMER_RETURNS_PATH,
+      routeProductDetails: (productData) => (productData ? `/products/${productData.product.urlKey}/${productData.product.sku}` : '#'),
+    })(block);
+  }
+}
+```
+
+---
+
+# ShippingStatus container
+
+The `ShippingStatus` container displays information about shipments, including product images, the delivery service used, and tracking numbers. A separate block is rendered for each shipment created for the order. It also lists products that have not yet been shipped, providing a clear overview of the shipping status for all items.
+
+![ShippingStatus container](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/order/shipping-status.png)
+
+*ShippingStatus container*
+
+## Configurations
+
+The `ShippingStatus` container provides the following configuration options:
+
+```text
+[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['slots.DeliveryTimeLine', 'slot', 'No', 'Allows integration of the delivery process in a timeline format. Displays key events from dispatch to arrival, making it easier to track delivery progress and view the current stage in real-time.'],
+        ['slots.DeliveryTrackActions', 'slot', 'No', 'Enables integration of custom actions related to order and delivery tracking. Allows customization with parameters such as delivery type, status updates, and timestamps, providing flexibility and control over user interactions and tracking.'],
+        ['slots.ReturnItemsDetails', 'slot', 'No', 'Supports adding or customizing additional data for return items, enabling tailored content to meet specific requirements.'],
+        ['className', 'string', 'No', 'CSS class for additional styling customization of the container.'],
+        ['collapseThreshold', 'number', 'No', 'Sets the minimum number of elements required for images to be displayed in an accordion view.'],
+        ['orderData', 'OrderDataModel', 'No', 'Contains order data, including the order ID and a list of items.'],
+        ['routeOrderDetails', 'function', 'No', 'A function that returns the URL for the product details route.'],
+        ['routeTracking', 'function', 'No', 'Specifies the URL where the customer should be redirected when clicking the tracking number link.'],
+        ['routeProductDetails', 'function', 'No', 'A function that returns the URL for the product details page.'],
+    ]
+```
+
+## Example
+
+The following example demonstrates how to render the `ShippingStatus` container:
+
+```javascript
+export default async function decorate(block) {
+  await orderRenderer.render(ShippingStatus, {
+    routeTracking: ({ carrier, number }) => {
+      if (carrier?.toLowerCase() === 'ups') {
+        return `${UPS_TRACKING_URL}?tracknum=${number}`;
+      }
+      return '';
+    },
+    routeProductDetails: (data) => {
+      if (data?.orderItem) {
+        return `/products/${data?.orderItem?.productUrlKey}/${data?.orderItem?.product?.sku}`;
+      }
+      if (data?.product) {
+        return `/products/${data?.product?.urlKey}/${data?.product?.sku}`;
+      }
+      return '#';
+    },
+  })(block);
+}
+```
+
+---
+
+# Order Dictionary
+
+The **Order dictionary** contains all user-facing text, labels, and messages displayed by this drop-in. Customize the dictionary to:
+
+- **Localize** the drop-in for different languages and regions
+- **Customize** labels and messages to match your brand voice
+- **Override** default text without modifying source code for the drop-in
+
+Dictionaries use the **i18n (internationalization)** pattern, where each text string is identified by a unique key path.
+
+<strong>Version: 3.2.0</strong>
+
+## How to customize
+
+Override dictionary values during drop-in initialization. The drop-in deep-merges your custom values with the defaults.
+
+```javascript
+
+await initialize({
+  langDefinitions: {
+    en_US: {
+      "Order": {
+        "CreateReturn": {
+          "headerText": "Your custom message here",
+          "downloadableCount": "Custom value"
+        }
+      }
+    }
+  }
+});
+```
+
+You only need to include the keys you want to change. For multi-language support and advanced patterns, see the [Dictionary customization guide](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/dictionaries/).
+
+## Default keys and values
+
+Below are the default English (`en_US`) strings provided by the **Order** drop-in:
+
+```json title="en_US.json"
+{
+  "Order": {
+    "CreateReturn": {
+      "headerText": "Return items",
+      "downloadableCount": "Files",
+      "returnedItems": "Returned items:",
+      "configurationsList": {
+        "quantity": "Quantity"
+      },
+      "stockStatus": {
+        "inStock": "In stock",
+        "outOfStock": "Out of stock"
+      },
+      "giftCard": {
+        "sender": "Sender",
+        "recipient": "Recipient",
+        "message": "Note"
+      },
+      "success": {
+        "title": "Return submitted",
+        "message": "Your return request has been successfully submitted."
+      },
+      "buttons": {
+        "nextStep": "Continue",
+        "backStep": "Back",
+        "submit": "Submit return",
+        "backStore": "Back to order"
+      }
+    },
+    "OrderComments": {
+      "emptyState": "No order comments.",
+      "title": "Order comments"
+    },
+    "OrderCostSummary": {
+      "headerText": "Order summary",
+      "headerReturnText": "Return summary",
+      "totalFree": "Free",
+      "subtotal": {
+        "title": "Subtotal"
+      },
+      "shipping": {
+        "title": "Shipping",
+        "freeShipping": "Free shipping"
+      },
+      "appliedGiftCards": {
+        "label": {
+          "singular": "Gift card",
+          "plural": "Gift cards"
+        }
+      },
+      "giftOptionsTax": {
+        "printedCard": {
+          "title": "Printer card",
+          "inclTax": "Including taxes",
+          "exclTax": "Excluding taxes"
+        },
+        "itemGiftWrapping": {
+          "title": "Item gift wrapping",
+          "inclTax": "Including taxes",
+          "exclTax": "Excluding taxes"
+        },
+        "orderGiftWrapping": {
+          "title": "Order gift wrapping",
+          "inclTax": "Including taxes",
+          "exclTax": "Excluding taxes"
+        }
+      },
+      "tax": {
+        "accordionTitle": "Taxes",
+        "accordionTotalTax": "Tax Total",
+        "totalExcludingTaxes": "Total excluding taxes",
+        "title": "Tax",
+        "incl": "Including taxes",
+        "excl": "Excluding taxes"
+      },
+      "discount": {
+        "title": "Discount",
+        "subtitle": "discounted"
+      },
+      "total": {
+        "title": "Total"
+      }
+    },
+    "Returns": {
+      "minifiedView": {
+        "returnsList": {
+          "viewAllOrdersButton": "View all returns",
+          "ariaLabelLink": "Redirect to full order information",
+          "emptyOrdersListMessage": "No returns",
+          "minifiedViewTitle": "Recent returns",
+          "orderNumber": "Order number:",
+          "returnNumber": "Return number:",
+          "carrier": "Carrier:",
+          "itemText": {
+            "none": "",
+            "one": "item",
+            "many": "items"
+          },
+          "returnStatus": {
+            "pending": "Pending",
+            "authorized": "Authorized",
+            "partiallyAuthorized": "Partially authorized",
+            "received": "Received",
+            "partiallyReceived": "Partially received",
+            "approved": "Approved",
+            "partiallyApproved": "Partially approved",
+            "rejected": "Rejected",
+            "partiallyRejected": "Partially rejected",
+            "denied": "Denied",
+            "processedAndClosed": "Processed and closed",
+            "closed": "Closed"
+          }
+        }
+      },
+      "fullSizeView": {
+        "returnsList": {
+          "viewAllOrdersButton": "View all orders",
+          "ariaLabelLink": "Redirect to full order information",
+          "emptyOrdersListMessage": "No returns",
+          "minifiedViewTitle": "Returns",
+          "orderNumber": "Order number:",
+          "returnNumber": "Return number:",
+          "carrier": "Carrier:",
+          "itemText": {
+            "none": "",
+            "one": "item",
+            "many": "items"
+          },
+          "returnStatus": {
+            "pending": "Pending",
+            "authorized": "Authorized",
+            "partiallyAuthorized": "Partially authorized",
+            "received": "Received",
+            "partiallyReceived": "Partially received",
+            "approved": "Approved",
+            "partiallyApproved": "Partially approved",
+            "rejected": "Rejected",
+            "partiallyRejected": "Partially rejected",
+            "denied": "Denied",
+            "processedAndClosed": "Processed and closed",
+            "closed": "Closed"
+          }
+        }
+      }
+    },
+    "OrderProductListContent": {
+      "cancelledTitle": "Cancelled",
+      "allOrdersTitle": "Your order",
+      "returnedTitle": "Returned",
+      "refundedTitle": "Your refunded",
+      "downloadableCount": "Files",
+      "stockStatus": {
+        "inStock": "In stock",
+        "outOfStock": "Out of stock"
+      },
+      "GiftCard": {
+        "sender": "Sender",
+        "recipient": "Recipient",
+        "message": "Note"
+      }
+    },
+    "OrderSearchForm": {
+      "title": "Enter your information to view order details",
+      "description": "You can find your order number in the receipt you received via email.",
+      "button": "View Order",
+      "email": "Email",
+      "lastname": "Last Name",
+      "orderNumber": "Order Number"
+    },
+    "Form": {
+      "notifications": {
+        "requiredFieldError": "This is a required field."
+      }
+    },
+    "ShippingStatusCard": {
+      "orderNumber": "Order number:",
+      "returnNumber": "Return number:",
+      "itemText": {
+        "none": "",
+        "one": "Package contents ({{count}} item)",
+        "many": "Package contents ({{count}} items)"
+      },
+      "trackButton": "Track package",
+      "carrier": "Carrier:",
+      "prepositionOf": "of",
+      "returnOrderCardTitle": "Package details",
+      "shippingCardTitle": "Package details",
+      "shippingInfoTitle": "Shipping information",
+      "notYetShippedTitle": "Not yet shipped",
+      "notYetShippedImagesTitle": {
+        "singular": "Package contents ({{count}} item)",
+        "plural": "Package contents ({{count}} items)"
+      }
+    },
+    "OrderStatusContent": {
+      "noInfoTitle": "Check back later for more details.",
+      "adminAssistedLabel": "Order placed by an administrator",
+      "returnMessage": "The order was placed on {ORDER_CREATE_DATE} and your return process started on {RETURN_CREATE_DATE}",
+      "returnStatus": {
+        "pending": "Pending",
+        "authorized": "Authorized",
+        "partiallyAuthorized": "Partially authorized",
+        "received": "Received",
+        "partiallyReceived": "Partially received",
+        "approved": "Approved",
+        "partiallyApproved": "Partially approved",
+        "rejected": "Rejected",
+        "partiallyRejected": "Partially rejected",
+        "denied": "Denied",
+        "processedAndClosed": "Processed and closed",
+        "closed": "Closed"
+      },
+      "actions": {
+        "cancel": "Cancel order",
+        "confirmGuestReturn": "Return request confirmed",
+        "confirmGuestReturnMessage": "Your return request has been successfully confirmed.",
+        "createReturn": "Return or replace",
+        "createAnotherReturn": "Start another return",
+        "reorder": "Reorder"
+      },
+      "orderPlaceholder": {
+        "title": "",
+        "message": "Your order has been in its current status since {DATE}.",
+        "messageWithoutDate": "Your order has been in its current status for some time."
+      },
+      "orderPending": {
+        "title": "Pending",
+        "message": "The order was successfully placed on {DATE} and your order is processing. Check back for more details when your order ships.",
+        "messageWithoutDate": "Your order is processing. Check back for more details when your order ships."
+      },
+      "orderProcessing": {
+        "title": "Processing",
+        "message": "The order was successfully placed on {DATE} and your order is processing. Check back for more details when your order ships.",
+        "messageWithoutDate": "Your order is processing. Check back for more details when your order ships."
+      },
+      "orderOnHold": {
+        "title": "On hold",
+        "message": "We’ve run into an issue while processing your order on {DATE}. Please check back later or contact us at support@adobe.com for more information.",
+        "messageWithoutDate": "We’ve run into an issue while processing your order. Please check back later or contact us at support@adobe.com for more information."
+      },
+      "orderReceived": {
+        "title": "Order received",
+        "message": "The order was successfully placed on {DATE} and your order is processing. Check back for more details when your order ships.",
+        "messageWithoutDate": "Your order is processing. Check back for more details when your order ships."
+      },
+      "orderComplete": {
+        "title": "Complete",
+        "message": "Your order is complete. Need help with your order? Contact us at support@adobe.com"
+      },
+      "orderCanceled": {
+        "title": "Canceled",
+        "message": "This order was cancelled by you. You should see a refund to your original payment method with 5-7 business days.",
+        "messageWithoutDate": "This order was cancelled by you. You should see a refund to your original payment method with 5-7 business days."
+      },
+      "orderSuspectedFraud": {
+        "title": "Suspected fraud",
+        "message": "We’ve run into an issue while processing your order on {DATE}. Please check back later or contact us at support@adobe.com for more information.",
+        "messageWithoutDate": "We’ve run into an issue while processing your order. Please check back later or contact us at support@adobe.com for more information."
+      },
+      "orderPaymentReview": {
+        "title": "Payment Review",
+        "message": "The order was successfully placed on {DATE} and your order is processing. Check back for more details when your order ships.",
+        "messageWithoutDate": "Your order is processing. Check back for more details when your order ships."
+      },
+      "guestOrderCancellationRequested": {
+        "title": "Cancellation requested",
+        "message": "The cancellation has been requested on {DATE}. Check your email for further instructions.",
+        "messageWithoutDate": "The cancellation has been requested. Check your email for further instructions."
+      },
+      "orderPendingPayment": {
+        "title": "Pending Payment",
+        "message": "The order was successfully placed on {DATE}, but it is awaiting payment. Please complete the payment so we can start processing your order.",
+        "messageWithoutDate": "Your order is awaiting payment. Please complete the payment so we can start processing your order."
+      },
+      "orderRejected": {
+        "title": "Rejected",
+        "message": "Your order was rejected on {DATE}. Please contact us for more information.",
+        "messageWithoutDate": "Your order was rejected. Please contact us for more information."
+      },
+      "orderAuthorized": {
+        "title": "Authorized",
+        "message": "Your order was successfully authorized on {DATE}. We will begin processing your order shortly.",
+        "messageWithoutDate": "Your order was successfully authorized. We will begin processing your order shortly."
+      },
+      "orderPaypalCanceledReversal": {
+        "title": "PayPal Canceled Reversal",
+        "message": "The PayPal transaction reversal was canceled on {DATE}. Please check your order details for more information.",
+        "messageWithoutDate": "The PayPal transaction reversal was canceled. Please check your order details for more information."
+      },
+      "orderPendingPaypal": {
+        "title": "Pending PayPal",
+        "message": "Your order is awaiting PayPal payment confirmation since {DATE}. Please check your PayPal account for the payment status.",
+        "messageWithoutDate": "Your order is awaiting PayPal payment confirmation. Please check your PayPal account for the payment status."
+      },
+      "orderPaypalReversed": {
+        "title": "PayPal Reversed",
+        "message": "The PayPal payment was reversed on {DATE}. Please contact us for further details.",
+        "messageWithoutDate": "The PayPal payment was reversed. Please contact us for further details."
+      },
+      "orderClosed": {
+        "title": "Closed",
+        "message": "The order placed on {DATE} has been closed. For any further assistance, please contact support.",
+        "messageWithoutDate": "Your order has been closed. For any further assistance, please contact support."
+      }
+    },
+    "CustomerDetails": {
+      "headerText": "Customer information",
+      "freeShipping": "Free shipping",
+      "orderReturnLabels": {
+        "createdReturnAt": "Return requested on: ",
+        "returnStatusLabel": "Return status: ",
+        "orderNumberLabel": "Order number: "
+      },
+      "returnStatus": {
+        "pending": "Pending",
+        "authorized": "Authorized",
+        "partiallyAuthorized": "Partially authorized",
+        "received": "Received",
+        "partiallyReceived": "Partially received",
+        "approved": "Approved",
+        "partiallyApproved": "Partially approved",
+        "rejected": "Rejected",
+        "partiallyRejected": "Partially rejected",
+        "denied": "Denied",
+        "processedAndClosed": "Processed and closed",
+        "closed": "Closed"
+      },
+      "email": {
+        "title": "Contact details"
+      },
+      "shippingAddress": {
+        "title": "Shipping address"
+      },
+      "shippingMethods": {
+        "title": "Shipping method"
+      },
+      "billingAddress": {
+        "title": "Billing address"
+      },
+      "paymentMethods": {
+        "title": "Payment method"
+      },
+      "returnInformation": {
+        "title": "Return details"
+      }
+    },
+    "Errors": {
+      "invalidOrder": "Invalid order. Please try again.",
+      "invalidSearch": "No order found with these order details."
+    },
+    "OrderCancel": {
+      "buttonText": "Cancel Order"
+    },
+    "OrderCancelForm": {
+      "title": "Cancel order",
+      "description": "Select a reason for canceling the order",
+      "label": "Reason for cancel",
+      "button": "Submit Cancellation",
+      "errorHeading": "Error",
+      "errorDescription": "There was an error processing your order cancellation."
+    },
+    "OrderHeader": {
+      "title": "{{name}}, thank you for your order!",
+      "defaultTitle": "Thank you for your order!",
+      "order": "ORDER #{{order}}",
+      "CreateAccount": {
+        "message": "Save your information for faster checkout next time.",
+        "button": "Create an account"
+      }
+    }
+  }
+}
+```
+
+---
+
+# Order Data & Events
+
+The **Order** drop-in uses the [event bus](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/events/) to emit and listen to events for communication between drop-ins and external integrations.
+
+<strong>Version: 3.2.0</strong>
+
+## Events reference
+
+{/* EVENTS_TABLE_START */}
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [cart/reset](#cartreset-emits) | Emits | Emitted when the component state is reset. |
+| [order/placed](#orderplaced-emits) | Emits | Emitted when an order is placed. |
+| [companyContext/changed](#companycontextchanged-listens) | Listens | Fired by Company Context (`companyContext`) when a change occurs. |
+| [order/data](#orderdata-emits-and-listens) | Emits and listens | Triggered when data is available or changes. |
+| [order/error](#ordererror-emits-and-listens) | Emits and listens | Triggered when an error occurs. |
+
+{/* EVENTS_TABLE_END */}
+
+## Event details
+
+The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
+
+### `cart/reset` (emits)
+
+Emitted when the component state is reset.
+
+#### Event payload
+
+#### Example
+
+```js
+
+events.on('cart/reset', (payload) => {
+  console.log('cart/reset event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `companyContext/changed` (listens)
+
+Fired by Company Context (`companyContext`) when a change occurs.
+
+#### Event payload
+
+```typescript
+string | null | undefined
+```
+
+#### Example
+
+```js
+
+events.on('companyContext/changed', (payload) => {
+  console.log('companyContext/changed event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `order/data` (emits and listens)
+
+Emitted when order data is loaded or updated. This includes order details, items, shipping information, and payment status.
+
+#### Event payload
+
+```typescript
+OrderDataModel
+```
+
+See [`OrderDataModel`](#orderdatamodel) for full type definition.
+
+#### Example
+
+```js
+
+events.on('order/data', (payload) => {
+  console.log('order/data event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `order/error` (emits and listens)
+
+Emitted when an error occurs during order operations such as fetching order details, reordering items, or processing returns.
+
+#### Event payload
+
+```typescript
+{ source: string; type: string; error: Error | string }
+```
+
+#### Example
+
+```js
+
+events.on('order/error', (payload) => {
+  console.log('order/error event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `order/placed` (emits)
+
+Emitted when an order is placed.
+
+#### Event payload
+
+```typescript
+OrderDataModel
+```
+
+See [`OrderDataModel`](#orderdatamodel) for full type definition.
+
+#### Example
+
+```js
+
+events.on('order/placed', (payload) => {
+  console.log('order/placed event received:', payload);
+  // Add your custom logic here
+});
+```
+
+## Data Models
+
+The following data models are used in event payloads for this drop-in.
+
+### OrderDataModel
+
+Used in: [`order/data`](#orderdata-emits-and-listens), [`order/placed`](#orderplaced-emits).
+
+```ts
+type OrderDataModel = {
+  giftReceiptIncluded: boolean;
+  printedCardIncluded: boolean;
+  giftWrappingOrder: {
+    price: MoneyProps;
+    uid: string;
+  };
+  placeholderImage?: string;
+  returnNumber?: string;
+  id: string;
+  orderStatusChangeDate?: string;
+  number: string;
+  email: string;
+  token?: string;
+  status: string;
+  isVirtual: boolean;
+  totalQuantity: number;
+  shippingMethod?: string;
+  carrier?: string;
+  orderDate: string;
+  returns: OrdersReturnPropsModel[];
+  discounts: { amount: MoneyProps; label: string }[];
+  coupons: {
+    code: string;
+  }[];
+  payments: {
+    code: string;
+    name: string;
+  }[];
+  shipping?: { code: string; amount: number; currency: string };
+  shipments: ShipmentsModel[];
+  items: OrderItemModel[];
+  totalGiftCard: MoneyProps;
+  grandTotal: MoneyProps;
+  grandTotalExclTax: MoneyProps;
+  totalShipping?: MoneyProps;
+  subtotalExclTax: MoneyProps;
+  subtotalInclTax: MoneyProps;
+  totalTax: MoneyProps;
+  shippingAddress: OrderAddressModel;
+  totalGiftOptions: {
+    giftWrappingForItems: MoneyProps;
+    giftWrappingForItemsInclTax: MoneyProps;
+    giftWrappingForOrder: MoneyProps;
+    giftWrappingForOrderInclTax: MoneyProps;
+    printedCard: MoneyProps;
+    printedCardInclTax: MoneyProps;
+  };
+  billingAddress: OrderAddressModel;
+  availableActions: AvailableActionsProps[];
+  taxes: { amount: MoneyProps; rate: number; title: string }[];
+  appliedGiftCards: {
+    code: string;
+    appliedBalance: MoneyProps;
+  }[];
+};
+```
+
+### OrderItemProductModel
+
+```ts
+type OrderItemProductModel = {
+  onlyXLeftInStock?: number;
+  priceRange?: {
+    maximumPrice?: {
+      regularPrice?: MoneyProps;
+    };
+  };
+  uid: string;
+  __typename: string;
+  stockStatus?: string;
+  canonicalUrl?: string;
+  urlKey?: string;
+  id: string;
+  image?: string;
+  imageAlt?: string;
+  name: string;
+  productType: string;
+  sku: string;
+  thumbnail: {
+    url: string;
+    label: string;
+  };
+  giftWrappingAvailable?: boolean;
+};
+```
+
+### OrderItemModel
+
+```ts
+type OrderItemModel = {
+  giftMessage: {
+    senderName: string;
+    recipientName: string;
+    message: string;
+  };
+  giftWrappingPrice: MoneyProps;
+  productGiftWrapping: {
+    uid: string;
+    design: string;
+    selected: boolean;
+    image: {
+      url: string;
+      label: string;
+    };
+    price: MoneyProps;
+  }[];
+  taxCalculations: {
+    includeAndExcludeTax: {
+      originalPrice: MoneyProps;
+      baseOriginalPrice: MoneyProps;
+      baseDiscountedPrice: MoneyProps;
+      baseExcludingTax: MoneyProps;
+    };
+    excludeTax: {
+      originalPrice: MoneyProps;
+      baseOriginalPrice: MoneyProps;
+      baseDiscountedPrice: MoneyProps;
+      baseExcludingTax: MoneyProps;
+    };
+    includeTax: {
+      singleItemPrice: MoneyProps;
+      baseOriginalPrice: MoneyProps;
+      baseDiscountedPrice: MoneyProps;
+    };
+  };
+  productSalePrice: MoneyProps;
+  status?: string;
+  currentReturnOrderQuantity?: number;
+  eligibleForReturn: boolean;
+  productSku?: string;
+  type?: string;
+  discounted?: boolean;
+  id: string;
+  productName?: string;
+  productUrlKey?: string;
+  regularPrice?: MoneyProps;
+  price: MoneyProps;
+  product?: OrderItemProductModel;
+  selectedOptions?: Array<{
+    label: string;
+    value: any;
+  }>;
+  thumbnail?: {
+    label: string;
+    url: string;
+  };
+  downloadableLinks: {
+    count: number;
+    result: string;
+  } | null;
+  prices: {
+    priceIncludingTax: MoneyProps;
+    originalPrice: MoneyProps;
+    originalPriceIncludingTax: MoneyProps;
+    price: MoneyProps;
+    discounts: {
+      label: string;
+      amount: { value: number };
+    }[];
+  };
+  itemPrices: {
+    priceIncludingTax: MoneyProps;
+    originalPrice: MoneyProps;
+    originalPriceIncludingTax: MoneyProps;
+    price: MoneyProps;
+    discounts: {
+      label: string;
+      amount: { value: number };
+    }[];
+  };
+  bundleOptions: Record<string, string> | null;
+  totalInclTax: MoneyProps;
+  priceInclTax: MoneyProps;
+  total: MoneyProps;
+  configurableOptions: Record<string, string | number | boolean> | undefined;
+  giftCard?: {
+    senderName: string;
+    senderEmail: string;
+    recipientEmail: string;
+    recipientName: string;
+    message: string;
+  };
+  quantityCanceled: number;
+  quantityInvoiced: number;
+  quantityOrdered: number;
+  quantityRefunded: number;
+  quantityReturned: number;
+  quantityShipped: number;
+  requestQuantity?: number;
+  totalQuantity: number;
+  returnableQuantity?: number;
+  quantityReturnRequested: number;
+};
+```
+
+---
+
+# Order Functions
+
+The Order drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
+
+<strong>Version: 3.2.0</strong>
+
+| Function | Description |
+| --- | --- |
+| [`cancelOrder`](#cancelorder) | Calls the `cancelOrder` mutation. |
+| [`confirmCancelOrder`](#confirmcancelorder) | Confirms the cancellation of an order using the provided order ID and confirmation key. |
+| [`confirmGuestReturn`](#confirmguestreturn) | Confirms a return request for a guest order using an order ID and confirmation key. |
+| [`getAttributesForm`](#getattributesform) | Calls the `attributesForm` query. |
+| [`getAttributesList`](#getattributeslist) | Is a wrapper for the `attributesList` query. |
+| [`getCustomer`](#getcustomer) | Is a wrapper for the customer query. |
+| [`getCustomerOrdersReturn`](#getcustomerordersreturn) | Returns details about the returns a customer has requested. |
+| [`getGuestOrder`](#getguestorder) | Is a wrapper for the `guestOrder` query. |
+| [`getOrderDetailsById`](#getorderdetailsbyid) | Fetches detailed order data by order ID from the Commerce backend. |
+| [`getStoreConfig`](#getstoreconfig) | Returns information about the storefront configuration. |
+| [`guestOrderByToken`](#guestorderbytoken) | Retrieves a guest order using a token generated by Adobe Commerce. |
+| [`placeNegotiableQuoteOrder`](#placenegotiablequoteorder) | Places an order for a negotiable quote. |
+| [`placeOrder`](#placeorder) | API function for the drop-in. |
+| [`reorderItems`](#reorderitems) | Allows a logged-in customer to add all the products from a previous order into their cart. |
+| [`requestGuestOrderCancel`](#requestguestordercancel) | Is similar to the `cancelOrder` function, but it is used for guest orders. |
+| [`requestGuestReturn`](#requestguestreturn) | Initiates a return request for a guest order. |
+| [`requestReturn`](#requestreturn) | Takes the `RequestReturnProps` form as an argument and initiates the process of returning items from an order. |
+| [`setPaymentMethodAndPlaceOrder`](#setpaymentmethodandplaceorder) | Sets the payment method on a cart and immediately places the order. |
+
+## cancelOrder
+
+The `cancelOrder` function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/orders/mutations/cancel-order/ mutation. You must pass an order ID and reason.
+
+```ts
+const cancelOrder = async (
+  orderId: string,
+  reason: string,
+  onSuccess: Function,
+  onError: Function
+): Promise<void | null | undefined>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `orderId` | `string` | Yes | The ID of the order to cancel. |
+| `reason` | `string` | Yes | The reason for canceling the order. |
+| `onSuccess` | `Function` | Yes | The callback function to execute when the order is successfully canceled. |
+| `onError` | `Function` | Yes | The callback function to execute when an error occurs. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void | null | undefined`.
+
+## confirmCancelOrder
+
+The `confirmCancelOrder` function confirms the cancellation of an order using the provided order ID and confirmation key. The function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/orders/mutations/confirm-cancel-order/ mutation.
+
+```ts
+const confirmCancelOrder = async (
+  orderId: string,
+  confirmationKey: string
+): Promise<any>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `orderId` | `string` | Yes | The ID of the order to cancel. |
+| `confirmationKey` | `string` | Yes | A key generated when a guest requests to cancel an order. |
+
+### Events
+
+Emits the [`order/data`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/events/#orderdata-emits-and-listens) event with the updated order information after confirming the cancellation.
+
+### Returns
+
+Returns `void`.
+
+## confirmGuestReturn
+
+The `confirmGuestReturn` function confirms a return request for a guest order using an order ID and confirmation key. The function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/orders/mutations/confirm-return/ mutation.
+
+```ts
+const confirmGuestReturn = async (
+  orderId: string,
+  confirmationKey: string
+): Promise<OrderDataModel | null>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `orderId` | `string` | Yes | The ID of the order for which the return is being confirmed. |
+| `confirmationKey` | `string` | Yes | The confirmation key sent to the guest's email address to authorize the return. |
+
+### Events
+
+Emits the [`order/data`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/events/#orderdata-emits-and-listens) event.
+
+### Returns
+
+Returns [`OrderDataModel`](#orderdatamodel) or `null`.
+
+## getAttributesForm
+
+The `getAttributesForm` function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/attributes/queries/attributes-form/ query.
+
+```ts
+const getAttributesForm = async (
+  formCode: string
+): Promise<AttributesFormModel[]>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `formCode` | `string` | Yes | One of "customer_account_create", "customer_account_edit", "customer_address_create", "customer_address_edit". |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `AttributesFormModel[]`.
+
+## getAttributesList
+
+The `getAttributesList` function is a wrapper for the https://developer.adobe.com/commerce/webapi/graphql/schema/attributes/queries/attributes-list/ query. You must pass an attribute code to retrieve the list. The system default values are `CUSTOMER`, `CUSTOMER_ADDRESS`, `CATALOG_PRODUCT` and `RMA_ITEM`.
+
+```ts
+const getAttributesList = async (
+  entityType: string
+): Promise<AttributesFormModel[] | []>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `entityType` | `string` | Yes | The entity type for which to retrieve the list of attributes. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `AttributesFormModel[] | []`.
+
+## getCustomer
+
+The `getCustomer` function is a wrapper for the https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/ query. You must pass a customer ID to retrieve the customer data.
+
+```ts
+const getCustomer = async (): Promise<CustomerDataModelShort>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CustomerDataModelShort`](#customerdatamodelshort).
+
+## getCustomerOrdersReturn
+
+The `getCustomerOrdersReturn` function returns details about the returns a customer has requested. It is a wrapper for the https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/ query.
+
+```ts
+const getCustomerOrdersReturn = async (
+  pageSize = 10,
+  currentPage = 1
+): Promise<CustomerOrdersReturnModel | null>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `pageSize` | `number` | No | The number of orders to return at a time. |
+| `currentPage` | `number` | No | See function signature above |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CustomerOrdersReturnModel`](#customerordersreturnmodel) or `null`.
+
+## getGuestOrder
+
+The `getGuestOrder` function is a wrapper for the https://developer.adobe.com/commerce/webapi/graphql/schema/orders/queries/guest-order/ query.
+
+```ts
+const getGuestOrder = async (
+  form: { number: string; email: string; lastname: string; }
+): Promise<OrderDataModel | null>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `number` | `string` | Yes | The order number. |
+| `email` | `string` | Yes | The email address associated with the order. |
+| `lastname` | `string` | Yes | The last name associated with the order. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`OrderDataModel`](#orderdatamodel) or `null`.
+
+## getStoreConfig
+
+The `getStoreConfig` function returns information about the storefront configuration. It is a wrapper for the https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/store-config/ query.
+
+```ts
+const getStoreConfig = async (): Promise<StoreConfigModel | null>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`StoreConfigModel`](#storeconfigmodel) or `null`.
+
+## guestOrderByToken
+
+The `guestOrderByToken` function retrieves a guest order using a token generated by Adobe Commerce. It is a wrapper for the `guestOrderByToken` query. The function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/orders/queries/guest-order-by-token/ query.
+
+```ts
+const guestOrderByToken = async (
+  token?: string,
+  returnRef?: string
+): Promise<OrderDataModel | null>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `token` | `string` | No | A token for the order assigned by Adobe Commerce. |
+| `returnRef` | `string` | No | The reference to return. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`OrderDataModel`](#orderdatamodel) or `null`.
+
+## placeNegotiableQuoteOrder
+
+The `placeNegotiableQuoteOrder` function places an order for a negotiable quote. It is a wrapper for the `placeNegotiableQuoteOrder` mutation. The function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/b2b/negotiable-quote/mutations/place-order/ mutation.
+
+```ts
+const placeNegotiableQuoteOrder = async (
+  quoteUid: string
+): Promise<OrderDataModel | null | undefined>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `quoteUid` | `string` | Yes | The unique identifier (UID) of the negotiable quote to place as an order. |
+
+### Events
+
+Emits the [`order/placed`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/events/#orderplaced-emits) event.
+
+### Returns
+
+Returns `OrderDataModel | null | undefined`. See [`OrderDataModel`](#orderdatamodel).
+
+## placeOrder
+
+```ts
+const placeOrder = async (
+  cartId: string
+): Promise<OrderDataModel | null | undefined>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `cartId` | `string` | Yes | The unique identifier for the shopping cart. This ID is used to track and persist cart data across sessions. |
+
+### Events
+
+Emits the following events: [`cart/reset`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/events/#cartreset-emits), [`order/placed`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/events/#orderplaced-emits).
+
+### Returns
+
+Returns `OrderDataModel | null | undefined`. See [`OrderDataModel`](#orderdatamodel).
+
+## reorderItems
+
+The `reorderItems` function allows a logged-in customer to add all the products from a previous order into their cart. It is a wrapper for the https://developer.adobe.com/commerce/webapi/graphql/schema/orders/mutations/reorder-items/ mutation.
+
+```ts
+const reorderItems = async (
+  orderNumber: string
+): Promise<ReorderItemsProps>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `orderNumber` | `string` | Yes | The order number to reorder. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`ReorderItemsProps`](#reorderitemsprops).
+
+## requestGuestOrderCancel
+
+The `requestGuestOrderCancel` function is similar to the `cancelOrder` function, but it is used for guest orders.
+The token is a unique value generated using guest's email, order number and postcode The function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/orders/mutations/request-guest-order-cancel/ mutation.
+
+```ts
+const requestGuestOrderCancel = async (
+  token: string,
+  reason: string,
+  onSuccess: Function,
+  onError: Function
+): Promise<void>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `token` | `string` | Yes | The token for the order assigned by Adobe Commerce. |
+| `reason` | `string` | Yes | The reason for canceling the order. |
+| `onSuccess` | `Function` | Yes | The callback function to execute when the order is successfully canceled. |
+| `onError` | `Function` | Yes | The callback function to execute when an error occurs. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## requestGuestReturn
+
+The `requestGuestReturn` function initiates a return request for a guest order. The function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/orders/mutations/request-guest-return/ mutation.
+
+```ts
+const requestGuestReturn = async (
+  form: RequestGuestReturnProps
+): Promise<{
+  uid: string;
+  number: string;
+  status: string;
+  createdAt: string;
+}>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `form` | `RequestGuestReturnProps` | Yes | The form data for the guest return request, including order details and items to return. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+```ts
+Promise<{
+  uid: string;
+  number: string;
+  status: string;
+  createdAt: string;
+}>
+```
+
+## requestReturn
+
+The `requestReturn` function takes the `RequestReturnProps` form as an argument and initiates the process of returning items from an order. It is a wrapper for the https://developer.adobe.com/commerce/webapi/graphql/schema/orders/mutations/request-return/ mutation.
+
+```ts
+const requestReturn = async (
+  form: RequestReturnProps
+): Promise<RequestReturnModel | {}>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `form` | `RequestReturnProps` | Yes | The form data for the return request. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `RequestReturnModel | {}`. See [`RequestReturnModel`](#requestreturnmodel).
+
+## setPaymentMethodAndPlaceOrder
+
+The `setPaymentMethodAndPlaceOrder` function sets the payment method on a cart and immediately places the order. The function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-payment-method/ mutation.
+
+```ts
+const setPaymentMethodAndPlaceOrder = async (
+  cartId: string,
+  paymentMethod: any
+): Promise<OrderDataModel | null | undefined>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `cartId` | `string` | Yes | The ID of the cart to place as an order. |
+| `paymentMethod` | `any` | Yes | The payment method information to apply to the cart before placing the order. |
+
+### Events
+
+Emits the following events: [`cart/reset`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/events/#cartreset-emits), [`order/placed`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/events/#orderplaced-emits).
+
+### Returns
+
+Returns `OrderDataModel | null | undefined`. See [`OrderDataModel`](#orderdatamodel).
+
+## getOrderDetailsById
+
+The `getOrderDetailsById` function fetches detailed order data by order number from the Adobe Commerce backend. It supports optional return details and is used internally by the order initialization helpers.
+
+```ts
+const getOrderDetailsById = async <T extends QueryType>({
+  orderId,
+  returnRef,
+  queryType,
+  returnsPageSize,
+}: GetOrderDetailsByIdProps): Promise<TransformedData<T>>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `orderId` | `string` | No | The order number to fetch. |
+| `returnRef` | `string` | No | An optional return reference used to filter return details. |
+| `queryType` | `QueryType` | Yes | The type of data to query. Use `'orderData'` for standard order details. |
+| `returnsPageSize` | `number` | No | Number of return records to fetch. Defaults to `50`. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`OrderDataModel`](#orderdatamodel) or `null`.
+
+## Data Models
+
+The following data models are used by functions in this drop-in.
+
+### CustomerDataModelShort
+
+The `CustomerDataModelShort` object is returned by the following functions: [`getCustomer`](#getcustomer).
+
+```ts
+interface CustomerDataModelShort {
+  firstname: string;
+  lastname: string;
+  email: string;
+}
+```
+
+### CustomerOrdersReturnModel
+
+The `CustomerOrdersReturnModel` object is returned by the following functions: [`getCustomerOrdersReturn`](#getcustomerordersreturn).
+
+```ts
+interface CustomerOrdersReturnModel {
+  ordersReturn: OrdersReturnPropsModel[];
+  pageInfo?: PageInfoProps;
+}
+```
+
+### OrderDataModel
+
+The `OrderDataModel` object is returned by the following functions: [`confirmGuestReturn`](#confirmguestreturn), [`getGuestOrder`](#getguestorder), [`guestOrderByToken`](#guestorderbytoken), [`placeNegotiableQuoteOrder`](#placenegotiablequoteorder), [`placeOrder`](#placeorder), [`setPaymentMethodAndPlaceOrder`](#setpaymentmethodandplaceorder).
+
+```ts
+type OrderDataModel = {
+  giftReceiptIncluded: boolean;
+  printedCardIncluded: boolean;
+  giftWrappingOrder: {
+    price: MoneyProps;
+    uid: string;
+  };
+  placeholderImage?: string;
+  returnNumber?: string;
+  id: string;
+  orderStatusChangeDate?: string;
+  number: string;
+  email: string;
+  token?: string;
+  status: string;
+  isVirtual: boolean;
+  totalQuantity: number;
+  shippingMethod?: string;
+  carrier?: string;
+  orderDate: string;
+  returns: OrdersReturnPropsModel[];
+  discounts: { amount: MoneyProps; label: string }[];
+  coupons: {
+    code: string;
+  }[];
+  payments: {
+    code: string;
+    name: string;
+  }[];
+  shipping?: { code: string; amount: number; currency: string };
+  shipments: ShipmentsModel[];
+  items: OrderItemModel[];
+  totalGiftCard: MoneyProps;
+  grandTotal: MoneyProps;
+  grandTotalExclTax: MoneyProps;
+  totalShipping?: MoneyProps;
+  subtotalExclTax: MoneyProps;
+  subtotalInclTax: MoneyProps;
+  totalTax: MoneyProps;
+  shippingAddress: OrderAddressModel;
+  totalGiftOptions: {
+    giftWrappingForItems: MoneyProps;
+    giftWrappingForItemsInclTax: MoneyProps;
+    giftWrappingForOrder: MoneyProps;
+    giftWrappingForOrderInclTax: MoneyProps;
+    printedCard: MoneyProps;
+    printedCardInclTax: MoneyProps;
+  };
+  billingAddress: OrderAddressModel;
+  availableActions: AvailableActionsProps[];
+  taxes: { amount: MoneyProps; rate: number; title: string }[];
+  appliedGiftCards: {
+    code: string;
+    appliedBalance: MoneyProps;
+  }[];
+};
+```
+
+### OrderItemProductModel
+
+```ts
+type OrderItemProductModel = {
+  onlyXLeftInStock?: number;
+  priceRange?: {
+    maximumPrice?: {
+      regularPrice?: MoneyProps;
+    };
+  };
+  uid: string;
+  __typename: string;
+  stockStatus?: string;
+  canonicalUrl?: string;
+  urlKey?: string;
+  id: string;
+  image?: string;
+  imageAlt?: string;
+  name: string;
+  productType: string;
+  sku: string;
+  thumbnail: {
+    url: string;
+    label: string;
+  };
+  giftWrappingAvailable?: boolean;
+};
+```
+
+### OrderItemModel
+
+```ts
+type OrderItemModel = {
+  giftMessage: {
+    senderName: string;
+    recipientName: string;
+    message: string;
+  };
+  giftWrappingPrice: MoneyProps;
+  productGiftWrapping: {
+    uid: string;
+    design: string;
+    selected: boolean;
+    image: {
+      url: string;
+      label: string;
+    };
+    price: MoneyProps;
+  }[];
+  taxCalculations: {
+    includeAndExcludeTax: {
+      originalPrice: MoneyProps;
+      baseOriginalPrice: MoneyProps;
+      baseDiscountedPrice: MoneyProps;
+      baseExcludingTax: MoneyProps;
+    };
+    excludeTax: {
+      originalPrice: MoneyProps;
+      baseOriginalPrice: MoneyProps;
+      baseDiscountedPrice: MoneyProps;
+      baseExcludingTax: MoneyProps;
+    };
+    includeTax: {
+      singleItemPrice: MoneyProps;
+      baseOriginalPrice: MoneyProps;
+      baseDiscountedPrice: MoneyProps;
+    };
+  };
+  productSalePrice: MoneyProps;
+  status?: string;
+  currentReturnOrderQuantity?: number;
+  eligibleForReturn: boolean;
+  productSku?: string;
+  type?: string;
+  discounted?: boolean;
+  id: string;
+  productName?: string;
+  productUrlKey?: string;
+  regularPrice?: MoneyProps;
+  price: MoneyProps;
+  product?: OrderItemProductModel;
+  selectedOptions?: Array<{
+    label: string;
+    value: any;
+  }>;
+  thumbnail?: {
+    label: string;
+    url: string;
+  };
+  downloadableLinks: {
+    count: number;
+    result: string;
+  } | null;
+  prices: {
+    priceIncludingTax: MoneyProps;
+    originalPrice: MoneyProps;
+    originalPriceIncludingTax: MoneyProps;
+    price: MoneyProps;
+    discounts: {
+      label: string;
+      amount: { value: number };
+    }[];
+  };
+  itemPrices: {
+    priceIncludingTax: MoneyProps;
+    originalPrice: MoneyProps;
+    originalPriceIncludingTax: MoneyProps;
+    price: MoneyProps;
+    discounts: {
+      label: string;
+      amount: { value: number };
+    }[];
+  };
+  bundleOptions: Record<string, string> | null;
+  totalInclTax: MoneyProps;
+  priceInclTax: MoneyProps;
+  total: MoneyProps;
+  configurableOptions: Record<string, string | number | boolean> | undefined;
+  giftCard?: {
+    senderName: string;
+    senderEmail: string;
+    recipientEmail: string;
+    recipientName: string;
+    message: string;
+  };
+  quantityCanceled: number;
+  quantityInvoiced: number;
+  quantityOrdered: number;
+  quantityRefunded: number;
+  quantityReturned: number;
+  quantityShipped: number;
+  requestQuantity?: number;
+  totalQuantity: number;
+  returnableQuantity?: number;
+  quantityReturnRequested: number;
+};
+```
+
+### ReorderItemsProps
+
+The `ReorderItemsProps` object is returned by the following functions: [`reorderItems`](#reorderitems).
+
+```ts
+interface ReorderItemsProps {
+  success: boolean;
+  userInputErrors: UserInputErrorProps[];
+}
+```
+
+### RequestReturnModel
+
+The `RequestReturnModel` object is returned by the following functions: [`requestReturn`](#requestreturn).
+
+```ts
+interface RequestReturnModel {
+  uid: string;
+  number: string;
+  status: string;
+  createdAt: string;
+}
+```
+
+### StoreConfigModel
+
+The `StoreConfigModel` object is returned by the following functions: [`getStoreConfig`](#getstoreconfig).
+
+```ts
+interface StoreConfigModel {
+  baseMediaUrl: string;
+  orderCancellationEnabled: boolean;
+  orderCancellationReasons: OrderCancellationReason[];
+  shoppingOrderDisplayPrice: OrderDisplayPriceProps;
+  shoppingOrdersDisplayShipping: OrderDisplayPriceProps;
+  shoppingOrdersDisplaySubtotal: OrderDisplayPriceProps;
+  shoppingOrdersDisplayFullSummary: boolean;
+  shoppingOrdersDisplayGrandTotal: boolean;
+  shoppingOrdersDisplayZeroTax: boolean;
+  salesPrintedCard: number;
+  salesGiftWrapping: number;
+}
+```
+
+{/* This documentation is auto-generated from the drop-in source repository: REPO_URL */}
+
+---
+
+# Order overview
+
+The order drop-in component provides a comprehensive set of tools and containers designed to manage and display order-related data across various pages and scenarios. It simplifies the implementation of order management functionality and supports seamless integration with both customer accounts and guest user workflows.
+
+> **Part of seller-assisted buying** The `OrderStatus` container labels orders placed by an administrator during an assisted session. This label belongs to the cross-drop-in [seller-assisted buying](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/user-account/containers/seller-assisted-buying/) feature. Read that overview first for the end-to-end flow and Admin setup.
+
+## Architecture
+
+The order drop-in component consists of multiple containers that display order details on different pages, such as:
+
+- Order data containers display order details within the customer account, guest user areas, and on the order confirmation page.
+- Returned merchandise authorization (RMA) containers guide users through the return process and display a list of created return requests.
+- The `OrderSearch` container enables guest users to locate their orders using a combination of email, ZIP code, and order number. This ensures easy access to order details even for users without an account. (Logged-in customers can also use this form.)
+
+The component's initialization process helps manage data retrieval and event emission, ensuring that containers receive the necessary data without individual fetching.
+
+This modular architecture allows for efficient, reusable, and highly customizable implementations of order and return workflows, making it ideal for both standard and advanced e-commerce use cases. In addition, the implementation of order and return details pages includes elements such as headers, which are implemented at the boilerplate level rather than provided directly by the drop-in containers. These elements, including `commerce-order-header` and `commerce-return-header` blocks, are covered as part of the overall framework for order and return details layouts, but are distinct from the drop-in container set.
+
+The following diagrams provide a visual composition of the order details and return details pages:
+
+![Order details containers](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/order/order-details-containers.png)
+
+*Order details containers*
+
+![Return details containers](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/order/return-details-containers.png)
+
+*Return details containers*
+
+## Supported Commerce features
+
+The following table provides an overview of the Adobe Commerce guest user features that the order component supports:
+
+| Feature                                                          | Status                                     |
+| ---------------------------------------------------------------- | ------------------------------------------ |
+| Cancel order (with email confirmation)                           | Supported   |
+| Create a return                                                  | Supported   |
+| Filter orders by time of purchase                                | Supported   |
+| Reorder                                                          | Supported   |
+| Search orders                                                    | Roadmap |
+| View list of orders on the account                               | Supported   |
+| View order status                                                | Supported   |
+| View return status                                               | Supported   |
+
+## See also
+
+- [Seller-assisted buying](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/user-account/containers/seller-assisted-buying/) — extends this drop-in so the `OrderStatus` container labels orders placed by an administrator during an assisted session.
+
+---
+
+# Order initialization
+
+The **Order initializer** configures how order data is managed and displayed, including order history, status tracking, and order details. Use initialization to customize order data structures and integrate order management features.
+
+<strong>Version: 3.2.0</strong>
+
+## Configuration options
+
+The following table describes the configuration options available for the **Order** initializer:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
+| `models` | [`Record<string, any>`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
+| `orderRef` | `string` | No | Pre-loads a specific order by its reference ID or order number. Useful for direct access to order details from email links or confirmation pages. |
+| `returnRef` | `string` | No | Pre-loads a specific return request by its reference ID. Enables direct navigation to return request details and status tracking. |
+| `orderData` | [`OrderDataModel`](#orderdatamodel) \| null | No | Injects initial order data on page load. Useful for server-side rendering or hydrating order details without an additional \`GraphQL\` request. |
+| `routeOrdersList` | `() => string` | No |  |
+
+## Default configuration
+
+The initializer runs with these defaults when no configuration is provided:
+
+```javascript title="scripts/initializers/order.js"
+
+// All configuration options are optional
+await initializers.mountImmediately(initialize, {
+  langDefinitions: {}, // Uses built-in English strings
+  models: {}, // Uses default data models
+  // Drop-in-specific defaults:
+  // orderRef: undefined // See configuration options below
+  // returnRef: undefined // See configuration options below
+  // orderData: undefined // See configuration options below
+  // routeOrdersList: undefined // See configuration options below
+});
+```
+
+## Language definitions
+
+Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override default text for the drop-in.
+
+```javascript title="scripts/initializers/order.js"
+
+const customStrings = {
+  'AddToCart': 'Add to Bag',
+  'Checkout': 'Complete Purchase',
+  'Price': 'Cost',
+};
+
+const langDefinitions = {
+  default: customStrings,
+};
+
+await initializers.mountImmediately(initialize, { langDefinitions });
+```
+
+> For complete dictionary customization including all available keys and multi-language support, see the [Order Dictionary](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/dictionary/) page.
+
+## Customizing data models
+
+Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
+
+### Available models
+
+The following models can be customized through the `models` configuration option:
+
+| Model | Description |
+|---|---|
+| [`OrderDataModel`](#orderdatamodel) | Transforms order data from `GraphQL` including order details, items, shipping, billing, payment, and tracking information. Use this to add custom fields specific to your order management workflow. |
+| [`CustomerOrdersReturnModel`](#customerordersreturnmodel) | Transforms `CustomerOrdersReturnModel` data from `GraphQL`. |
+| [`RequestReturnModel`](#requestreturnmodel) | Transforms `RequestReturnModel` data from `GraphQL`. |
+
+The following example shows how to customize the `OrderDataModel` model for the **Order** drop-in:
+
+```javascript title="scripts/initializers/order.js"
+
+const models = {
+  OrderDataModel: {
+    transformer: (data) => ({
+      // Add custom fields from backend data
+      customField: data?.custom_field,
+      promotionBadge: data?.promotion?.label,
+      // Transform existing fields
+      displayPrice: data?.price?.value ? `${data.price.value}` : 'N/A',
+    }),
+  },
+};
+
+await initializers.mountImmediately(initialize, { models });
+```
+
+## Drop-in configuration
+
+The **Order initializer** configures how order data is managed and displayed, including order history, status tracking, and order details. Use initialization to customize order data structures and integrate order management features.
+
+```javascript title="scripts/initializers/order.js"
+
+await initializers.mountImmediately(initialize, {
+  langDefinitions: {},
+  models: {},
+  orderRef: 'abc123',
+  returnRef: 'abc123',
+  orderData: {},
+  routeOrdersList: 'value',
+});
+```
+
+> Refer to the [Configuration options](#configuration-options) table for detailed descriptions of each option.
+
+## Configuration types
+
+The following TypeScript definitions show the structure of each configuration object:
+
+### langDefinitions
+
+Maps locale identifiers to dictionaries of key-value pairs. The `default` locale is used as the fallback when no specific locale matches. Each dictionary key corresponds to a text string used in the drop-in UI.
+
+```typescript
+langDefinitions?: {
+  [locale: string]: {
+    [key: string]: string;
+  };
+};
+```
+
+### models
+
+Maps model names to transformer functions. Each transformer receives data from GraphQL and returns a modified or extended version. Use the `Model<T>` type from `@dropins/tools` to create type-safe transformers.
+
+```typescript
+models?: {
+  [modelName: string]: Model<any>;
+};
+```
+
+## Model definitions
+
+The following TypeScript definitions show the structure of each customizable model:
+
+### OrderDataModel
+
+```typescript
+export type OrderDataModel = {
+  giftReceiptIncluded: boolean;
+  printedCardIncluded: boolean;
+  giftWrappingOrder: {
+    price: MoneyProps;
+    uid: string;
+  };
+  placeholderImage?: string;
+  returnNumber?: string;
+  id: string;
+  orderStatusChangeDate?: string;
+  number: string;
+  email: string;
+  token?: string;
+  status: string;
+  isVirtual: boolean;
+  totalQuantity: number;
+  shippingMethod?: string;
+  carrier?: string;
+  orderDate: string;
+  returns: OrdersReturnPropsModel[];
+  discounts: { amount: MoneyProps; label: string }[];
+  coupons: {
+    code: string;
+  }[];
+  payments: {
+    code: string;
+    name: string;
+  }[];
+  shipping?: { code: string; amount: number; currency: string };
+  shipments: ShipmentsModel[];
+  items: OrderItemModel[];
+  totalGiftCard: MoneyProps;
+  grandTotal: MoneyProps;
+  grandTotalExclTax: MoneyProps;
+  totalShipping?: MoneyProps;
+  subtotalExclTax: MoneyProps;
+  subtotalInclTax: MoneyProps;
+  totalTax: MoneyProps;
+  shippingAddress: OrderAddressModel;
+  totalGiftOptions: {
+    giftWrappingForItems: MoneyProps;
+    giftWrappingForItemsInclTax: MoneyProps;
+    giftWrappingForOrder: MoneyProps;
+    giftWrappingForOrderInclTax: MoneyProps;
+    printedCard: MoneyProps;
+    printedCardInclTax: MoneyProps;
+  };
+  billingAddress: OrderAddressModel;
+  availableActions: AvailableActionsProps[];
+  taxes: { amount: MoneyProps; rate: number; title: string }[];
+  appliedGiftCards: {
+    code: string;
+    appliedBalance: MoneyProps;
+  }[];
+};
+```
+
+### OrderItemProductModel
+
+```typescript
+export type OrderItemProductModel = {
+  onlyXLeftInStock?: number;
+  priceRange?: {
+    maximumPrice?: {
+      regularPrice?: MoneyProps;
+    };
+  };
+  uid: string;
+  __typename: string;
+  stockStatus?: string;
+  canonicalUrl?: string;
+  urlKey?: string;
+  id: string;
+  image?: string;
+  imageAlt?: string;
+  name: string;
+  productType: string;
+  sku: string;
+  thumbnail: {
+    url: string;
+    label: string;
+  };
+  giftWrappingAvailable?: boolean;
+};
+```
+
+### OrderItemModel
+
+```typescript
+export type OrderItemModel = {
+  giftMessage: {
+    senderName: string;
+    recipientName: string;
+    message: string;
+  };
+  giftWrappingPrice: MoneyProps;
+  productGiftWrapping: {
+    uid: string;
+    design: string;
+    selected: boolean;
+    image: {
+      url: string;
+      label: string;
+    };
+    price: MoneyProps;
+  }[];
+  taxCalculations: {
+    includeAndExcludeTax: {
+      originalPrice: MoneyProps;
+      baseOriginalPrice: MoneyProps;
+      baseDiscountedPrice: MoneyProps;
+      baseExcludingTax: MoneyProps;
+    };
+    excludeTax: {
+      originalPrice: MoneyProps;
+      baseOriginalPrice: MoneyProps;
+      baseDiscountedPrice: MoneyProps;
+      baseExcludingTax: MoneyProps;
+    };
+    includeTax: {
+      singleItemPrice: MoneyProps;
+      baseOriginalPrice: MoneyProps;
+      baseDiscountedPrice: MoneyProps;
+    };
+  };
+  productSalePrice: MoneyProps;
+  status?: string;
+  currentReturnOrderQuantity?: number;
+  eligibleForReturn: boolean;
+  productSku?: string;
+  type?: string;
+  discounted?: boolean;
+  id: string;
+  productName?: string;
+  productUrlKey?: string;
+  regularPrice?: MoneyProps;
+  price: MoneyProps;
+  product?: OrderItemProductModel;
+  selectedOptions?: Array<{
+    label: string;
+    value: any;
+  }>;
+  thumbnail?: {
+    label: string;
+    url: string;
+  };
+  downloadableLinks: {
+    count: number;
+    result: string;
+  } | null;
+  prices: {
+    priceIncludingTax: MoneyProps;
+    originalPrice: MoneyProps;
+    originalPriceIncludingTax: MoneyProps;
+    price: MoneyProps;
+    discounts: {
+      label: string;
+      amount: { value: number };
+    }[];
+  };
+  itemPrices: {
+    priceIncludingTax: MoneyProps;
+    originalPrice: MoneyProps;
+    originalPriceIncludingTax: MoneyProps;
+    price: MoneyProps;
+    discounts: {
+      label: string;
+      amount: { value: number };
+    }[];
+  };
+  bundleOptions: Record<string, string> | null;
+  totalInclTax: MoneyProps;
+  priceInclTax: MoneyProps;
+  total: MoneyProps;
+  configurableOptions: Record<string, string | number | boolean> | undefined;
+  giftCard?: {
+    senderName: string;
+    senderEmail: string;
+    recipientEmail: string;
+    recipientName: string;
+    message: string;
+  };
+  quantityCanceled: number;
+  quantityInvoiced: number;
+  quantityOrdered: number;
+  quantityRefunded: number;
+  quantityReturned: number;
+  quantityShipped: number;
+  requestQuantity?: number;
+  totalQuantity: number;
+  returnableQuantity?: number;
+  quantityReturnRequested: number;
+};
+```
+
+### CustomerOrdersReturnModel
+
+```typescript
+export interface CustomerOrdersReturnModel {
+  ordersReturn: OrdersReturnPropsModel[];
+  pageInfo?: PageInfoProps;
+}
+```
+
+### RequestReturnModel
+
+```typescript
+export interface RequestReturnModel {
+  uid: string;
+  number: string;
+  status: string;
+  createdAt: string;
+}
+```
+
+---
+
+# Order Quick Start
+
+The Order drop-in provides a complete order management experience for customers. It includes containers for viewing order details, tracking shipments, managing returns, and searching order history.
+
+<strong>Version: 3.2.0</strong>
+
+## Quick example
+
+The Order drop-in is included in the https://github.com/hlxsites/aem-boilerplate-commerce. This example shows the basic pattern:
+
+```js
+// 1. Import initializer (handles all setup)
+
+// 2. Import the container you need
+
+// 3. Import the provider
+
+// 4. Render in your block
+export default async function decorate(block) {
+  await provider.render(CreateReturn, {
+    // Configuration options - see Containers page
+  })(block);
+}
+```
+
+**New to drop-ins?** See the [Using drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/quick-start/) guide for complete step-by-step instructions.
+
+## Quick reference
+
+**Import paths:**
+- Initializer: `import '../../scripts/initializers/order.js'`
+- Containers: `import ContainerName from '@dropins/storefront-order/containers/ContainerName.js'`
+- Provider: `import { render } from '@dropins/storefront-order/render.js'`
+
+**Package:** `@dropins/storefront-order`
+
+**Version:** 3.2.0 (verify compatibility with your Commerce instance)
+
+**Example container:** `CreateReturn`
+
+## Learn more
+
+- [Containers](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/containers/) - Available UI components and configuration options
+- [Initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/initialization/) - Customize initializer settings and data models
+- [Functions](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/functions/) - Control drop-in behavior programmatically
+- [Events](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/events/) - Listen to and respond to drop-in state changes
+- [Slots](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/order/slots/) - Extend containers with custom content
+
+---
+
+# Order Slots
+
+The Order drop-in exposes slots for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/extending/).
+
+<strong>Version: 3.2.0</strong>
+
+| Container | Slots |
+|-----------|-------|
+| [`CreateReturn`](#createreturn-slots) | `Footer`, `ReturnOrderItem`, `ReturnFormActions`, `ReturnReasonFormImage`, `CartSummaryItemImage` |
+| [`CustomerDetails`](#customerdetails-slots) | `OrderReturnInformation`, `PaymentMethodIcon` |
+| [`OrderProductList`](#orderproductlist-slots) | `Footer`, `CartSummaryItemImage` |
+| [`OrderReturns`](#orderreturns-slots) | `ReturnItemsDetails`, `DetailsActionParams`, `ReturnListImage` |
+| [`OrderStatus`](#orderstatus-slots) | `OrderActions` |
+| [`ReturnsList`](#returnslist-slots) | `ReturnItemsDetails`, `DetailsActionParams`, `ReturnListImage` |
+| [`ShippingStatus`](#shippingstatus-slots) | `DeliveryTimeLine`, `DeliveryTrackActions`, `ReturnItemsDetails`, `ShippingStatusCardImage`, `NotYetShippedProductImage`, `ShippingStatusReturnCardImage` |
+
+> **Slot usage best practice** Do not use context methods inside other context methods (for example, `appendChild()` inside `onChange()`). See [Slots best practices](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/slots/#best-practice-for-dynamic-slot-content) for details and examples.
+
+## CreateReturn slots
+
+The slots for the `CreateReturn` container allow you to customize its appearance and behavior.
+
+```typescript
+interface CreateReturnProps {
+  slots?: {
+    Footer: SlotProps;
+    ReturnOrderItem: SlotProps;
+    ReturnFormActions: SlotProps<{
+    handleChangeStep: (value: StepsTypes) => void;
+    }>;
+    ReturnReasonFormImage?: SlotProps<{
+    data: OrderItemModel;
+    defaultImageProps: ImageProps;
+    }>;
+    CartSummaryItemImage?: SlotProps<{
+    data: OrderItemModel;
+    defaultImageProps: ImageProps;
+    }>;
+  };
+}
+```
+
+### Footer slot
+
+The Footer slot allows you to customize the footer section of the `CreateReturn` container.
+
+#### Example
+
+```js
+
+await provider.render(CreateReturn, {
+  slots: {
+    Footer: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Footer';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ReturnOrderItem slot
+
+The `ReturnOrderItem` slot allows you to customize the return order item section of the `CreateReturn` container.
+
+#### Example
+
+```js
+
+await provider.render(CreateReturn, {
+  slots: {
+    ReturnOrderItem: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ReturnOrderItem';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ReturnReasonFormImage slot
+
+The `ReturnReasonFormImage` slot allows you to customize the return reason form image section of the `CreateReturn` container.
+
+#### Example
+
+```js
+
+await provider.render(CreateReturn, {
+  slots: {
+    ReturnReasonFormImage: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ReturnReasonFormImage';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### CartSummaryItemImage slot
+
+The `CartSummaryItemImage` slot allows you to customize the cart summary item image section of the `CreateReturn` container.
+
+#### Example
+
+```js
+
+await provider.render(CreateReturn, {
+  slots: {
+    CartSummaryItemImage: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom CartSummaryItemImage';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+## CustomerDetails slots
+
+The slots for the `CustomerDetails` container allow you to customize its appearance and behavior.
+
+```typescript
+interface CustomerDetailsProps {
+  slots?: {
+    OrderReturnInformation: SlotProps<OrdersReturnPropsModel | undefined>;
+    PaymentMethodIcon: SlotProps<Record<string, string>>;
+  };
+}
+```
+
+### OrderReturnInformation slot
+
+The `OrderReturnInformation` slot allows you to customize the order return information section of the `CustomerDetails` container.
+
+#### Example
+
+```js
+
+await provider.render(CustomerDetails, {
+  slots: {
+    OrderReturnInformation: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom OrderReturnInformation';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+## OrderProductList slots
+
+The slots for the `OrderProductList` container allow you to customize its appearance and behavior.
+
+```typescript
+interface OrderProductListProps {
+  slots?: {
+    Footer: SlotProps;
+    CartSummaryItemImage?: SlotProps<{
+    data: OrderItemModel;
+    defaultImageProps: ImageProps;
+    }>;
+  };
+}
+```
+
+### Footer slot
+
+The Footer slot allows you to customize the footer section of the `OrderProductList` container.
+
+#### Example
+
+```js
+
+await provider.render(OrderProductList, {
+  slots: {
+    Footer: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Footer';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### CartSummaryItemImage slot
+
+The `CartSummaryItemImage` slot allows you to customize the cart summary item image section of the `OrderProductList` container.
+
+#### Example
+
+```js
+
+await provider.render(OrderProductList, {
+  slots: {
+    CartSummaryItemImage: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom CartSummaryItemImage';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+## OrderReturns slots
+
+The slots for the `OrderReturns` container allow you to customize its appearance and behavior.
+
+```typescript
+interface OrderReturnsProps {
+  slots?: {
+    ReturnItemsDetails?: SlotProps<{
+      items: OrdersReturnItemsPropsModel[];
+    }>;
+    DetailsActionParams?: SlotProps<{
+      returnOrderItem: OrdersReturnPropsModel;
+    }>;
+    ReturnListImage?: SlotProps<{
+      data: OrdersReturnItemsPropsModel;
+      defaultImageProps: ImageProps;
+    }>;
+  };
+}
+```
+
+### ReturnItemsDetails slot
+
+The `ReturnItemsDetails` slot allows you to customize the return items details section of the `OrderReturns` container.
+
+#### Example
+
+```js
+
+await provider.render(OrderReturns, {
+  slots: {
+    ReturnItemsDetails: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ReturnItemsDetails';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### DetailsActionParams slot
+
+The `DetailsActionParams` slot allows you to customize the return action parameters section of the `OrderReturns` container.
+
+#### Example
+
+```js
+
+await provider.render(OrderReturns, {
+  slots: {
+    DetailsActionParams: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom DetailsActionParams';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ReturnListImage slot
+
+The `ReturnListImage` slot allows you to customize the return list image section of the `OrderReturns` container.
+
+#### Example
+
+```js
+
+await provider.render(OrderReturns, {
+  slots: {
+    ReturnListImage: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ReturnListImage';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+## OrderStatus slots
+
+The slots for the `OrderStatus` container allow you to customize its appearance and behavior.
+
+```typescript
+interface OrderStatusProps {
+  slots?: {
+    OrderActions: SlotProps<DefaultSlotContext>;
+  };
+}
+```
+
+### OrderActions slot
+
+The `OrderActions` slot allows you to customize the order actions section of the `OrderStatus` container.
+
+#### Example
+
+```js
+
+await provider.render(OrderStatus, {
+  slots: {
+    OrderActions: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom OrderActions';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+## ReturnsList slots
+
+The slots for the `ReturnsList` container allow you to customize its appearance and behavior.
+
+```typescript
+interface ReturnsListProps {
+  slots?: {
+    ReturnItemsDetails?: SlotProps<{
+    items: OrdersReturnItemsPropsModel[];
+    }>;
+    DetailsActionParams?: SlotProps<{
+    returnOrderItem: OrdersReturnPropsModel;
+    }>;
+    ReturnListImage?: SlotProps<{
+    data: OrdersReturnItemsPropsModel;
+    defaultImageProps: ImageProps;
+    }>;
+  };
+}
+```
+
+### ReturnItemsDetails slot
+
+The `ReturnItemsDetails` slot allows you to customize the return items details section of the `ReturnsList` container.
+
+#### Example
+
+```js
+
+await provider.render(ReturnsList, {
+  slots: {
+    ReturnItemsDetails: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ReturnItemsDetails';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### DetailsActionParams slot
+
+The `DetailsActionParams` slot allows you to customize the details action params section of the `ReturnsList` container.
+
+#### Example
+
+```js
+
+await provider.render(ReturnsList, {
+  slots: {
+    DetailsActionParams: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom DetailsActionParams';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ReturnListImage slot
+
+The `ReturnListImage` slot allows you to customize the return list image section of the `ReturnsList` container.
+
+#### Example
+
+```js
+
+await provider.render(ReturnsList, {
+  slots: {
+    ReturnListImage: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ReturnListImage';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+## ShippingStatus slots
+
+The slots for the `ShippingStatus` container allow you to customize its appearance and behavior.
+
+```typescript
+interface ShippingStatusProps {
+  slots?: {
+    DeliveryTimeLine?: SlotProps;
+    DeliveryTrackActions?: SlotProps;
+    ReturnItemsDetails?: SlotProps;
+    ShippingStatusCardImage?: SlotProps<{
+    data: ShipmentItemsModel;
+    defaultImageProps: ImageProps;
+    }>;
+    NotYetShippedProductImage?: SlotProps<{
+    data: OrderItemModel;
+    defaultImageProps: ImageProps;
+    }>;
+    ShippingStatusReturnCardImage?: SlotProps<{
+    data: OrdersReturnItemsPropsModel;
+    defaultImageProps: ImageProps;
+    }>;
+  };
+}
+```
+
+### DeliveryTimeLine slot
+
+The `DeliveryTimeLine` slot allows you to customize the delivery time line section of the `ShippingStatus` container.
+
+#### Example
+
+```js
+
+await provider.render(ShippingStatus, {
+  slots: {
+    DeliveryTimeLine: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom DeliveryTimeLine';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### DeliveryTrackActions slot
+
+The `DeliveryTrackActions` slot allows you to customize the delivery track actions section of the `ShippingStatus` container.
+
+#### Example
+
+```js
+
+await provider.render(ShippingStatus, {
+  slots: {
+    DeliveryTrackActions: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom DeliveryTrackActions';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ReturnItemsDetails slot
+
+The `ReturnItemsDetails` slot allows you to customize the return items details section of the `ShippingStatus` container.
+
+#### Example
+
+```js
+
+await provider.render(ShippingStatus, {
+  slots: {
+    ReturnItemsDetails: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ReturnItemsDetails';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ShippingStatusCardImage slot
+
+The `ShippingStatusCardImage` slot allows you to customize the shipping status card image section of the `ShippingStatus` container.
+
+#### Example
+
+```js
+
+await provider.render(ShippingStatus, {
+  slots: {
+    ShippingStatusCardImage: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ShippingStatusCardImage';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### NotYetShippedProductImage slot
+
+The `NotYetShippedProductImage` slot allows you to customize the not yet shipped product image section of the `ShippingStatus` container.
+
+#### Example
+
+```js
+
+await provider.render(ShippingStatus, {
+  slots: {
+    NotYetShippedProductImage: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom NotYetShippedProductImage';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ShippingStatusReturnCardImage slot
+
+The `ShippingStatusReturnCardImage` slot allows you to customize the shipping status return card image section of the `ShippingStatus` container.
+
+#### Example
+
+```js
+
+await provider.render(ShippingStatus, {
+  slots: {
+    ShippingStatusReturnCardImage: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ShippingStatusReturnCardImage';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+---
+
+# Order styles
+
+Customize the Order drop-in using CSS classes and design tokens. This page covers the Order-specific container classes and customization examples. For comprehensive information about design tokens, responsive breakpoints, and styling best practices, see [Styling Drop-In Components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/styling/).
+
+<strong>Version: 3.2.0</strong>
+
+## Customization example
+
+Add this to the CSS file of the specific https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/ where you're using the Order drop-in.
+
+For a complete list of available design tokens (colors, spacing, typography, and more), see the [Design tokens reference](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/styling/#design-tokens-reference).
+
+```css title="styles/styles.css" del={2-3} ins={4-5}
+.order-order-actions__wrapper {
+  gap: 0 var(--spacing-small);
+  margin-bottom: var(--spacing-small);
+  gap: 0 var(--spacing-medium);
+  margin-bottom: var(--spacing-medium);
+}
+```
+
+## Container classes
+
+The Order drop-in uses BEM-style class naming. Use the browser DevTools to inspect elements and find specific class names.
+
+```css
+/* CustomerDetailsContent */
+.dropin-card__content {}
+.order-customer-details-content {}
+.order-customer-details-content__container {}
+.order-customer-details-content__container--no-margin {}
+.order-customer-details-content__container-billing_address {}
+.order-customer-details-content__container-billing_address--fullwidth {}
+.order-customer-details-content__container-description {}
+.order-customer-details-content__container-email {}
+.order-customer-details-content__container-payment_methods {}
+.order-customer-details-content__container-payment_methods--fullwidth {}
+.order-customer-details-content__container-payment_methods--icon {}
+.order-customer-details-content__container-return-information {}
+.order-customer-details-content__container-shipping_address {}
+.order-customer-details-content__container-shipping_methods {}
+.order-customer-details-content__container-title {}
+
+/* EmptyList */
+.dropin-card {}
+.dropin-card__content {}
+.order-empty-list {}
+.order-empty-list--empty-box {}
+.order-empty-list--minified {}
+
+/* OrderActions */
+.order-order-actions__wrapper {}
+.order-order-actions__wrapper--empty {}
+
+/* OrderCancel */
+.dropin-modal__body--medium {}
+.dropin-modal__header {}
+.dropin-modal__header-close-button {}
+.dropin-modal__header-title {}
+.order-order-cancel__button-container {}
+.order-order-cancel__modal {}
+.order-order-cancel__text {}
+.order-order-cancel__title {}
+
+/* OrderComments */
+.order-order-comments-container {}
+.order-order-comments-card .dropin-card__content {}
+.order-order-comments-card__container {}
+.order-order-comments {}
+.order-order-comments--empty {}
+.order-order-comments__empty-state {}
+.order-order-comments__item {}
+.order-order-comments__header {}
+.order-order-comments__date {}
+.order-order-comments__text {}
+
+/* OrderCostSummaryContent */
+.dropin-accordion-section {}
+.dropin-accordion-section__content-container {}
+.dropin-card__content {}
+.dropin-price {}
+.order-cost-summary-content {}
+.order-cost-summary-content__accordion {}
+.order-cost-summary-content__accordion-row {}
+.order-cost-summary-content__accordion-total {}
+.order-cost-summary-content__description {}
+.order-cost-summary-content__description--discount {}
+.order-cost-summary-content__description--gift-wrapping {}
+.order-cost-summary-content__description--header {}
+.order-cost-summary-content__description--printed-card {}
+.order-cost-summary-content__description--shipping {}
+.order-cost-summary-content__description--subheader {}
+.order-cost-summary-content__description--subtotal {}
+.order-cost-summary-content__description--total {}
+.order-cost-summary-content__description--total-free {}
+
+/* OrderHeader */
+.order-header {}
+.order-header-create-account {}
+.order-header-create-account__button {}
+.order-header-create-account__message {}
+.order-header__icon {}
+.order-header__order {}
+.order-header__title {}
+.success-icon {}
+
+/* OrderLoaders */
+.order-order-loaders--card-loader {}
+
+/* OrderProductListContent */
+.cart-summary-item__title--strikethrough {}
+.dropin-card__content {}
+.dropin-cart-item__alert {}
+.order-confirmation-cart-summary-item {}
+.order-order-product-list-content {}
+.order-order-product-list-content__items {}
+
+/* OrderSearchForm */
+.dropin-card__content {}
+.order-order-search-form {}
+.order-order-search-form__button-container {}
+.order-order-search-form__title {}
+.order-order-search-form__wrapper {}
+.order-order-search-form__wrapper__item--email {}
+.order-order-search-form__wrapper__item--lastname {}
+.order-order-search-form__wrapper__item--number {}
+
+/* OrderStatusContent */
+.dropin-card__content {}
+.order-order-status-content {}
+.order-order-status-content__wrapper {}
+.order-order-status-content__wrapper-description {}
+.order-order-status-content__wrapper-description--actions-slot {}
+
+/* ReturnOrderMessage */
+.order-return-order-message {}
+.order-return-order-message__subtitle {}
+.order-return-order-message__title {}
+
+/* ReturnOrderProductList */
+.cart-summary-item__title--strikethrough {}
+.dropin-cart-item__alert {}
+.dropin-cart-item__footer {}
+.dropin-incrementer {}
+.dropin-incrementer--medium {}
+.dropin-incrementer__button-container {}
+.order-create-return {}
+.order-create-return_notification {}
+.order-return-order-product-list {}
+.order-return-order-product-list__item {}
+.order-return-order-product-list__item--blur {}
+
+/* ReturnReasonForm */
+.dropin-cart-item {}
+.dropin-field {}
+.order-return-reason-form {}
+.order-return-reason-form__actions {}
+
+/* ReturnsListContent */
+.dropin-accordion-section__content-container {}
+.dropin-card__content {}
+.dropin-content-grid {}
+.dropin-content-grid__content {}
+.dropin-divider {}
+.dropin-divider--secondary {}
+.order-returns-list-content {}
+.order-returns-list-content__actions {}
+.order-returns-list-content__card {}
+.order-returns-list-content__card-wrapper {}
+.order-returns-list-content__cards-grid {}
+.order-returns-list-content__cards-list {}
+.order-returns-list-content__descriptions {}
+.order-returns-list-content__images {}
+.order-returns-list-content__images-3 {}
+.order-returns-list-content__return-status {}
+.order-returns__header--full-size {}
+.order-returns__header--minified {}
+
+/* ShippingStatusCard */
+.dropin-accordion-section__content-container {}
+.dropin-card__content {}
+.dropin-content-grid {}
+.dropin-content-grid__content {}
+.dropin-divider {}
+.dropin-divider--secondary {}
+.order-shipping-status-card {}
+.order-shipping-status-card--count-stepper {}
+.order-shipping-status-card--return-order {}
+.order-shipping-status-card__header {}
+.order-shipping-status-card__header--content {}
+.order-shipping-status-card__images {}
+
+/* OrderCancelForm */
+.order-order-cancel-reasons-form__button-container {}
+.order-order-cancel-reasons-form__text {}
+```

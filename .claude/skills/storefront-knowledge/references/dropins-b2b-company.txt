@@ -1,0 +1,3915 @@
+<SYSTEM>This is the B2B company management drop-ins bundle for Adobe Commerce Storefront on Edge Delivery Services</SYSTEM>
+
+# B2B company management drop-ins
+
+> Company management and company switcher drop-in reference for B2B
+> Generated: 2026-06-26T22:40:20.158Z
+> Source: https://experienceleague.adobe.com/developer/commerce/storefront
+
+
+---
+
+# AcceptInvitation Container
+
+Processes company invitation acceptance from email links and displays the result to the user.
+
+<strong>Version: 1.3.0</strong>
+
+## Configuration
+
+The `AcceptInvitation` container provides the following configuration options:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `routeMyAccount` | `function` | No | Returns the URL for the customer account page. Used for the 'Go to My Account' button after successful invitation acceptance. |
+| `routeLogin` | `function` | No | Returns the URL for the login page. Used when the user is not authenticated and needs to sign in. |
+| `isAuthenticated` | `boolean` | No | Indicates the current authentication status. When true, the container renders the acceptance flow; when false, it prompts the user to log in first. |
+| `labels` | `object` | No | Optional labels for overriding the default text. Supports keys: `title`, `loadingText`, `successTitle`, `successMessage`, `errorTitle`, `myAccountButton`, `loginButton`. |
+
+## Slots
+
+This container does not expose any customizable slots.
+
+## Usage
+
+The following example demonstrates how to use the `AcceptInvitation` container:
+
+```js
+
+await provider.render(AcceptInvitation, {
+  routeMyAccount: () => `/customer/account`,
+  routeLogin: () => `/customer/login`,
+  isAuthenticated
+})(block);
+```
+
+---
+
+# CompanyCredit Container
+
+Displays company credit information including credit limit, outstanding balance, and available credit for B2B customers.
+
+<strong>Version: 1.3.0</strong>
+
+## Configuration
+
+The `CompanyCredit` container provides the following configuration options:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `creditHistoryParams` | `GetCompanyCreditHistoryParams` | No | Provides optional parameters for filtering and paginating credit history data. Use to control date ranges, page size, or apply custom filters when displaying company credit transactions. |
+| `showCreditHistory` | `boolean` | No | Controls whether to display the credit history section. Set to false to hide historical transactions and show only current credit information, useful for simplified views or when history is displayed elsewhere. |
+| `initialData` | `object` | No | Preloaded data for the model before backend data is fetched. Use for testing, SSR, or improving initial load. |
+
+## Slots
+
+This container does not expose any customizable slots.
+
+## Usage
+
+The following example demonstrates how to use the `CompanyCredit` container:
+
+```js
+
+await provider.render(CompanyCredit, {
+  showCreditHistory: shouldShowHistory,
+  creditHistoryParams: shouldShowHistory ? { pageSize: 10, currentPage: 1, } : undefined
+})(block);
+```
+
+---
+
+# CompanyHierarchy Container
+
+Part of the https://github.com/adobe-commerce/storefront-company-management drop-in. Displays and manages the company organizational hierarchy for company administrators, with an interactive tree view that supports drag-and-drop reorganization of parent-child company relationships. The hierarchy supports only a single-level structure: parent companies and their direct children. Nested hierarchies are not supported.
+
+The following shows the tree view rendered in `SHOW_STRUCTURE` mode.
+
+![CompanyHierarchy container showing an interactive tree view of parent and child companies](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins-b2b/CH.png)
+
+*CompanyHierarchy container showing an interactive tree view of parent and child companies*
+
+> Only users with the Company Administrator role can view and interact with this container. Users without that role see an access-denied message. Company features must also be enabled in the Admin before hierarchy data can load — see [Admin configuration](#admin-configuration).
+
+## View modes
+
+The container renders one of five view modes depending on data state and user permissions.
+
+| Mode | When it appears |
+|---|---|
+| `IS_LOADING` | During the initial admin check and data fetch |
+| `NO_ACCESS` | When the authenticated user lacks Company Administrator privileges |
+| `IS_EMPTY` | When no companies exist in the hierarchy |
+| `IS_ERROR` | When an API call fails or a network error occurs |
+| `SHOW_STRUCTURE` | When data loads successfully, rendering the full interactive tree |
+
+## Displayed information
+
+When the container renders in `SHOW_STRUCTURE` mode, the tree view includes:
+
+- Company names in a hierarchical tree structure
+- Visual distinction between root companies (no parent) and child companies nested under a parent
+- Optional "Admin" badges next to companies where `is_admin` is `true` (controlled by `showAdminBadge`)
+- Drag handles on child companies for reorganizing the structure
+- Expand and collapse indicators for companies that have children
+- Company icons that distinguish root-level entries (full opacity) from child-level entries
+- Selection highlighting with a blue border on the clicked company row
+- A toolbar with Expand All and Collapse All action buttons
+
+## Available actions
+
+| Action | How to trigger |
+|---|---|
+| Expand or collapse a single node | Click the chevron icon on a company row |
+| Expand all nodes | Click the Expand All toolbar button |
+| Collapse all nodes | Click the Collapse All toolbar button (all nodes collapse except the virtual root) |
+| Select a company | Click any company row |
+| Drag a company | Drag a child company row to a new position in the tree |
+| Drop a company | Drop a dragged company onto a root-level company or the virtual root to reassign the relationship |
+| Auto-refresh | Triggered automatically after a successful assign or unassign operation |
+
+## GraphQL operations
+
+The container orchestrates the following operations automatically.
+
+| Operation | Type | Description |
+|---|---|---|
+| `isCompanyAdmin` | Query | Validates that the authenticated user has Company Administrator role. The check passes when `role.id === '0'` or `role.name === 'Company Administrator'`. |
+| `getCompanyHierarchy` | Query | Fetches the complete hierarchy including parent-child relationships via the `customer.company_hierarchy` field. |
+| `assignChildCompany` | Mutation | Assigns a child company to a parent company. |
+| `unassignChildCompany` | Mutation | Removes a child company from its parent, making it a root-level company. |
+
+## Configuration
+
+The `CompanyHierarchy` container provides the following configuration options:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `withHeader` | `boolean` | No | Renders a "Company Hierarchy" title and divider above the tree. Set to `true` for standalone page sections; leave `false` (default) when the surrounding layout already provides a title. Use `true` for full-page company management dashboards; use `false` for sidebar widgets or embedded views. |
+| `className` | `string` | No | Adds a custom CSS class to the root container element, merged with the default `account-company-hierarchy` class. Use to apply brand styles, integrate with a utility CSS framework (Tailwind, Bootstrap, etc.), add responsive layout classes for mobile or tablet layouts, or override default spacing, colors, or typography. |
+| `defaultExpanded` | `boolean` | No | Controls whether all tree nodes are expanded on first render. Defaults to `true`. Use `true` for small hierarchies (fewer than 10 companies) where immediate full visibility helps; use `false` for large hierarchies (20 or more companies) to reduce visual overload, or for progressive disclosure in compact or mobile layouts. |
+| `showAdminBadge` | `boolean` | No | Shows an "Admin" badge next to companies where the authenticated user has admin privileges (`is_admin: true`). Defaults to `false`. Enable in multi-company environments where users manage more than one organization, or in company selection interfaces where quick visual identification of administrative access rights is important. Disable for single-company users or when permissions are irrelevant to the task. |
+| `slots` | `object` | No | Replaces or extends the default toolbar above the tree. Use to swap in custom-styled Expand All / Collapse All controls, add extra actions (such as Export to PDF, Print Structure, or Share Hierarchy), implement filtering or search above the tree, display company count badges or hierarchy statistics, or integrate analytics tracking for expand and collapse events. See [Slots](#slots) for context properties. |
+
+## Slots
+
+The `CompanyHierarchy` container exposes one slot for customizing the toolbar.
+
+| Slot | Type | Required | Description |
+|------|------|----------|-------------|
+| `Actions` | `SlotProps<HierarchyActionsContext>` | No | Replaces the default "Expand All" / "Collapse All" toolbar buttons. Receives context with tree controls and state. |
+
+### Actions slot context
+
+The `Actions` slot receives a context object with the following properties:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `expandAll` | `() => void` | Expands all tree nodes. |
+| `collapseAll` | `() => void` | Collapses all nodes except the virtual root. |
+| `expandedIds` | `Set<string>` | The set of currently expanded node IDs. |
+| `setExpandedIds` | `(ids: Set<string>) => void` | Sets the expanded nodes programmatically. |
+| `treeItemsCount` | `number` | Total number of companies in the hierarchy. |
+
+## Usage
+
+The following examples show common ways to render the `CompanyHierarchy` container.
+
+### Basic
+
+```js
+
+await provider.render(CompanyHierarchy, {})(block);
+```
+
+### With header
+
+```js
+
+await provider.render(CompanyHierarchy, {
+  withHeader: true,
+})(block);
+```
+
+### With header and admin badges
+
+```js
+
+await provider.render(CompanyHierarchy, {
+  withHeader: true,
+  defaultExpanded: false,
+  showAdminBadge: true,
+})(block);
+```
+
+### With a custom Actions slot
+
+```jsx
+
+await provider.render(CompanyHierarchy, {
+  className: 'custom-hierarchy-styling',
+  withHeader: true,
+  defaultExpanded: true,
+  showAdminBadge: true,
+  slots: {
+    Actions: ({ expandAll, collapseAll, treeItemsCount }) => (
+      
+        <Button onClick={expandAll}>Open All ({treeItemsCount})</Button>
+        <Button onClick={collapseAll}>Close All</Button>
+        <Button>Export Structure</Button>
+      
+    ),
+  },
+})(block);
+```
+
+## Admin configuration
+
+The `CompanyHierarchy` container has no dedicated Admin panel settings of its own, but the following configurations must be in place for it to function.
+
+### Store settings
+
+Path: **Admin** > **Stores** > **Settings** > **Configuration** > **General** > **B2B Features** > **Company**
+
+| Setting | Required value |
+|---|---|
+| Enable Company | Yes |
+| Enable Company Registration from the Storefront | Yes |
+
+### Company settings
+
+Path: **Admin** > **Customers** > **Companies** > **Edit Company** > **Advanced Settings**
+
+- The parent company must exist and have Active status.
+- Each child company must have a valid company record before it can be assigned to a parent.
+
+### Permissions
+
+There are no dedicated ACL resources that control access to Company Hierarchy. Access is determined entirely by the Company Administrator role check performed via the `isCompanyAdmin()` API. Non-admin users see the access-denied view regardless of Admin panel settings.
+
+---
+
+# CompanyProfile Container
+
+Manages company profile information including legal name, VAT/Tax ID, contact details, and `payment/shipping` configurations.
+
+<strong>Version: 1.3.0</strong>
+
+## Configuration
+
+The `CompanyProfile` container provides the following configuration options:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `className` | `string` | No | Adds custom CSS classes to the container element. Use to override default styles, integrate with existing design systems, or apply conditional styling based on application state. |
+| `initialData` | `object` | No | Preloaded data for the model before backend data is fetched. Use for testing, SSR, or improving initial load. |
+
+## Slots
+
+This container exposes the following slots for customization:
+
+| Slot | Type | Required | Description |
+|------|------|----------|-------------|
+| `CompanyData` | `SlotProps` | No | Customize company profile information display. |
+
+## Usage
+
+The following example demonstrates how to use the `CompanyProfile` container:
+
+```js
+
+await provider.render(CompanyProfile, {
+  className: "Example Name",
+  initialData: {},
+  slots: {
+    // Add custom slot implementations here
+  }
+})(block);
+```
+
+---
+
+# CompanyRegistration Container
+
+Provides a company registration form for new B2B customers to create a company account.
+
+<strong>Version: 1.3.0</strong>
+
+## Configuration
+
+The `CompanyRegistration` container provides the following configuration options:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `isAuthenticated` | `boolean` | No | Indicates authentication status. Use to conditionally show registration or redirect to account. |
+| `onRedirectLogin` | `function` | No | Callback to redirect to login. Use for custom login routing. |
+| `onRedirectAccount` | `function` | No | Callback to redirect to account after registration. Use for custom navigation. |
+| `onSuccess` | `function` | No | Callback function triggered on successful completion. Use to implement custom success handling, navigation, or notifications. |
+| `onError` | `function` | No | Callback function triggered when an error occurs. Use to implement custom error handling, logging, or user notifications. |
+| `className` | `string` | No | Adds custom CSS classes to the container element. Use to override default styles, integrate with existing design systems, or apply conditional styling based on application state. |
+| `initialData` | `object` | No | Preloaded data for the model before backend data is fetched. Use for testing, SSR, or improving initial load. |
+
+## Slots
+
+This container does not expose any customizable slots.
+
+## Usage
+
+The following example demonstrates how to use the `CompanyRegistration` container:
+
+```js
+
+await provider.render(CompanyRegistration, {
+  isAuthenticated: true,
+  onRedirectLogin: (redirectLogin) => console.log('RedirectLogin', redirectLogin),
+  onRedirectAccount: (redirectAccount) => console.log('RedirectAccount', redirectAccount),
+})(block);
+```
+
+---
+
+# CompanyStructure Container
+
+Displays and manages the company organizational hierarchy with teams and user assignments.
+
+<strong>Version: 1.3.0</strong>
+
+## Configuration
+
+The `CompanyStructure` container provides the following configuration options:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `className` | `string` | No | Adds custom CSS classes to the container element. Use to override default styles, integrate with existing design systems, or apply conditional styling based on application state. |
+| `withHeader` | `boolean` | No | Controls whether to render the container header section. Set to false when embedding the container within a layout that already provides its own header to avoid duplicate navigation elements. |
+| `isAuthenticated` | `boolean` | No | Indicates authentication status. Use to conditionally render content or trigger login. |
+| `onRedirectLogin` | `function` | No | Callback to redirect to login. Use for custom login routing. |
+| `onRedirectAccount` | `function` | No | Callback to redirect to account. Use for custom navigation. |
+| `initialData` | `object` | No | Preloaded data for the model before backend data is fetched. Use for testing, SSR, or improving initial load. |
+
+## Slots
+
+This container exposes the following slots for customization:
+
+| Slot | Type | Required | Description |
+|------|------|----------|-------------|
+| `StructureData` | `SlotProps` | No | Customize company structure hierarchy display. |
+
+## Usage
+
+The following example demonstrates how to use the `CompanyStructure` container:
+
+```js
+
+await provider.render(CompanyStructure, {
+  className: "Example Name",
+  withHeader: true,
+  isAuthenticated: true,
+  slots: {
+    // Add custom slot implementations here
+  }
+})(block);
+```
+
+---
+
+# CompanyUsers Container
+
+Manages company users including adding, editing, removing users, and controlling user status (Active/Inactive).
+
+<strong>Version: 1.3.0</strong>
+
+## Configuration
+
+The `CompanyUsers` container provides the following configuration options:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| No configurations | - | - | - |
+
+## Slots
+
+This container does not expose any customizable slots.
+
+## Usage
+
+The following example demonstrates how to use the `CompanyUsers` container:
+
+```js
+
+await provider.render(CompanyUsers, {})(block);
+```
+
+---
+
+# CustomerCompanyInfo Container
+
+Displays basic company information for the currently authenticated customer.
+
+<strong>Version: 1.3.0</strong>
+
+## Configuration
+
+The `CustomerCompanyInfo` container provides the following configuration options:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `className` | `string` | No | Adds custom CSS classes to the container element. Use to override default styles, integrate with existing design systems, or apply conditional styling based on application state. |
+| `initialData` | `object` | No | Preloaded data for the model before backend data is fetched. Use for testing, SSR, or improving initial load. |
+
+## Slots
+
+This container does not expose any customizable slots.
+
+## Usage
+
+The following example demonstrates how to use the `CustomerCompanyInfo` container:
+
+```js
+
+await provider.render(CustomerCompanyInfo, {
+  className: "Example Name",
+  initialData: {},
+})(block);
+```
+
+---
+
+# Company Management Containers
+
+The **Company Management** drop-in provides pre-built container components for integrating into your storefront.
+
+<strong>Version: 1.3.0</strong>
+
+## What are Containers?
+
+Containers are pre-built UI components that combine functionality, state management, and presentation. They provide a complete solution for specific features and can be customized through props, slots, and CSS.
+
+## Available Containers
+
+| Container | Description |
+| --------- | ----------- |
+| [AcceptInvitation](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-management/containers/accept-invitation/) | Processes company invitation acceptance from email links and displays the result to the user. |
+| [CompanyCredit](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-management/containers/company-credit/) | Displays company credit information including credit limit, outstanding balance, and available credit for B2B customers. |
+| [CompanyHierarchy](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-management/containers/company-hierarchy/) | Displays and manages parent-child company relationships through an interactive tree view with drag-and-drop reorganization. |
+| [CompanyProfile](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-management/containers/company-profile/) | Manages company profile information including legal name, VAT/Tax ID, contact details, and `p`ayment/shippin`g` configurations. |
+| [CompanyRegistration](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-management/containers/company-registration/) | Provides a company registration form for new B2B customers to create a company account. |
+| [CompanyStructure](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-management/containers/company-structure/) | Displays and manages the company organizational hierarchy with teams and user assignments. |
+| [CompanyUsers](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-management/containers/company-users/) | Manages company users including adding, editing, removing users, and controlling user status (Active/Inactive). |
+| [CustomerCompanyInfo](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-management/containers/customer-company-info/) | Displays basic company information for the currently authenticated customer. |
+| [RolesAndPermissions](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-management/containers/roles-and-permissions/) | Manages company roles and permission assignments for role-based access control. |
+
+> Each container is designed to work independently but can be composed together to create comprehensive user experiences.
+
+---
+
+# RolesAndPermissions Container
+
+Manages company roles and permission assignments for role-based access control.
+
+<strong>Version: 1.3.0</strong>
+
+## Configuration
+
+The `RolesAndPermissions` container provides the following configuration options:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `className` | `string` | No | Adds custom CSS classes to the container element. Use to override default styles, integrate with existing design systems, or apply conditional styling based on application state. |
+| `withHeader` | `boolean` | No | Controls whether to render the container header section. Set to false when embedding the container within a layout that already provides its own header to avoid duplicate navigation elements. |
+| `initialData` | `object` | No | Preloaded data for the model before backend data is fetched. Use for testing, SSR, or improving initial load. |
+
+## Slots
+
+This container does not expose any customizable slots.
+
+## Usage
+
+The following example demonstrates how to use the `RolesAndPermissions` container:
+
+```js
+
+await provider.render(RolesAndPermissions, {
+  className: "Example Name",
+  withHeader: true,
+  initialData: {},
+})(block);
+```
+
+---
+
+# Company Management Dictionary
+
+The **Company Management dictionary** contains all user-facing text, labels, and messages displayed by this drop-in. Customize the dictionary to:
+
+- **Localize** the drop-in for different languages and regions
+- **Customize** labels and messages to match your brand voice
+- **Override** default text without modifying source code for the drop-in
+
+Dictionaries use the **i18n (internationalization)** pattern, where each text string is identified by a unique key path.
+
+<strong>Version: 1.2.0</strong>
+
+## How to customize
+
+Override dictionary values during drop-in initialization. The drop-in deep-merges your custom values with the defaults.
+
+```javascript
+
+await initialize({
+  langDefinitions: {
+    en_US: {
+      "Company": {
+        "shared": {
+          "fields": {
+            "companyName": "Custom value",
+            "companyEmail": "Custom value"
+          }
+        }
+      }
+    }
+  }
+});
+```
+
+You only need to include the keys you want to change. For multi-language support and advanced patterns, see the [Dictionary customization guide](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/dictionaries/).
+
+## Default keys and values
+
+Below are the default English (`en_US`) strings provided by the **Company Management** drop-in:
+
+```json title="en_US.json"
+{
+  "Company": {
+    "shared": {
+      "fields": {
+        "companyName": "Company Name",
+        "companyEmail": "Company Email",
+        "email": "Email",
+        "legalName": "Legal Name",
+        "vatTaxId": "VAT/Tax ID",
+        "resellerId": "Reseller ID",
+        "accountInformation": "Account Information",
+        "legalAddress": "Legal Address",
+        "streetAddress": "Street Address",
+        "city": "City",
+        "country": "Country",
+        "stateProvince": "State/Province",
+        "zipPostalCode": "ZIP/Postal Code",
+        "phoneNumber": "Phone Number",
+        "status": "Status",
+        "region": "Region",
+        "postalCode": "Postal Code",
+        "jobTitle": "Job Title",
+        "workPhoneNumber": "Work Phone Number",
+        "userRole": "User Role",
+        "title": "New Company",
+        "companyInformation": "Company Information",
+        "street": "Street Address",
+        "streetLine2": "Street Address Line 2",
+        "postcode": "ZIP/Postal Code",
+        "telephone": "Phone Number",
+        "companyAdmin": "Company Administrator",
+        "adminJobTitle": "Job Title",
+        "adminWorkTelephone": "Work Phone Number",
+        "adminEmail": "Email",
+        "adminFirstname": "First Name",
+        "adminLastname": "Last Name",
+        "adminGender": "Gender",
+        "address": "Address",
+        "submit": "Register Company",
+        "submitting": "Registering...",
+        "required": "Required",
+        "createCompanyError": "Failed to create company. Please try again.",
+        "unexpectedError": "An unexpected error occurred. Please try again."
+      },
+      "buttons": {
+        "edit": "Edit",
+        "cancel": "Cancel",
+        "save": "Save Changes",
+        "saving": "Saving...",
+        "close": "Close",
+        "confirm": "Confirm"
+      },
+      "validation": {
+        "required": "This field is required",
+        "invalidEmail": "Please enter a valid email address",
+        "companyNameRequired": "Company name is required",
+        "emailRequired": "Email is required",
+        "emailNotAvailable": "This email is already used by another company",
+        "phoneInvalid": "Please enter a valid phone number",
+        "postalCodeInvalid": "Please enter a valid postal code",
+        "companyNameLengthError": "Company name must not exceed 40 characters",
+        "legalNameLengthError": "Legal name must not exceed 80 characters",
+        "vatTaxIdLengthError": "VAT/Tax ID must not exceed 40 characters",
+        "resellerIdLengthError": "Reseller ID must not exceed 40 characters",
+        "roleNameRequired": "This is a required field.",
+        "roleNameExists": "User role with this name already exists. Enter a different name to save this role."
+      },
+      "messages": {
+        "loading": "Loading...",
+        "noData": "No data available",
+        "error": "An error occurred",
+        "success": "Operation completed successfully"
+      },
+      "loading": "Loading...",
+      "ariaLabels": {
+        "editButton": "Edit company profile",
+        "cancelButton": "Cancel editing",
+        "saveButton": "Save company profile changes",
+        "closeButton": "Close dialog"
+      }
+    },
+    "CompanyProfile": {
+      "containerTitle": "Company Profile",
+      "editCompanyProfile": {
+        "containerTitle": "Edit Company Profile",
+        "companySuccess": "Company profile updated successfully",
+        "companyError": "Failed to update company profile",
+        "buttonSecondary": "Cancel",
+        "buttonPrimary": "Save Changes"
+      },
+      "companyProfileCard": {
+        "noDataMessage": "Company profile not available. Please contact your administrator.",
+        "contacts": "Contacts",
+        "companyAdministrator": "Company Administrator",
+        "salesRepresentative": "Sales Representative",
+        "paymentInformation": "Payment Information",
+        "availablePaymentMethods": "Available Payment Methods",
+        "shippingInformation": "Shipping Information",
+        "availableShippingMethods": "Available Shipping Methods",
+        "noPaymentMethods": "This company has no payment methods. Please contact store administrator.",
+        "noShippingMethods": "This company has no shipping methods. Please contact store administrator.",
+        "companyDetails": "Company Details",
+        "addressInformation": "Address Information"
+      },
+      "messages": {
+        "loadError": "Failed to load company profile",
+        "updateError": "Failed to update company profile",
+        "loadingProfile": "Loading company profile...",
+        "savingProfile": "Saving company profile...",
+        "noDataToUpdate": "No data to update"
+      }
+    },
+    "CompanyStructure": {
+      "containerTitle": "Company Structure",
+      "shared": {
+        "buttons": {
+          "addUser": "Add User",
+          "addTeam": "Add Team",
+          "editSelected": "Edit",
+          "remove": "Remove",
+          "ok": "OK",
+          "cancel": "Cancel",
+          "close": "Close",
+          "save": "Save",
+          "deleting": "Deleting…",
+          "removing": "Removing…",
+          "expandAll": "Expand All",
+          "collapseAll": "Collapse All"
+        },
+        "titles": {
+          "addUser": "Add User",
+          "editUser": "Edit User",
+          "addTeam": "Add Team",
+          "editTeam": "Edit Team"
+        },
+        "fields": {
+          "jobTitle": "Job Title",
+          "userRole": "User Role",
+          "firstName": "First Name",
+          "lastName": "Last Name",
+          "email": "Email",
+          "workPhoneNumber": "Work Phone Number",
+          "status": "Status",
+          "teamTitle": "Team Title",
+          "description": "Description"
+        },
+        "options": {
+          "selectRole": "Select role…",
+          "active": "Active",
+          "inactive": "Inactive",
+          "companyAdministrator": "Company Administrator",
+          "delete": "Delete",
+          "expand": "Expand",
+          "collapse": "Collapse"
+        },
+        "ariaLabels": {
+          "addUser": "Add user",
+          "addTeam": "Add team",
+          "editSelected": "Edit selected",
+          "removeSelected": "Remove selected",
+          "showDescription": "Show description",
+          "companyStructureActions": "Company structure actions",
+          "expandAllNodes": "Expand all nodes",
+          "collapseAllNodes": "Collapse all nodes"
+        },
+        "messages": {
+          "processing": "Processing…",
+          "teamDescription": "Team description"
+        },
+        "validation": {
+          "firstNameRequired": "First name is required",
+          "lastNameRequired": "Last name is required",
+          "emailRequired": "Email is required",
+          "emailInvalid": "Enter a valid email",
+          "jobTitleRequired": "Job title is required",
+          "workPhoneRequired": "Work phone number is required",
+          "selectRole": "Select a role",
+          "teamTitleRequired": "Team title is required",
+          "firstNameMaxLength": "First name must not exceed 255 characters",
+          "lastNameMaxLength": "Last name must not exceed 255 characters",
+          "emailMaxLength": "Email must not exceed 254 characters",
+          "jobTitleMaxLength": "Job title must not exceed 255 characters",
+          "telephoneMaxLength": "Phone number must not exceed 20 characters",
+          "teamNameMaxLength": "Team title must not exceed 39 characters",
+          "teamDescriptionMaxLength": "Team description must not exceed 1000 characters",
+          "firstNameInvalidChars": "First name contains invalid characters. Only letters, numbers, spaces, and ,-._'`& are allowed",
+          "lastNameInvalidChars": "Last name contains invalid characters. Only letters, numbers, spaces, and ,-._'`& are allowed",
+          "telephoneInvalidChars": "Phone number contains invalid characters. Only 0-9, +, -, (, ), and spaces are allowed"
+        }
+      },
+      "messages": {
+        "loadError": "Failed to load company structure",
+        "updateError": "Failed to update company structure",
+        "noStructureData": "No structure data.",
+        "cannotDeleteUser": "Cannot Delete User",
+        "cannotDeleteTeam": "Cannot Delete This Team",
+        "removeUserConfirm": "Remove this user from Company structure?",
+        "deleteTeamConfirm": "Delete this team?",
+        "removeItemsConfirm": "Remove {count} item(s)?",
+        "removeUserMessage": "Removing a user changes the account status to Inactive. The user's content is still available to the Company administrator, but the user cannot log in.",
+        "cannotDeleteUserMessage": "This user has active users or teams assigned to it and cannot be deleted. Please unassign the users or teams first.",
+        "cannotDeleteTeamMessage": "This team has active users or teams assigned to it and cannot be deleted. Please unassign the users or teams first.",
+        "removeItemsMessage": "This action will remove the selected items from the company structure.",
+        "deleteTeamMessage": "This action cannot be undone. Are you sure you want to delete this team?",
+        "failedToMoveItem": "Failed to move item",
+        "createUserError": "Failed to create user. You may not have permission to perform this action.",
+        "createTeamError": "Failed to create team. You may not have permission to perform this action.",
+        "saveUserError": "An error occurred while saving the user.",
+        "saveTeamError": "An error occurred while saving the team.",
+        "createUserSuccess": "The customer was successfully created.",
+        "updateUserSuccess": "The customer was successfully updated.",
+        "createTeamSuccess": "The team was successfully created.",
+        "updateTeamSuccess": "The team was successfully updated.",
+        "removeUserSuccess": "User was successfully removed from company structure.",
+        "deleteTeamSuccess": "Team was successfully deleted.",
+        "removeMultipleSuccess": "{count} item(s) were successfully removed.",
+        "moveUserSuccess": "User was successfully moved.",
+        "moveTeamSuccess": "Team was successfully moved.",
+        "loadRolesError": "Failed to load roles",
+        "fetchPermissionsError": "Failed to fetch permissions"
+      }
+    },
+    "CompanyUsers": {
+      "filters": {
+        "showAll": "Show All Users",
+        "showActive": "Show Active Users",
+        "showInactive": "Show Inactive Users"
+      },
+      "columns": {
+        "id": "ID",
+        "name": "Name",
+        "email": "Email",
+        "role": "Role",
+        "team": "Team",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "emptyTeam": "-",
+      "pagination": {
+        "itemsRange": "Items {start}-{end} of {total}",
+        "itemsPerPage": "Items per page:",
+        "show": "Show",
+        "perPage": "per page",
+        "previous": "Previous",
+        "next": "Next",
+        "pageInfo": "Page {current} of {total}"
+      },
+      "emptyActions": "",
+      "noUsersFound": "No users found.",
+      "actions": {
+        "manage": "Manage",
+        "edit": "Edit",
+        "addNewUser": "Add New User"
+      },
+      "ariaLabels": {
+        "loadingUsers": "Loading company users",
+        "usersTable": "Company users table",
+        "filterOptions": "User filter options",
+        "paginationNav": "Pagination navigation",
+        "pageNavigation": "Page navigation",
+        "pageSizeSelector": "Items per page selector",
+        "previousPageFull": "Go to previous page, current page {current}",
+        "nextPageFull": "Go to next page, current page {current}",
+        "currentPage": "Current page {current} of {total}",
+        "showingUsers": "Showing {count} users",
+        "dataLoaded": "Loaded {count} users",
+        "dataError": "Failed to load users.",
+        "manageUser": "Manage user {name}",
+        "editUser": "Edit user {name}"
+      },
+      "managementModal": {
+        "title": "Manage user",
+        "setActiveText": "Reactivate the user's account by selecting \"Set as Active\".",
+        "setInactiveText": "Temporarily lock the user's account by selecting \"Set as Inactive\".",
+        "deleteText": "Permanently delete the user's account and all associated content by selecting \"Delete\". This action cannot be reverted.",
+        "setActiveButton": "Set as Active",
+        "setInactiveButton": "Set as Inactive",
+        "settingActiveButton": "Setting Active...",
+        "settingInactiveButton": "Setting Inactive...",
+        "deleteButton": "Delete",
+        "deletingButton": "Deleting...",
+        "cancelButton": "Cancel",
+        "setActiveErrorGeneric": "An unexpected error occurred while setting user as active.",
+        "setActiveErrorSpecific": "Failed to set user as active.",
+        "setInactiveErrorGeneric": "An unexpected error occurred while setting user as inactive.",
+        "setInactiveErrorSpecific": "Failed to set user as inactive.",
+        "deleteErrorGeneric": "An unexpected error occurred.",
+        "deleteErrorSpecific": "Failed to delete user.",
+        "setActiveSuccess": "User was successfully activated.",
+        "setInactiveSuccess": "User was successfully deactivated.",
+        "deleteSuccess": "User was successfully deleted.",
+        "ariaLabels": {
+          "closeModal": "Close modal",
+          "modalDescription": "User management options including setting as inactive or deleting the user account"
+        }
+      }
+    },
+    "CompanyRegistration": {
+      "success": {
+        "pendingApproval": "Thank you! We're reviewing your request and will contact you soon.",
+        "companyDetails": "Company Information"
+      }
+    },
+    "CustomerCompanyInfo": {
+      "individualUserMessage": "You don't have a company account yet.",
+      "createAccountCta": "Create a Company Account"
+    },
+    "CompanyCredit": {
+      "title": "Company Credit",
+      "creditAvailable": "Available Credit",
+      "creditLimit": "Credit Limit",
+      "outstandingBalance": "Outstanding Balance",
+      "messages": {
+        "loadError": "Failed to load company credit"
+      },
+      "emptyState": {
+        "title": "No Credit Information",
+        "message": "There is no credit information to display."
+      }
+    },
+    "CompanyCreditHistory": {
+      "title": "Credit History",
+      "columns": {
+        "date": "Date",
+        "operation": "Operation",
+        "amount": "Amount",
+        "outstandingBalance": "Outstanding Balance",
+        "availableCredit": "Available Credit",
+        "creditLimit": "Credit Limit",
+        "customReference": "Custom Reference #",
+        "updatedBy": "Updated By"
+      },
+      "pagination": {
+        "itemsRange": "Items {start}-{end} of {total}",
+        "show": "Show"
+      },
+      "emptyState": {
+        "title": "No Credit History",
+        "message": "There is no credit history to display."
+      },
+      "ariaLabels": {
+        "dataLoaded": "Loaded {count} credit history entries",
+        "dataError": "Failed to load credit history entries. Please try again.",
+        "historyTable": "Credit history table",
+        "paginationNav": "Pagination navigation",
+        "pageSizeSelector": "Items per page selector",
+        "showingHistory": "Showing {count} credit history entries"
+      }
+    },
+    "EditRoleAndPermission": {
+      "createTitle": "Add New Role",
+      "editTitle": "Edit Role",
+      "roleInformation": "Role Information",
+      "roleName": "Role Name",
+      "rolePermissions": "Role Permissions",
+      "permissionsDescription": "Granting permissions does not affect which features are available for your company account. The merchant must enable features to make them available for your account.",
+      "expandAll": "Expand All",
+      "collapseAll": "Collapse All",
+      "saveRole": "Save Role"
+    },
+    "FormText": {
+      "requiredFieldError": "This is a required field.",
+      "numericError": "Only numeric values are allowed.",
+      "alphaNumWithSpacesError": "Only alphanumeric characters and spaces are allowed.",
+      "alphaNumericError": "Only alphanumeric characters are allowed.",
+      "alphaError": "Only alphabetic characters are allowed.",
+      "emailError": "Please enter a valid email address.",
+      "phoneError": "Please enter a valid phone number.",
+      "postalCodeError": "Please enter a valid postal code.",
+      "lengthTextError": "Text length must be between {min} and {max} characters.",
+      "urlError": "Please enter a valid URL",
+      "nameError": "Please enter a valid name",
+      "selectCountry": "Please select a country",
+      "selectRegion": "Please select a region, state or province",
+      "selectCountryFirst": "Please select a country first",
+      "companyNameLengthError": "Company name must be between {min} and {max} characters.",
+      "loading": "Loading...",
+      "submitting": "Registering your company..."
+    },
+    "AcceptInvitation": {
+      "title": "Accept Company Invitation",
+      "loadingText": "Processing your invitation...",
+      "successMessage": "You have successfully accepted the invitation to the company.",
+      "myAccountButton": "My Account",
+      "loginButton": "Go to Login",
+      "invalidLinkError": "Invalid invitation link. Please check the URL and try again.",
+      "companyDisabledError": "Company functionality is not enabled. Please contact the store administrator.",
+      "expiredLinkError": "This invitation link has expired or is no longer valid.",
+      "genericError": "An error occurred while processing your invitation. Please try again."
+    },
+    "RolesAndPermissions": {
+      "containerTitle": "Company Roles & Permissions",
+      "noAccess": {
+        "title": "Access Restricted",
+        "message": "You do not have permission to view roles and permissions. Please contact your company administrator."
+      },
+      "error": {
+        "title": "Error Loading Roles",
+        "message": "An error occurred while loading roles and permissions. Please try again."
+      },
+      "deleteModal": {
+        "title": "Delete This Role?",
+        "message": "This action cannot be undone. Are you sure you want to delete this role?",
+        "confirm": "Delete",
+        "cancel": "Cancel"
+      },
+      "cannotDeleteModal": {
+        "title": "Cannot Delete Role",
+        "message": "This role cannot be deleted because users are assigned to it. Reassign the users to another role to continue.",
+        "ok": "OK"
+      },
+      "alerts": {
+        "createSuccess": "Role \"{roleName}\" created successfully!",
+        "createError": "Failed to create role. Please try again.",
+        "createErrorPermissions": "Failed to create role. Please check your permissions and try again.",
+        "updateSuccess": "Role \"{roleName}\" updated successfully!",
+        "updateError": "Failed to update role. Please try again.",
+        "updateErrorPermissions": "Failed to update role. Please check your permissions and try again.",
+        "deleteError": "Failed to delete role. Please try again."
+      }
+    },
+    "RoleAndPermissionTable": {
+      "addNewRole": "Add New Role",
+      "columnId": "ID",
+      "columnRole": "Role",
+      "columnUsers": "Users",
+      "columnActions": "Actions",
+      "editButton": "Edit",
+      "duplicateButton": "Duplicate",
+      "deleteButton": "Delete",
+      "viewOnlyLabel": "View Only",
+      "systemRoleLabel": "System Role",
+      "itemCount": "Item(s)",
+      "itemsRange": "Items {start}-{end} of {total}",
+      "show": "Show",
+      "perPage": "per page",
+      "deleteRole": {
+        "success": "You have deleted role \"{roleName}\"."
+      }
+    },
+    "CompanyHierarchy": {
+      "containerTitle": "Company Hierarchy",
+      "messages": {
+        "noCompaniesData": "No companies data available.",
+        "loading": "Loading company hierarchy...",
+        "loadError": "Failed to load company hierarchy. Please try again.",
+        "moveError": "Failed to update company hierarchy. Your changes were not saved."
+      },
+      "noAccess": {
+        "title": "Access Denied",
+        "message": "You do not have permission to view company hierarchy."
+      }
+    },
+    "Table": {
+      "sortedAscending": "Sorted ascending by {label}",
+      "sortedDescending": "Sorted descending by {label}",
+      "sortBy": "Sort by {label}"
+    }
+  }
+}
+```
+
+---
+
+# Company Management Events and Data
+
+The **Company Management** drop-in uses the [event bus](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/events/) to emit and listen to events for communication between drop-ins and external integrations.
+
+<strong>Version: 1.3.0</strong>
+
+## Events reference
+
+{/* EVENTS_TABLE_START */}
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [company/updated](#companyupdated-emits) | Emits | Emitted when the component state is updated. |
+| [companyStructure/updated](#companystructureupdated-emits) | Emits | Emitted when the component state is updated. |
+| [error](#error-emits) | Emits | Emitted when a network error occurs during any API call. |
+| [companyContext/changed](#companycontextchanged-listens) | Listens | Fired by Company Context (`companyContext`) when a change occurs. |
+
+{/* EVENTS_TABLE_END */}
+
+## Event details
+
+The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
+
+### `company/updated` (emits)
+
+Emitted when company information is updated. This event fires after successful company profile updates, legal address changes, contact information modifications, or sales representative information updates.
+
+#### Event payload
+
+```typescript
+{
+  data?: {
+    id?: string;
+    companyName?: string;
+    email?: string;
+    telephone?: string;
+  };
+  message?: string;
+  error?: Error;
+}
+```
+
+#### When triggered
+
+- After successful company profile update
+- After updating company legal address
+- After updating company contact information
+- After updating sales representative information
+
+#### Example 1: Basic company update handler
+
+```js
+
+// Listen for company updates
+events.on('company/updated', (payload) => {
+  console.log('Company updated:', payload.data);
+  
+  // Update UI or trigger other actions
+  refreshCompanyDisplay();
+});
+```
+
+#### Example 2: Update with notification and error handling
+
+```js
+
+async function updateCompanyProfile(updates) {
+  try {
+    // Show loading state
+    showLoadingIndicator('Updating company profile...');
+    
+    // Update the company
+    await updateCompany(updates);
+    
+    // Listen for successful update
+    events.once('company/updated', (payload) => {
+      hideLoadingIndicator();
+      showSuccessNotification('Company profile updated successfully');
+      
+      // Update the displayed company information
+      document.querySelector('.company-name').textContent = payload.data.companyName;
+      document.querySelector('.company-email').textContent = payload.data.email;
+      
+      // Track the update in analytics
+      trackEvent('company_profile_updated', {
+        companyId: payload.data.id,
+        fieldsUpdated: Object.keys(updates)
+      });
+    });
+    
+  } catch (error) {
+    hideLoadingIndicator();
+    showErrorNotification('Failed to update company profile: ' + error.message);
+    console.error('Company update error:', error);
+  }
+}
+
+// Usage
+updateCompanyProfile({
+  companyName: 'Acme Corporation',
+  email: 'info@acme.com',
+  telephone: '+1-555-0123'
+});
+```
+
+#### Example 3: Real-time multi-component sync
+
+```js
+
+// Central company data manager
+class CompanyDataManager {
+  constructor() {
+    this.subscribers = [];
+    
+    // Listen for company updates
+    events.on('company/updated', this.handleCompanyUpdate.bind(this));
+  }
+  
+  handleCompanyUpdate(payload) {
+    const companyData = payload.data;
+    
+    // Update all subscribed components
+    this.subscribers.forEach(callback => {
+      try {
+        callback(companyData);
+      } catch (error) {
+        console.error('Error updating subscriber:', error);
+      }
+    });
+    
+    // Update local storage for offline support
+    localStorage.setItem('companyData', JSON.stringify(companyData));
+    
+    // Sync with external CRM
+    this.syncWithCRM(companyData);
+  }
+  
+  subscribe(callback) {
+    this.subscribers.push(callback);
+  }
+  
+  async syncWithCRM(companyData) {
+    try {
+      await fetch('/api/crm/update-company', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(companyData)
+      });
+    } catch (error) {
+      console.error('CRM sync failed:', error);
+    }
+  }
+}
+
+// Initialize manager
+const companyManager = new CompanyDataManager();
+
+// Subscribe components
+companyManager.subscribe((data) => {
+  // Update header component
+  document.querySelector('.header-company-name').textContent = data.companyName;
+});
+
+companyManager.subscribe((data) => {
+  // Update sidebar widget
+  updateCompanySidebarWidget(data);
+});
+```
+
+#### Usage scenarios
+
+- Refresh company profile display after edits.
+- Trigger analytics tracking for profile changes.
+- Update related UI components (headers, sidebars, widgets).
+- Sync company data with external systems (CRM, ERP).
+- Show success notifications to users.
+- Update cached data and local storage.
+- Refresh company-dependent permissions.
+- Update breadcrumbs and navigation with company name.
+
+---
+
+### `error` (emits)
+
+Emitted when a network error occurs during any Company Management API call. Does not fire for intentional user cancellations (`AbortError`).
+
+#### Event payload
+
+```typescript
+{
+  source: 'company';
+  type: 'network';
+  error: Error;
+}
+```
+
+#### When triggered
+
+- When any API mutation or query fails due to a network error.
+- Does **not** fire when the request is deliberately aborted.
+
+#### Example
+
+```js
+
+events.on('error', ({ source, type, error }) => {
+  if (source === 'company') {
+    console.error('Company Management network error:', error.message);
+  }
+});
+```
+
+---
+
+### `companyContext/changed` (listens)
+
+Fired by Company Context (`companyContext`) when a change occurs.
+
+#### Event payload
+
+```typescript
+string | null | undefined
+```
+
+#### Example
+
+```js
+
+events.on('companyContext/changed', (payload) => {
+  console.log('companyContext/changed event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `companyStructure/updated` (emits)
+
+Emitted when the company organizational structure changes. This event fires after creating or updating teams, deleting teams, creating or updating users, moving users between teams, or changing team hierarchy.
+
+#### Event payload
+
+```typescript
+{
+  message?: string;
+  action?: 'move' | 'remove' | 'add';
+  nodeId?: string;
+  newParentId?: string;
+  nodeIds?: string[];
+  nodes?: unknown[];
+  error?: unknown;
+}
+```
+
+#### When triggered
+
+- After creating a new team
+- After updating team information
+- After deleting a team
+- After creating a new user
+- After updating user details
+- After moving users between teams
+- After changing team hierarchy
+
+#### Example 1: Interactive structure tree with live updates
+
+```js
+
+class CompanyStructureTree {
+  constructor(containerElement) {
+    this.container = containerElement;
+    this.structureData = null;
+    
+    // Listen for structure updates
+    events.on('companyStructure/updated', this.handleUpdate.bind(this));
+    
+    // Initial load
+    this.loadStructure();
+  }
+  
+  async loadStructure() {
+    try {
+      this.showLoading();
+      this.structureData = await getCompanyStructure();
+      this.render();
+    } catch (error) {
+      this.showError('Failed to load company structure');
+      console.error(error);
+    }
+  }
+  
+  async handleUpdate(payload) {
+    console.log('Structure updated:', payload.data);
+    
+    // Highlight the updated section
+    const updatedNodeId = payload.data.updatedNodeId;
+    if (updatedNodeId) {
+      this.highlightNode(updatedNodeId);
+    }
+    
+    // Reload the full structure
+    await this.loadStructure();
+    
+    // Show success message
+    this.showNotification('Organization structure updated', 'success');
+    
+    // Refresh permissions for all users in the tree
+    await this.refreshPermissions();
+  }
+  
+  highlightNode(nodeId) {
+    const nodeElement = this.container.querySelector(`[data-node-id="${nodeId}"]`);
+    if (nodeElement) {
+      nodeElement.classList.add('highlight-update');
+      setTimeout(() => nodeElement.classList.remove('highlight-update'), 2000);
+    }
+  }
+  
+  render() {
+    // Render the structure tree
+    this.container.innerHTML = this.buildTreeHTML(this.structureData);
+    this.attachEventListeners();
+  }
+  
+  buildTreeHTML(structure) {
+    // Build hierarchical HTML for the structure
+    return `...`;
+  }
+  
+  async refreshPermissions() {
+    // Refresh permissions after structure change
+    events.emit('permissions/refresh-needed');
+  }
+  
+  showLoading() {
+    this.container.innerHTML = 'Loading structure...';
+  }
+  
+  showError(message) {
+    this.container.innerHTML = `${message}`;
+  }
+  
+  showNotification(message, type) {
+    // Show toast notification
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
+  }
+  
+  attachEventListeners() {
+    // Add drag-and-drop, expand/collapse, etc.
+  }
+}
+
+// Initialize the tree
+const tree = new CompanyStructureTree(document.querySelector('#company-structure'));
+```
+
+#### Example 2: Team-based notification system
+
+```js
+
+// Track structure changes and notify affected users
+events.on('companyStructure/updated', async (payload) => {
+  const { data } = payload;
+  
+  // Determine what changed
+  const changeType = determineChangeType(data);
+  
+  switch (changeType) {
+    case 'team-created':
+      notifyTeamCreation(data.newTeam);
+      break;
+    case 'team-deleted':
+      notifyTeamDeletion(data.deletedTeam);
+      break;
+    case 'user-moved':
+      notifyUserReassignment(data.user, data.oldTeam, data.newTeam);
+      break;
+    case 'hierarchy-changed':
+      notifyHierarchyChange(data.affectedTeams);
+      break;
+  }
+  
+  // Update all team-based UI components
+  updateTeamSelectors();
+  updateUserFilters();
+  refreshTeamDashboards();
+  
+  // Log for audit trail
+  logStructureChange({
+    timestamp: new Date(),
+    changeType,
+    userId: getCurrentUserId(),
+    details: data
+  });
+});
+
+function determineChangeType(data) {
+  // Logic to determine what type of change occurred
+  if (data.newTeam) return 'team-created';
+  if (data.deletedTeam) return 'team-deleted';
+  if (data.userMoved) return 'user-moved';
+  return 'hierarchy-changed';
+}
+
+async function notifyUserReassignment(user, oldTeam, newTeam) {
+  const message = `${user.name} has been moved from ${oldTeam.name} to ${newTeam.name}`;
+  
+  // Notify team managers
+  await sendNotification([oldTeam.managerId, newTeam.managerId], message);
+  
+  // Notify the user
+  await sendNotification([user.id], `You have been assigned to ${newTeam.name}`);
+  
+  // Update UI
+  showToast(message, 'info');
+}
+
+function logStructureChange(logEntry) {
+  // Send to audit log
+  fetch('/api/audit/log', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(logEntry)
+  });
+}
+```
+
+#### Usage scenarios
+
+- Refresh the company structure tree display in real-time.
+- Update user access controls based on new hierarchy.
+- Trigger notifications to affected team members.
+- Log organizational changes for audit and compliance.
+- Update cached structure data and local storage.
+- Refresh team-based dropdowns and filters.
+- Update permission matrices after reassignments.
+- Highlight changes in the structure visualization.
+- Trigger workflow updates (approval chains, and so on).
+- Sync organizational structure with external HR systems.
+
+---
+
+## Listening to events
+
+All Company Management events are emitted through the centralized event bus. Subscribe to events using the `events.on()` method:
+
+```js
+
+// Single event listener
+events.on('company/updated', (payload) => {
+  // Handle company update
+});
+
+// Multiple event listeners
+events.on('company/updated', handleCompanyUpdate);
+events.on('companyStructure/updated', handleStructureUpdate);
+
+// Remove listeners when no longer needed
+events.off('company/updated', handleCompanyUpdate);
+```
+
+> Event listeners remain active until explicitly removed with `events.off()`. Clean up listeners when components unmount to prevent memory leaks.
+
+## Related documentation
+
+- [Functions](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-management/functions/) - API functions that emit these events
+- [Containers](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-management/containers/) - UI components that respond to events
+- [Event bus documentation](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/events/) - Learn more about the event system
+
+{/* This documentation is manually curated based on: https://github.com/adobe-commerce/storefront-company-management */}
+
+---
+
+# Company Management Functions
+
+The Company Management drop-in provides **29 API functions** for managing company structures, users, roles, permissions, and credit, enabling complete B2B company administration workflows.
+
+<strong>Version: 1.3.0</strong>
+
+| Function | Description |
+| --- | --- |
+| [`acceptCompanyInvitation`](#acceptcompanyinvitation) | Accepts a company invitation using the invitation code and user details from an email link. |
+| [`allowCompanyRegistration`](#allowcompanyregistration) | Returns whether the backend allows company self-registration per store configuration. |
+| [`assignChildCompany`](#assignchildcompany) | Assigns a child company to a parent company in the company hierarchy. |
+| [`buildPermissionTree`](#buildpermissiontree) | Filters a complete ACL resource tree down to only the resources matching the provided permission IDs. |
+| [`checkCompanyCreditEnabled`](#checkcompanycreditenabled) | Checks whether the Company Credit functionality ("Payment on Account") is enabled for the logged-in customer's company. |
+| [`companyEnabled`](#companyenabled) | Returns whether the Company feature is enabled in store configuration. |
+| [`createCompany`](#createcompany) | Registers a new B2B company with complete business information including company details, legal address, and administrator account. |
+| [`createCompanyRole`](#createcompanyrole) | Creates a new company role with specified permissions and assigns it to users. |
+| [`createCompanyTeam`](#createcompanyteam) | Creates a new company team under an optional target structure node. |
+| [`createCompanyUser`](#createcompanyuser) | Creates a new company user and optionally places them under a target structure node. |
+| [`deleteCompanyRole`](#deletecompanyrole) | Deletes a company role by ID and unassigns users from the deleted role. |
+| [`deleteCompanyTeam`](#deletecompanyteam) | Deletes a company team by entity ID. |
+| [`deleteCompanyUser`](#deletecompanyuser) | Unassigns the user from the company (the user is not removed from the Company Structure tree). |
+| [`fetchUserPermissions`](#fetchuserpermissions) | Retrieves the current user's role permissions and returns both the flattened permission IDs and the raw role response. |
+| [`flattenPermissionIds`](#flattenpermissionids) | Flattens a nested ACL resource tree into a flat array of permission ID strings. |
+| [`getCompany`](#getcompany) | Retrieves complete information about the current company including name, structure, settings, and metadata. |
+| [`getCompanyAclResources`](#getcompanyaclresources) | Retrieves the available ACL (Access Control List) resources for company role permissions. |
+| [`getCompanyHierarchy`](#getcompanyhierarchy) | Retrieves the hierarchy of companies related to the current company. |
+| [`getCompanyCredit`](#getcompanycredit) | Retrieves the company's credit information including available credit, credit limit, outstanding balance, and currency. |
+| [`getCompanyCreditHistory`](#getcompanycredithistory) | Retrieves the company's credit transaction history with pagination support. |
+| [`getCompanyRole`](#getcompanyrole) | Retrieves details for a single company role including permissions and assigned users. |
+| [`getCompanyRoles`](#getcompanyroles) | Retrieves all company roles with their permissions and user assignments. |
+| [`getCompanyStructure`](#getcompanystructure) | Retrieves the hierarchical organization structure of the company including all teams, divisions, and reporting relationships. |
+| [`getCompanyTeam`](#getcompanyteam) | Fetches details for a single company team by entity ID. |
+| [`getCompanyUser`](#getcompanyuser) | Fetches details for a single company user by entity ID. |
+| [`getCompanyUsers`](#getcompanyusers) | Fetches the list of company users with their roles and team information, supporting pagination and status filtering. |
+| [`getCountries`](#getcountries) | Retrieves available countries and regions for address forms. |
+| [`getCustomerCompany`](#getcustomercompany) | Fetches simplified customer company information for display on the customer account information page. |
+| [`getStoreConfig`](#getstoreconfig) | Retrieves store configuration settings relevant to company management. |
+| `initialize` | Initializes the Company drop-in with optional language definitions and data model metadata. |
+| [`isCompanyAdmin`](#iscompanyadmin) | Checks if the current authenticated customer is a company administrator in any company. |
+| [`isCompanyRoleNameAvailable`](#iscompanyrolenameavailable) | Checks if a role name is available for use in the company. |
+| [`isCompanyUser`](#iscompanyuser) | Checks if the current authenticated customer belongs to any company. |
+| [`isCompanyUserEmailAvailable`](#iscompanyuseremailavailable) | Checks if an email address is available for a new company user. |
+| [`unassignChildCompany`](#unassignchildcompany) | Removes a child company from its parent in the company hierarchy. |
+| [`updateCompany`](#updatecompany) | Updates company profile information with permission-aware field filtering based on user's edit permissions. |
+| [`updateCompanyRole`](#updatecompanyrole) | Updates an existing company role's name, permissions, or assigned users. |
+| [`updateCompanyStructure`](#updatecompanystructure) | Moves a structure node under a new parent in the company structure tree. |
+| [`updateCompanyTeam`](#updatecompanyteam) | Updates a company team's name and/or description. |
+| [`updateCompanyUser`](#updatecompanyuser) | Updates company user fields such as name, email, telephone, role, and status. |
+| [`updateCompanyUserStatus`](#updatecompanyuserstatus) | Updates a company user's status between Active and Inactive with automatic base64 encoding. |
+| [`validateCompanyEmail`](#validatecompanyemail) | Validates if a company email is available. |
+
+## acceptCompanyInvitation
+
+Accepts a company invitation using the invitation code and user details from an email link.
+
+```ts
+const acceptCompanyInvitation = async (
+  input: AcceptCompanyInvitationInput
+): Promise<any>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `AcceptCompanyInvitationInput` | Yes | Input parameters for the operation. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## allowCompanyRegistration
+
+Returns whether the backend allows company self-registration per store configuration.
+
+```ts
+const allowCompanyRegistration = async (): Promise<boolean>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `boolean`.
+
+## assignChildCompany
+
+Assigns a child company to a parent company in the company hierarchy. Returns the updated hierarchy as a flat array of `Company` objects.
+
+```ts
+const assignChildCompany = async (
+  parentCompanyId: string,
+  childCompanyId: string
+): Promise<Company[]>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `parentCompanyId` | `string` | Yes | The unique ID of the parent company. |
+| `childCompanyId` | `string` | Yes | The unique ID of the child company to assign. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `Company[]` — the updated company hierarchy after the assignment.
+
+## checkCompanyCreditEnabled
+
+Checks whether the Company Credit functionality ("Payment on Account") is enabled for the logged-in customer's company.
+
+```ts
+const checkCompanyCreditEnabled = async (): Promise<CheckCompanyCreditEnabledResponse>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CheckCompanyCreditEnabledResponse`](#checkcompanycreditenabledresponse).
+
+## companyEnabled
+
+Returns whether the Company feature is enabled in store configuration.
+
+```ts
+const companyEnabled = async (): Promise<boolean>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `boolean`.
+
+## createCompany
+
+Registers a new B2B company with complete business information.
+
+This function handles the entire company registration workflow including:
+- Company details validation (name, email, legal name, tax IDs)
+- Legal address validation with `country/region` support
+- Company administrator account creation
+- Email uniqueness validation
+
+```ts
+const createCompany = async (
+  formData: any
+): Promise<{ success: boolean; company?: CompanyRegistrationModel; errors?: string[] }>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `formData` | `any` | Yes | Company registration form data containing company info, legal address, and admin details. Includes: `company_name`, `company_email`, `legal_name`, `vat_tax_id`, `reseller_id`, `legal_address` (with street, city, region, postcode, country_id, telephone), and `company_admin` (with email, firstname, lastname, job_title, telephone, gender, custom_attributes). |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+```ts
+{ success: boolean; company?: CompanyRegistrationModel; errors?: string[] }
+```
+
+See [`CompanyRegistrationModel`](#companyregistrationmodel).
+
+## createCompanyRole
+
+Creates a new company role with specified name and permissions.
+
+The role name must be unique within the company. Use `isCompanyRoleNameAvailable` to validate name uniqueness before calling this function.
+
+**Permissions Required:**
+- `Magento_Company::roles_edit` - User must have role management permission
+
+```ts
+const createCompanyRole = async (
+  input: CompanyRoleCreateInputModel
+): Promise<CompanyRoleModel>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `CompanyRoleCreateInputModel` | Yes | Role creation data including name and permission IDs. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CompanyRoleModel`](#companyrolemodel).
+
+## createCompanyTeam
+
+Creates a new company team under an optional target structure node.
+
+```ts
+const createCompanyTeam = async (
+  input: CreateCompanyTeamInput
+): Promise<any>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `CreateCompanyTeamInput` | Yes | Input parameters for the operation. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## createCompanyUser
+
+Creates a new company user and optionally places them under a target structure node.
+
+```ts
+const createCompanyUser = async (
+  input: CreateCompanyUserInput
+): Promise<any>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `CreateCompanyUserInput` | Yes | Input parameters for the operation. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## deleteCompanyRole
+
+Permanently deletes a company role.
+
+> Restrictions:
+
+- Cannot delete roles with assigned users. You must reassign users first
+- Cannot delete default system roles, such as "Default User"
+- This operation cannot be undone
+- Role configuration and permission settings are permanently lost
+
+**Permissions Required:**
+- `Magento_Company::roles_edit` - User must have role management permission
+
+```ts
+const deleteCompanyRole = async (
+  variables: DeleteCompanyRoleVariables
+): Promise<boolean>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `variables` | `DeleteCompanyRoleVariables` | Yes | Delete operation parameters containing the role ID. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `boolean`.
+
+## deleteCompanyTeam
+
+Deletes a company team by entity ID.
+
+```ts
+const deleteCompanyTeam = async (
+  id: string
+): Promise<any>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `id` | `string` | Yes | The unique identifier for the company team (structure node) to delete. This removes the team and may reassign team members depending on your company's configuration. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## deleteCompanyUser
+
+> This function **unassigns the user from the company** and should **NOT** be used for removing users from the Company Structure tree.
+
+```ts
+const deleteCompanyUser = async (
+  params: DeleteCompanyUserParams
+): Promise<DeleteCompanyUserResponse>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `DeleteCompanyUserParams` | Yes | An object of type `DeleteCompanyUserParams` containing the user ID to delete and any additional parameters required for user deletion. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`DeleteCompanyUserResponse`](#deletecompanyuserresponse).
+
+## fetchUserPermissions
+
+Retrieves the current user's role permissions and returns both the flattened permission IDs and the raw role response. This function is used internally by other API functions to determine what data the user can access.
+
+```ts
+const fetchUserPermissions = async (): Promise<any>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## getCompany
+
+Retrieves complete information about the current company including name, structure, settings, and metadata. Returns the full company profile for the authenticated user's company context.
+
+```ts
+const getCompany = async (): Promise<any>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## getCompanyAclResources
+
+Retrieves the available ACL (Access Control List) resources for company role permissions.
+
+```ts
+const getCompanyAclResources = async (): Promise<CompanyAclResourceModel[]>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns an array of [`CompanyAclResourceModel`](#companyaclresourcemodel) objects.
+
+## getCompanyHierarchy
+
+Retrieves the hierarchy of companies related to the current company, including parent and child company relationships. Returns the full hierarchy as a flat array of `Company` objects.
+
+```ts
+const getCompanyHierarchy = async (): Promise<Company[]>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `Company[]` — the full company hierarchy for the authenticated user's company context.
+
+## getCompanyCredit
+
+Retrieves the company's credit information including available credit, credit limit, outstanding balance, and currency. This is used to display company credit status and validate purchase limits.
+
+```ts
+const getCompanyCredit = async (): Promise<CompanyCreditInfo | null>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CompanyCreditInfo`](#companycreditinfo) or `null`.
+
+## getCompanyCreditHistory
+
+Retrieves the company's credit transaction history with pagination support.
+
+```ts
+const getCompanyCreditHistory = async (
+  params: GetCompanyCreditHistoryParams = {}
+): Promise<CompanyCreditHistory | null>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `GetCompanyCreditHistoryParams` | No | An optional object of type `GetCompanyCreditHistoryParams` containing pagination parameters (currentPage, pageSize) and optional filters. Omit to retrieve history with default pagination. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CompanyCreditHistory`](#companycredithistory) or `null`.
+
+## getCompanyRole
+
+Retrieves complete details for a specific company role by ID.
+
+Returns role name, assigned user count, and the complete permission tree structure with this role's granted permissions. Used when editing an existing role or viewing role details.
+
+**Permissions Required:**
+- `Magento_Company::roles_view` (minimum) - To view role details
+- `Magento_Company::roles_edit` - To modify the role (additional permission)
+
+```ts
+const getCompanyRole = async (
+  variables: GetCompanyRoleVariables
+): Promise<CompanyRoleModel>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `variables` | `GetCompanyRoleVariables` | Yes | Query parameters containing the role ID. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CompanyRoleModel`](#companyrolemodel).
+
+## getCompanyRoles
+
+Retrieves a paginated list of all company roles with basic information.
+
+Returns roles with their names, assigned user counts, and IDs. Supports server-side pagination and filtering by role name.
+
+**Permissions Required:**
+- `Magento_Company::roles_view` - User must have permission to view company roles
+
+```ts
+const getCompanyRoles = async (
+  variables: GetCompanyRolesVariables = {}
+): Promise<CompanyRolesResponseModel>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `variables` | `GetCompanyRolesVariables` | No | Optional query parameters for pagination and filtering. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CompanyRolesResponseModel`](#companyrolesresponsemodel).
+
+## getCompanyStructure
+
+Retrieves the hierarchical organization structure of the company including all teams, divisions, and reporting relationships. Returns the complete company tree structure.
+
+```ts
+const getCompanyStructure = async (): Promise<any>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## getCompanyTeam
+
+Fetches details for a single company team by entity ID.
+
+```ts
+const getCompanyTeam = async (
+  id: string
+): Promise<any>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `id` | `string` | Yes | The unique identifier for the company team to retrieve. Returns detailed information about the team including its name, members, and position in the company hierarchy. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## getCompanyUser
+
+Fetches details for a single company user by entity ID.
+
+```ts
+const getCompanyUser = async (
+  id: string
+): Promise<any>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `id` | `string` | Yes | The unique identifier for the company user to retrieve. Returns complete user profile including role, team assignment, and permissions. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## getCompanyUsers
+
+Fetches the list of company users with their roles and team information, supporting pagination and status filtering.
+
+```ts
+const getCompanyUsers = async (
+  params: CompanyUsersParams = {}
+): Promise<CompanyUsersResponse>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `CompanyUsersParams` | No | An optional object of type `CompanyUsersParams` containing pagination and filter criteria (currentPage, pageSize, filter). Omit to retrieve all users with default pagination. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CompanyUsersResponse`](#companyusersresponse).
+
+## getCountries
+
+Retrieves available countries and regions for address forms.
+
+```ts
+const getCountries = async (): Promise<{
+  availableCountries: Country[] | [];
+  countriesWithRequiredRegion: string[];
+  optionalZipCountries: string[];
+}>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+```ts
+Promise<{
+  availableCountries: Country[] | [];
+  countriesWithRequiredRegion: string[];
+  optionalZipCountries: string[];
+}>
+```
+
+See [`Country`](#country).
+
+## getCustomerCompany
+
+Fetches simplified customer company information for display on the customer account information page. This is a lightweight API that only returns essential company details without requiring full company management permissions.
+
+```ts
+const getCustomerCompany = async (): Promise<any>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## getStoreConfig
+
+Retrieves store configuration settings relevant to company management.
+
+```ts
+const getStoreConfig = async (): Promise<StoreConfigModel>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`StoreConfigModel`](#storeconfigmodel).
+
+## isCompanyAdmin
+
+Checks if the current authenticated customer is a company administrator in any company.
+
+```ts
+const isCompanyAdmin = async (): Promise<boolean>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `boolean`.
+
+## isCompanyRoleNameAvailable
+
+Validates whether a role name is available for use (not already taken).
+
+Used for real-time validation during role creation and editing to prevent duplicate role names within a company. Role names are case-sensitive.
+
+> Role names must be unique within a company. Different companies can have roles with the same name.
+
+```ts
+const isCompanyRoleNameAvailable = async (
+  variables: IsCompanyRoleNameAvailableVariables
+): Promise<boolean>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `variables` | `IsCompanyRoleNameAvailableVariables` | Yes | Validation parameters containing the role name to check. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `boolean`.
+
+## isCompanyUser
+
+Checks if the current authenticated customer belongs to any company.
+
+```ts
+const isCompanyUser = async (): Promise<boolean>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `boolean`.
+
+## isCompanyUserEmailAvailable
+
+Checks if an email address is available for a new company user.
+
+```ts
+const isCompanyUserEmailAvailable = async (
+  email: string
+): Promise<any>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `email` | `string` | Yes | The email address. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## unassignChildCompany
+
+Removes a child company from its parent in the company hierarchy. Returns the updated hierarchy as a flat array of `Company` objects.
+
+```ts
+const unassignChildCompany = async (
+  childCompanyId: string
+): Promise<Company[]>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `childCompanyId` | `string` | Yes | The unique ID of the child company to unassign from its parent. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `Company[]` — the updated company hierarchy after the child company is removed.
+
+## updateCompany
+
+Updates company profile information with permission-aware field filtering.
+
+This function dynamically builds the `GraphQL` mutation based on user permissions:
+- Only requests fields the user can view in the response
+- Only sends fields the user can edit in the mutation
+
+**Permissions Required:**
+- `Magento_Company::edit_account` - To update name, email, legal name, VAT/Tax ID, Reseller ID
+- `Magento_Company::edit_address` - To update legal address fields
+
+> The drop-in UI gates which fields are editable. If neither permission is granted, the submit button is disabled and this function should not be called.
+
+```ts
+const updateCompany = async (
+  input: UpdateCompanyDto
+): Promise<CompanyModel>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `UpdateCompanyDto` | Yes | Partial company data to update (only changed fields). Can include: `name`, `email`, `legalName`, `vatTaxId`, `resellerId`, and `legalAddress` (with street, city, region, countryCode, postcode, telephone). |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `CompanyModel`.
+
+## updateCompanyRole
+
+Updates an existing company role's name `and/or` permissions.
+
+The role name must be unique within the company (excluding the current role). Use `isCompanyRoleNameAvailable` to validate name uniqueness if changing the name.
+
+**Permissions Required:**
+- `Magento_Company::roles_edit` - User must have role management permission
+
+```ts
+const updateCompanyRole = async (
+  input: CompanyRoleUpdateInputModel
+): Promise<CompanyRoleModel>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `CompanyRoleUpdateInputModel` | Yes | Role update data including ID, new name, and/or new permission IDs. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CompanyRoleModel`](#companyrolemodel).
+
+## updateCompanyStructure
+
+Moves a structure node under a new parent in the company structure tree.
+
+```ts
+const updateCompanyStructure = async (
+  input: UpdateCompanyStructureInput
+): Promise<any>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `UpdateCompanyStructureInput` | Yes | Input parameters for the operation. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## updateCompanyTeam
+
+Updates a company team's name and description.
+
+```ts
+const updateCompanyTeam = async (
+  input: UpdateCompanyTeamInput
+): Promise<any>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `UpdateCompanyTeamInput` | Yes | Input parameters for the operation. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## updateCompanyUser
+
+Updates company user fields such as name, email, telephone, role, and status.
+
+```ts
+const updateCompanyUser = async (
+  input: UpdateCompanyUserInput
+): Promise<any>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `UpdateCompanyUserInput` | Yes | Input parameters for the operation. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## updateCompanyUserStatus
+
+Updates a company user's status between Active and Inactive with automatic base64 encoding.
+
+```ts
+const updateCompanyUserStatus = async (
+  params: UpdateCompanyUserStatusParams
+): Promise<UpdateCompanyUserStatusResponse>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `UpdateCompanyUserStatusParams` | Yes | An object of type `UpdateCompanyUserStatusParams` containing the user ID and the new status value (active, inactive). Used to enable or disable user access to company resources. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`UpdateCompanyUserStatusResponse`](#updatecompanyuserstatusresponse).
+
+## validateCompanyEmail
+
+Validates if a company email is available.
+
+```ts
+const validateCompanyEmail = async (
+  email: string
+): Promise<ValidateCompanyEmailResponse>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `email` | `string` | Yes | The email address. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`ValidateCompanyEmailResponse`](#validatecompanyemailresponse).
+
+## Utility Functions
+
+The following utility functions are exported from the public API and support working with company ACL (Access Control List) data.
+
+## buildPermissionTree
+
+The `buildPermissionTree` function filters a complete ACL resource tree down to only the nodes that match a given set of permission IDs. Nodes without matching descendants are excluded. Used when displaying or saving role permissions.
+
+```ts
+const buildPermissionTree = (
+  allResources: CompanyAclResourceModel[],
+  selectedIds: string[]
+): CompanyAclResourceModel[]
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `allResources` | `CompanyAclResourceModel[]` | Yes | The full, unfiltered tree of ACL resources as returned by `getCompanyAclResources`. |
+| `selectedIds` | `string[]` | Yes | An array of permission ID strings to keep. Nodes whose ID is in this array, or that have a descendant in this array, are included in the result. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns a filtered `CompanyAclResourceModel[]` containing only nodes that match the provided permission IDs (or have matching descendants).
+
+## flattenPermissionIds
+
+The `flattenPermissionIds` function traverses a nested ACL resource tree and returns a flat array of all permission ID strings. Useful for initializing checkboxes, validating permission sets, or building the `selectedIds` input for `buildPermissionTree`.
+
+```ts
+const flattenPermissionIds = (
+  resources: CompanyAclResourceModel[]
+): string[]
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `resources` | `CompanyAclResourceModel[]` | Yes | The nested ACL resource tree to flatten. |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns a `string[]` containing every permission ID found in the tree (including nested children).
+
+### Company
+
+The `Company` object is returned by the following functions: [`assignChildCompany`](#assignchildcompany), [`getCompanyHierarchy`](#getcompanyhierarchy), [`unassignChildCompany`](#unassignchildcompany).
+
+```ts
+interface Company {
+  id: string;
+  name: string;
+  is_admin: boolean;
+  parent_company: { id: string; name: string } | null;
+  child_companies: Company[];
+}
+```
+
+## Data Models
+
+The following data models are used by functions in this drop-in.
+
+### CheckCompanyCreditEnabledResponse
+
+The `CheckCompanyCreditEnabledResponse` object is returned by the following functions: [`checkCompanyCreditEnabled`](#checkcompanycreditenabled).
+
+```ts
+interface CheckCompanyCreditEnabledResponse {
+  creditEnabled: boolean;
+  error?: string;
+}
+```
+
+### CompanyAclResourceModel
+
+The `CompanyAclResourceModel` object is returned by the following functions: [`getCompanyAclResources`](#getcompanyaclresources).
+
+```ts
+interface CompanyAclResourceModel {
+  id: string;
+  text: string;
+  sortOrder: number;
+  children?: CompanyAclResourceModel[];
+}
+```
+
+### CompanyCreditHistory
+
+The `CompanyCreditHistory` object is returned by the following functions: [`getCompanyCreditHistory`](#getcompanycredithistory).
+
+```ts
+interface CompanyCreditHistory {
+  items: CompanyCreditHistoryItem[];
+  pageInfo: CompanyCreditHistoryPageInfo;
+  totalCount: number;
+}
+```
+
+### CompanyCreditInfo
+
+The `CompanyCreditInfo` object is returned by the following functions: [`getCompanyCredit`](#getcompanycredit).
+
+```ts
+interface CompanyCreditInfo {
+    credit: {
+        available_credit: {
+            currency: string;
+            value: number;
+        };
+        credit_limit: {
+            currency: string;
+            value: number;
+        };
+        outstanding_balance: {
+            currency: string;
+            value: number;
+        };
+
+    };
+}
+```
+
+### CompanyRegistrationModel
+
+The `CompanyRegistrationModel` object is returned by the following functions: [`createCompany`](#createcompany).
+
+```ts
+interface CompanyRegistrationModel {
+    id: string;
+    name: string;
+    email: string;
+    legalName?: string;
+    vatTaxId?: string;
+    resellerId?: string;
+    legalAddress: {
+        street: string[];
+        city: string;
+        region: {
+            regionCode: string;
+            region?: string;
+            regionId?: number;
+        };
+        postcode: string;
+        countryCode: string;
+        telephone?: string;
+    };
+    companyAdmin: {
+        id: string;
+        firstname: string;
+        lastname: string;
+        email: string;
+        jobTitle?: string;
+        telephone?: string;
+    };
+}
+```
+
+### CompanyRoleModel
+
+The `CompanyRoleModel` object is returned by the following functions: [`createCompanyRole`](#createcompanyrole), [`getCompanyRole`](#getcompanyrole), [`updateCompanyRole`](#updatecompanyrole).
+
+```ts
+interface CompanyRoleModel {
+  id: string;
+  name: string;
+  usersCount: number;
+  permissions: CompanyAclResourceModel[];
+}
+```
+
+### CompanyRolesResponseModel
+
+The `CompanyRolesResponseModel` object is returned by the following functions: [`getCompanyRoles`](#getcompanyroles).
+
+```ts
+interface CompanyRolesResponseModel {
+  items: CompanyRoleModel[];
+  totalCount: number;
+  pageInfo: PageInfoModel;
+}
+```
+
+### CompanyUsersResponse
+
+The `CompanyUsersResponse` object is returned by the following functions: [`getCompanyUsers`](#getcompanyusers).
+
+```ts
+interface CompanyUsersResponse {
+  users: CompanyUser[];
+  pageInfo: CompanyUsersPageInfo;
+  totalCount?: number;
+}
+```
+
+### Country
+
+The `Country` object is returned by the following functions: [`getCountries`](#getcountries).
+
+```ts
+type Country = {
+  value: string;
+  text: string;
+  availableRegions?: {
+    id: number;
+    code: string;
+    name: string;
+  }[];
+};
+```
+
+### DeleteCompanyUserResponse
+
+The `DeleteCompanyUserResponse` object is returned by the following functions: [`deleteCompanyUser`](#deletecompanyuser).
+
+```ts
+interface DeleteCompanyUserResponse {
+  success: boolean;
+}
+```
+
+### StoreConfigModel
+
+The `StoreConfigModel` object is returned by the following functions: [`getStoreConfig`](#getstoreconfig).
+
+```ts
+interface StoreConfigModel {
+  defaultCountry: string;
+  storeCode: string;
+}
+```
+
+### UpdateCompanyUserStatusResponse
+
+The `UpdateCompanyUserStatusResponse` object is returned by the following functions: [`updateCompanyUserStatus`](#updatecompanyuserstatus).
+
+```ts
+interface UpdateCompanyUserStatusResponse {
+  success: boolean;
+  user?: {
+    id: string;
+    status: CompanyUserStatus;
+  };
+}
+```
+
+### ValidateCompanyEmailResponse
+
+The `ValidateCompanyEmailResponse` object is returned by the following functions: [`validateCompanyEmail`](#validatecompanyemail).
+
+```ts
+interface ValidateCompanyEmailResponse {
+  isValid: boolean;
+  error?: string;
+}
+```
+
+{/* This documentation is auto-generated from the drop-in source repository: REPO_URL */}
+
+---
+
+# Company Management overview
+
+The Company Management drop-in enables company profile management and role-based permissions for Adobe Commerce storefronts. It also supports legal address management and company contact information.
+
+## Supported Commerce features
+
+The following table provides an overview of the Adobe Commerce features that the Company Management drop-in supports:
+
+| Feature | Status |
+| ------- | ------ |
+| Company profile management | Supported |
+| Role-based permissions | Supported |
+| Legal address management | Supported |
+| Company contact information | Supported |
+| Payment methods configuration | Supported |
+| Shipping methods configuration | Supported |
+| Multi-language support | Supported |
+| Custom regions for international addresses | Supported |
+| Email validation | Supported |
+| GraphQL API integration | Supported |
+| Company hierarchy management | Supported |
+| Advanced user role management | Supported |
+
+---
+
+# Company Management initialization
+
+The **Company Management initializer** configures the drop-in for managing company accounts, organizational structures, user roles, and permissions. Use initialization to customize how company data is displayed and enable internationalization for multi-language B2B storefronts.
+
+<strong>Version: 1.3.0</strong>
+
+## Basic initialization
+
+Initialize the drop-in with default settings:
+
+```javascript title="scripts/initializers/company-management.js"
+
+await initializers.mountImmediately(initialize, {});
+```
+
+> **Standard options** You can customize text and labels using the standard `langDefinitions` option. See other drop-in initialization pages for examples.
+
+---
+
+# Company Management Quick Start
+
+Get started with the Company Management drop-in to enable self-service company administration in your B2B storefront.
+
+<strong>Version: 1.3.0</strong>
+
+## Quick example
+
+The Company Management drop-in is included in the https://github.com/hlxsites/aem-boilerplate-commerce. This example shows the basic pattern:
+
+```js
+// 1. Import initializer (handles all setup)
+
+// 2. Import the container you need
+
+// 3. Import the provider
+
+// 4. Render in your block
+export default async function decorate(block) {
+  await provider.render(AcceptInvitation, {
+    // Configuration options - see Containers page
+  })(block);
+}
+```
+
+**New to drop-ins?** See the [Using drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/quick-start/) guide for complete step-by-step instructions.
+
+## Quick reference
+
+**Import paths:**
+- Initializer: `import '../../scripts/initializers/company-management.js'`
+- Containers: `import ContainerName from '@dropins/storefront-company-management/containers/ContainerName.js'`
+- Provider: `import { render } from '@dropins/storefront-company-management/render.js'`
+
+**Package:** `@dropins/storefront-company-management`
+
+**Version:** 1.2.0 (verify compatibility with your Commerce instance)
+
+**Example container:** `AcceptInvitation`
+
+## Learn more
+
+- [Containers](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-management/containers/) - Available UI components and configuration options
+- [Initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-management/initialization/) - Customize initializer settings and data models
+- [Functions](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-management/functions/) - Control drop-in behavior programmatically
+- [Events](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-management/events/) - Listen to and respond to drop-in state changes
+- [Slots](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-management/slots/) - Extend containers with custom content
+
+---
+
+# Company Management Slots
+
+The Company Management drop-in exposes slots for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/extending/).
+
+<strong>Version: 1.3.0</strong>
+
+| Container | Slots |
+|-----------|-------|
+| [`CompanyHierarchy`](#companyhierarchy-slots) | `Actions` |
+| [`CompanyProfile`](#companyprofile-slots) | `CompanyData` |
+| [`CompanyStructure`](#companystructure-slots) | `StructureData` |
+
+## CompanyHierarchy slots
+
+The slots for the `CompanyHierarchy` container allow you to customize its appearance and behavior.
+
+```typescript
+interface CompanyHierarchyProps {
+  slots?: {
+    Actions?: SlotProps<HierarchyActionsContext>;
+  };
+}
+```
+
+### Actions slot
+
+The `Actions` slot allows you to add custom actions to the `CompanyHierarchy` container.
+
+#### Example
+
+```js
+
+await provider.render(CompanyHierarchy, {
+  slots: {
+    Actions: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Actions';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+## CompanyProfile slots
+
+The slots for the `CompanyProfile` container allow you to customize its appearance and behavior.
+
+```typescript
+interface CompanyProfileProps {
+  slots?: {
+    CompanyData?: SlotProps<CompanyDataContext & { Default?: any }>;
+  };
+}
+```
+
+### CompanyData slot
+
+The `CompanyData` slot allows you to customize the company data section of the `CompanyProfile` container.
+
+#### Example
+
+```js
+
+await provider.render(CompanyProfile, {
+  slots: {
+    CompanyData: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom CompanyData';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+## CompanyStructure slots
+
+The slots for the `CompanyStructure` container allow you to customize its appearance and behavior.
+
+```typescript
+interface CompanyStructureProps {
+  slots?: {
+    StructureData?: SlotProps<CompanyStructureDataContext & { Default?: any }>;
+  };
+}
+```
+
+### StructureData slot
+
+The `StructureData` slot allows you to customize the structure data section of the `CompanyStructure` container.
+
+#### Example
+
+```js
+
+await provider.render(CompanyStructure, {
+  slots: {
+    StructureData: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom StructureData';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+---
+
+# Company Management styles
+
+Customize the Company Management drop-in using CSS classes and design tokens. This page covers the Company Management-specific container classes and customization examples. For comprehensive information about design tokens, responsive breakpoints, and styling best practices, see [Styling Drop-In Components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/styling/).
+
+<strong>Version: 1.3.0</strong>
+
+## Customization example
+
+Add this to the CSS file of the specific https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/ where you're using the Company Management drop-in.
+
+For a complete list of available design tokens (colors, spacing, typography, and more), see the [Design tokens reference](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/styling/#design-tokens-reference).
+
+```css title="styles/styles.css" del={2-2} ins={3-3}
+.company-registration-success {
+  max-width: 600px;
+  max-width: 900px;
+}
+```
+
+## Container classes
+
+The Company Management drop-in uses BEM-style class naming. Use the browser DevTools to inspect elements and find specific class names.
+
+```css
+/* AcceptInvitationForm */
+.company-accept-invitation-loading {}
+.company-accept-invitation-wrapper {}
+.company-accept-invitation-wrapper__buttons {}
+.company-accept-invitation-wrapper__submit {}
+
+/* CompanyCreditDisplay */
+.company-management-company-credit-display {}
+.company-management-company-credit-empty {}
+.company-management-company-credit-grid {}
+.company-management-company-credit-negative {}
+
+/* CompanyCreditHistoryDisplay */
+.company-management-company-credit-history-display {}
+.company-management-company-credit-history-table {}
+.company-management-credit-history-empty {}
+.company-management-credit-history-price {}
+.dropin-picker__button {}
+.dropin-picker__option {}
+.item-count {}
+.page-size-loading {}
+.page-size-picker {}
+.pagination-controls {}
+.pagination-label {}
+.sr-only {}
+.table-footer {}
+.table-footer-center {}
+.table-footer-left {}
+.table-footer-right {}
+
+/* CompanyLoaders */
+.company-company-loaders--card-loader {}
+.company-company-loaders--picker-loader {}
+.company-credit-skeleton-loader {}
+
+/* CompanyProfileCard */
+.account-company-profile-card {}
+.account-company-profile-card-short {}
+.account-company-profile-card__actions {}
+.account-company-profile-card__content {}
+.account-company-profile-card__no-data {}
+.account-company-profile-card__wrapper {}
+.company-contact {}
+.company-contacts {}
+.company-legal-address {}
+.company-payment-methods {}
+.company-profile__title {}
+.dropin-card__content {}
+
+/* CompanyRegistrationForm */
+.company-form-section {}
+.company-form-section__title {}
+.company-form-wrapper {}
+.company-form-wrapper__buttons {}
+.company-form-wrapper__errors {}
+.company-form-wrapper__notification {}
+.company-form-wrapper__submit {}
+.error-message {}
+
+/* Form */
+.company-form {}
+.company-form--submitting {}
+.company-form-container {}
+.company-form-loader {}
+.company-form-loader__text {}
+.company-form__submitting-overlay {}
+.company-form__submitting-text {}
+.company-registration-form__inputs {}
+.company-registration-form__section {}
+
+/* CompanyRegistrationSuccess */
+.company-registration-success {}
+.company-registration-success__details {}
+.company-registration-success__details-title {}
+.company-registration-success__grid {}
+.company-registration-success__header {}
+.company-registration-success__item {}
+.company-registration-success__label {}
+.company-registration-success__pending {}
+.company-registration-success__section-header {}
+.company-registration-success__subtitle {}
+.company-registration-success__title {}
+.company-registration-success__value {}
+
+/* CompanyStructureCard */
+.acm-structure-chevron {}
+.acm-structure-count {}
+.acm-structure-description {}
+.acm-structure-description-button {}
+.acm-structure-expander {}
+.acm-structure-expander--placeholder {}
+.acm-structure-expander-button {}
+.acm-structure-expander-wrapper {}
+.acm-structure-handle {}
+.acm-structure-icon {}
+.acm-structure-info {}
+.acm-structure-label {}
+.acm-structure-message-card {}
+.acm-structure-modal {}
+.acm-structure-modal-actions {}
+.acm-structure-modal-content {}
+.acm-structure-modal-title {}
+.acm-structure-modal__actions {}
+.acm-structure-modal__backdrop {}
+.acm-structure-modal__body {}
+.acm-structure-modal__title {}
+.acm-structure-panel {}
+.acm-structure-panel__title {}
+.acm-structure-row {}
+.acm-structure-toolbar {}
+.acm-structure-toolbar-card {}
+.acm-structure-toolbar-card--spaced {}
+.acm-structure-tree-card {}
+.acm-structure-tree-content {}
+.acm-structure-tree-overlay {}
+.acm-structure-working {}
+.acm-tree {}
+.acm-tree-root {}
+.acm-tree__group {}
+.acm-tree__item {}
+.css {}
+.is-expanded {}
+.is-root {}
+.is-team {}
+.is-user {}
+.is-working {}
+.req {}
+.secondary {}
+.svg {}
+
+/* CompanyStructureEmpty */
+.company-management-company-structure-card {}
+.company-management-company-structure-card__alert {}
+.company-management-company-structure-card__cta {}
+.dropin-button {}
+
+/* CompanyTeamForm */
+.company-team-form__card {}
+.company-team-form__content {}
+.company-team-form__overlay {}
+.dropin-field {}
+.dropin-field__label {}
+.is-working {}
+
+/* CompanyUserForm */
+.company-user-form__card {}
+.company-user-form__content {}
+.company-user-form__overlay {}
+.dropin-field {}
+.dropin-field__label {}
+.is-working {}
+
+/* CompanyUsersManagementModal */
+.company-management-company-users-management-modal {}
+.company-management-company-users-management-modal-overlay {}
+.company-management-company-users-management-modal__actions {}
+.company-management-company-users-management-modal__alert {}
+.company-management-company-users-management-modal__button-cancel {}
+.company-management-company-users-management-modal__button-delete {}
+.company-management-company-users-management-modal__button-primary {}
+.company-management-company-users-management-modal__close {}
+.company-management-company-users-management-modal__content {}
+.company-management-company-users-management-modal__header {}
+.company-management-company-users-management-modal__text {}
+.company-management-company-users-management-modal__title {}
+
+/* CustomerCompanyInfoCard */
+.customer-company-info-card {}
+.customer-company-info-card__content {}
+.dropin-card__content {}
+
+/* DeleteRoleModal */
+.delete-role-modal {}
+.delete-role-modal__actions {}
+.delete-role-modal__cancel-btn {}
+.delete-role-modal__confirm-btn {}
+.delete-role-modal__content {}
+.delete-role-modal__ok-btn {}
+
+/* EditCompanyProfile */
+.account-edit-company-profile {}
+.account-edit-company-profile-form {}
+.account-edit-company-profile-form__field {}
+.account-edit-company-profile-form__section {}
+.account-edit-company-profile-form__section-title {}
+.account-edit-company-profile__actions {}
+.account-edit-company-profile__loading-overlay {}
+.account-edit-company-profile__loading-text {}
+.account-edit-company-profile__notification {}
+.account-edit-company-profile__title {}
+.dropin-card__content {}
+
+/* EditRoleAndPermission */
+.acm-tree__group {}
+.acm-tree__item {}
+.dropin-field__label {}
+.edit-role-and-permission {}
+.edit-role-and-permission-form {}
+.edit-role-and-permission__actions {}
+.edit-role-and-permission__loading-overlay {}
+.edit-role-and-permission__loading-text {}
+.edit-role-and-permission__notification {}
+.edit-role-and-permission__permissions-description {}
+.edit-role-and-permission__section {}
+.edit-role-and-permission__section-title {}
+.edit-role-and-permission__title {}
+.edit-role-and-permission__tree-container {}
+.edit-role-and-permission__tree-controls {}
+.edit-role-and-permission__tree-expander {}
+.edit-role-and-permission__tree-label {}
+.edit-role-and-permission__tree-loading {}
+.edit-role-and-permission__tree-node {}
+.edit-role-and-permission__tree-spacer {}
+.edit-role-and-permission__validation-spinner {}
+
+/* RoleAndPermissionTable */
+.add-role-section {}
+.company-management-role-and-permission-table {}
+.dropin-header-container__divider {}
+.dropin-picker__button {}
+.dropin-picker__option {}
+.dropin-table__body__cell {}
+.dropin-table__body__row {}
+.dropin-table__header {}
+.dropin-table__header__cell {}
+.dropin-table__header__row {}
+.dropin-table__table {}
+.item-count {}
+.no-actions {}
+.page-actions {}
+.page-content {}
+.page-footer {}
+.page-header {}
+.page-size-loading {}
+.page-size-picker {}
+.pagination-controls {}
+.pagination-label {}
+.pagination-section {}
+.role-action-button {}
+.role-action-wrapper {}
+.role-actions {}
+.role-actions-container {}
+.roles-actions {}
+.roles-and-permissions-card {}
+.roles-and-permissions-page {}
+.roles-table-container {}
+.table-footer {}
+.table-footer-center {}
+.table-footer-left {}
+.table-footer-right {}
+
+/* Tree */
+.acm-structure-label {}
+.acm-structure-row {}
+.acm-tree {}
+.acm-tree-root {}
+.acm-tree__group {}
+.acm-tree__item {}
+.acm-tree__label {}
+.acm-tree__row {}
+
+/* CompanyStructure */
+.account-company-structure {}
+.company-structure__title {}
+
+/* CompanyUsers */
+.addUserButtonContainer {}
+.companyUsersTable {}
+.companyUsersTable__empty {}
+.edit-user-button {}
+.filterButtons {}
+.loadingContainer {}
+.manage-user-button {}
+.pageSizeSelector {}
+.paginationButtons {}
+.paginationContainer {}
+.sr-only {}
+.user-actions {}
+```
+
+For the source CSS files, see the https://github.com/adobe-commerce/storefront-company-management/tree/main/src.
+
+---
+
+# CompanySwitcher Container
+
+Allows users to switch between multiple companies they have access to using a dropdown selector.
+
+<strong>Version: 1.1.1</strong>
+
+## Configuration
+
+The `CompanySwitcher` container provides the following configuration options:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `ariaLabel` | `string` | No | Sets a custom aria-label for the company picker dropdown. Use to improve accessibility by providing descriptive text for screen readers, especially when the picker is embedded in contexts where the default label may not be clear. |
+| `onCompanyChange` | `function` | No | Callback when the user selects a different company. Use to refresh page data, update application state, or trigger navigation when the company context changes. |
+| `size` | `number` | No | Maximum number of companies to fetch for the picker. Defaults to `100`. |
+| `initialData` | `object` | No | Preloaded data for the model before backend data is fetched. Use for testing, SSR, or improving initial load. |
+
+## Slots
+
+This container does not expose any customizable slots.
+
+## Usage
+
+The following example demonstrates how to use the `CompanySwitcher` container:
+
+```js
+
+await provider.render(CompanySwitcher, {
+  onCompanyChange: () => { const redirect = Object.entries(redirections).find(([pattern]) => { const [pathname, search] = pattern.split('?'); return window.location.pathname.includes(pathname) && (!search || window.location.search.includes(search)); }); if (redirect) { const [, redirectUrl] = redirect; window.location.href = redirectUrl; } else { window.location.reload(); } }
+})(block);
+```
+
+---
+
+# Company Switcher Containers
+
+The **Company Switcher** drop-in provides pre-built container components for integrating into your storefront.
+
+<strong>Version: 1.1.1</strong>
+
+## What are Containers?
+
+Containers are pre-built UI components that combine functionality, state management, and presentation. They provide a complete solution for specific features and can be customized through props, slots, and CSS.
+
+## Available Containers
+
+| Container | Description |
+| --------- | ----------- |
+| [CompanySwitcher](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-switcher/containers/company-switcher/) | Allows users to switch between multiple companies they have access to using a dropdown selector. |
+
+> Each container is designed to work independently but can be composed together to create comprehensive user experiences.
+
+---
+
+# Company Switcher Dictionary
+
+The **Company Switcher dictionary** contains all user-facing text, labels, and messages displayed by this drop-in. Customize the dictionary to:
+
+- **Localize** the drop-in for different languages and regions
+- **Customize** labels and messages to match your brand voice
+- **Override** default text without modifying source code for the drop-in
+
+Dictionaries use the **i18n (internationalization)** pattern, where each text string is identified by a unique key path.
+
+<strong>Version: 1.1.1</strong>
+
+## How to customize
+
+Override dictionary values during drop-in initialization. The drop-in deep-merges your custom values with the defaults.
+
+```javascript
+
+await initialize({
+  langDefinitions: {
+    en_US: {
+        "Company Switcher": {
+          "Component": {
+            "heading": "My Custom Heading",
+            "buttonText": "Click Me"
+          }
+        }
+      }
+  }
+});
+```
+
+You only need to include the keys you want to change. For multi-language support and advanced patterns, see the [Dictionary customization guide](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/dictionaries/).
+
+## Default keys and values
+
+Below are the default English (`en_US`) strings provided by the **Company Switcher** drop-in:
+
+```json title="en_US.json"
+{
+  "": {}
+}
+```
+
+---
+
+# Company Switcher Events and Data
+
+The **Company Switcher** drop-in uses the [event bus](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/events/) to emit and listen to events for communication between drop-ins and external integrations.
+
+<strong>Version: 1.1.1</strong>
+
+## Events reference
+
+{/* EVENTS_TABLE_START */}
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [checkout/initialized](#checkoutinitialized-listens) | Listens | Fired by Checkout (`checkout`) when the component completes initialization. |
+| [checkout/updated](#checkoutupdated-listens) | Listens | Fired by Checkout (`checkout`) when the component state is updated. |
+| [company/updated](#companyupdated-listens) | Listens | Fired by Company (`company`) when the component state is updated. |
+| [companyContext/changed](#companycontextchanged-emits-and-listens) | Emits and listens | Emitted when a change occurs. |
+
+{/* EVENTS_TABLE_END */}
+
+## Event details
+
+The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
+
+### `checkout/initialized` (listens)
+
+Fired by Checkout (`checkout`) when the component completes initialization.
+
+#### Event payload
+
+#### Example
+
+```js
+
+events.on('checkout/initialized', (payload) => {
+  console.log('checkout/initialized event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `checkout/updated` (listens)
+
+Fired by Checkout (`checkout`) when the component state is updated.
+
+#### Event payload
+
+#### Example
+
+```js
+
+events.on('checkout/updated', (payload) => {
+  console.log('checkout/updated event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `company/updated` (listens)
+
+Fired by Company (`company`) when the component state is updated.
+
+#### Event payload
+
+```typescript
+{
+  company: {
+  id: string;
+  name: string;
+  email: string;
+  legalAddress: {
+  street: string[];
+  city: string;
+  region: {
+  region: string;
+  regionCode: string;
+  regionId: number;
+}
+  countryCode: string;
+  postcode: string;
+  telephone: string;
+}
+  companyAdmin: {
+  id: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+}
+  salesRepresentative: {
+  firstname: string;
+  lastname: string;
+  email: string;
+}
+  availablePaymentMethods: Array<{
+  code: string;
+  title: string;
+  }>;
+  availableShippingMethods: Array<{
+  code: string;
+  title: string;
+  }>;
+  canEditAccount: boolean;
+  canEditAddress: boolean;
+  permissionsFlags: {
+  canViewAccount: boolean;
+  canEditAccount: boolean;
+  canViewAddress: boolean;
+  canEditAddress: boolean;
+  canViewContacts: boolean;
+  canViewPaymentInformation: boolean;
+  canViewShippingInformation: boolean;
+}
+  customerRole: {
+  id: string;
+  name: string;
+  permissions: any[];
+}
+  customerStatus: string;
+}
+}
+```
+
+#### Example
+
+```js
+
+events.on('company/updated', (payload) => {
+  console.log('company/updated event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `companyContext/changed` (emits and listens)
+
+Emitted when a change occurs.
+
+#### Event payload
+
+```typescript
+string | null
+```
+
+#### Example
+
+```js
+
+events.on('companyContext/changed', (payload) => {
+  console.log('companyContext/changed event received:', payload);
+  // Add your custom logic here
+});
+```
+
+---
+
+# Company Switcher Functions
+
+The Company Switcher drop-in provides API functions for managing company context and headers in multi-company B2B scenarios.
+
+<strong>Version: 1.1.1</strong>
+
+| Function | Description |
+| --- | --- |
+| [`getCompanyHeaderManager`](#getcompanyheadermanager) | Returns the singleton `CompanyHeaderManager` instance that manages company-specific headers for all configured `GraphQL` modules. |
+| [`getCustomerCompanyInfo`](#getcustomercompanyinfo) | Retrieves the customer's current company context information including the active company ID, company name, and list of available companies for the user. |
+| [`getGroupHeaderManager`](#getgroupheadermanager) | Returns the singleton `GroupHeaderManager` instance that manages customer group headers for all configured `GraphQL` modules. |
+| [`updateCustomerGroup`](#updatecustomergroup) | Updates the customer group context for the current shopper. |
+
+## getCompanyHeaderManager
+
+Returns the singleton CompanyHeaderManager instance that manages company-specific headers for all configured GraphQL modules. Use the returned manager to set, remove, or check company headers.
+
+```typescript
+function getCompanyHeaderManager(): any
+```
+
+> After calling `manager.setCompanyHeaders()`, all subsequent GraphQL requests will operate in the context of the specified company. Ensure you refresh all company-dependent data after switching companies.
+
+> Passing `null` to `setCompanyHeaders()` removes the company context headers from all GraphQL requests. This is useful when logging out or switching to a non-company user context.
+
+> The `CompanyHeaderManager` is a singleton. Calling `getCompanyHeaderManager()` multiple times returns the same instance, ensuring consistent header management across your application.
+
+### Usage scenarios
+
+- Switch between companies for multi-company users.
+- Set company context after user selection.
+- Initialize company context on page load.
+- Change active company from a dropdown selector.
+- Restore company context from session storage.
+- Remove company context by passing `null`.
+- Check the current company header state.
+- Configure custom header keys dynamically.
+
+### Events
+
+The manager's `setCompanyHeaders()` method emits the [`companyContext/changed`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-switcher/events/#companycontextchanged-emits-and-listens) event after successfully setting or removing the company headers.
+
+### Returns
+
+Returns a `CompanyHeaderManager` instance with the following methods:
+
+```typescript
+{
+  setCompanyHeaders(companyId: string | null): void;
+  removeCompanyHeaders(): void;
+  isCompanyHeaderSet(): boolean;
+  setHeaderKey(headerKey: string): void;
+  setFetchGraphQlModules(modules: FetchGraphQL[]): void;
+}
+```
+
+### Example
+
+```js
+
+// Get the manager instance
+const manager = getCompanyHeaderManager();
+
+// Switch to a specific company
+manager.setCompanyHeaders('company-123');
+
+// Remove company headers (switch to no-company context)
+manager.setCompanyHeaders(null);
+
+// Check if headers are set
+if (manager.isCompanyHeaderSet()) {
+  console.log('Company context is active');
+}
+
+// Listen for context changes
+events.on('companyContext/changed', (companyId) => {
+  if (companyId) {
+    console.log('Switched to company:', companyId);
+  } else {
+    console.log('Company context removed');
+  }
+  
+  // Refresh all company-dependent data
+  refreshCompanyData();
+});
+```
+
+## getCustomerCompanyInfo
+
+Retrieves the customer's current company context information including the active company ID, company name, and list of available companies for the user.
+
+```typescript
+function getCustomerCompanyInfo(): Promise<CustomerCompanyInfo>
+```
+
+### Usage scenarios
+
+- Determine which company is currently active.
+- Load company-specific data on page load.
+- Check if user has company access.
+- Display current company information.
+- Conditional rendering based on company context.
+- Populate company dropdown selector with available companies.
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns a Promise that resolves to a `CustomerCompanyInfo` object containing:
+
+```typescript
+{
+  currentCompany: {
+    companyId: string;
+    companyName: string;
+  };
+  customerCompanies: Array<{
+    value: string;  // Company ID
+    text: string;   // Company name
+  }>;
+}
+```
+
+### Example
+
+```js
+
+// Get current company context
+const info = await getCustomerCompanyInfo();
+console.log('Active company:', info.currentCompany.companyName);
+console.log('Company ID:', info.currentCompany.companyId);
+console.log('Available companies:', info.customerCompanies.length);
+
+// Use context to load company-specific data
+if (info.currentCompany.companyId) {
+  loadCompanyData(info.currentCompany.companyId);
+}
+```
+
+## getGroupHeaderManager
+
+Returns the singleton GroupHeaderManager instance that manages customer group headers for all configured GraphQL modules. Use the returned manager to set, remove, or check group headers for proper pricing and catalog visibility.
+
+```typescript
+function getGroupHeaderManager(): any
+```
+
+> Customer group changes typically happen automatically based on the company context. You usually only need to call `manager.setGroupHeaders()` directly in advanced scenarios like admin impersonation or testing.
+
+> The `GroupHeaderManager` is a singleton. Calling `getGroupHeaderManager()` multiple times returns the same instance, ensuring consistent header management across your application.
+
+### Usage scenarios
+
+- Set the customer group context for proper pricing.
+- Apply group-specific catalog rules.
+- Initialize the group context on login.
+- Switch groups for testing or admin purposes.
+- Coordinate with company context changes.
+- Check current group header state.
+- Configure custom header keys dynamically.
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns a `GroupHeaderManager` instance with the following methods:
+
+```typescript
+{
+  setGroupHeaders(groupId: string | null): void;
+  removeGroupHeaders(): void;
+  isGroupHeaderSet(): boolean;
+  setHeaderKey(headerKey: string): void;
+  setFetchGraphQlModules(modules: FetchGraphQL[]): void;
+}
+```
+
+### Example
+
+```js
+
+// Get the manager instance
+const manager = getGroupHeaderManager();
+
+// Set customer group for pricing
+manager.setGroupHeaders('wholesale-group-id');
+
+// Subsequent requests will use this group context
+// Prices and catalog visibility will reflect group settings
+await loadProducts(); // Products will show group-specific prices
+
+// Remove group headers
+manager.setGroupHeaders(null);
+
+// Check if headers are set
+if (manager.isGroupHeaderSet()) {
+  console.log('Group context is active');
+}
+```
+
+## updateCustomerGroup
+
+The `updateCustomerGroup` function updates the customer group context for the current shopper (for example, after company or role changes).
+
+```ts
+const updateCustomerGroup = async (): Promise<string | null>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `string | null`.
+
+## Data models
+
+The following data models are used by functions in this drop-in.
+
+### CustomerCompanyInfo
+
+The `CustomerCompanyInfo` object is returned by the following functions: [`getCustomerCompanyInfo`](#getcustomercompanyinfo).
+
+```ts
+interface CustomerCompanyInfo {
+  currentCompany: Company;
+  customerCompanies: CompanyOption[];
+  customerGroupId: string;
+}
+```
+
+## Integration with company context
+
+The Company Switcher functions work together to manage the complete company and group context:
+
+```js
+
+// Get manager instances
+const companyManager = getCompanyHeaderManager();
+const groupManager = getGroupHeaderManager();
+
+// Complete company switch workflow
+async function switchCompany(companyId, groupId) {
+  // 1. Set the company headers
+  companyManager.setCompanyHeaders(companyId);
+  
+  // 2. Set the group headers
+  if (groupId) {
+    groupManager.setGroupHeaders(groupId);
+  }
+  
+  // 3. Verify the context
+  const info = await getCustomerCompanyInfo();
+  console.log('Switched to:', info.currentCompany.companyName);
+  
+  // 4. Refresh all company-dependent data
+  await Promise.all([
+    refreshPurchaseOrders(),
+    refreshQuotes(),
+    refreshRequisitionLists(),
+    refreshCompanyUsers()
+  ]);
+}
+```
+
+{/* This documentation is auto-generated from the drop-in source repository: REPO_URL */}
+
+---
+
+# Company Switcher overview
+
+The Company Switcher drop-in enables multi-company user access and company context switching for Adobe Commerce storefronts. It also supports company context retrieval and automatic GraphQL header management.
+
+## Supported Commerce features
+
+The following table provides an overview of the Adobe Commerce features that the Company Switcher drop-in supports:
+
+| Feature | Status |
+| ------- | ------ |
+| Multi-company user access | Supported |
+| Company context switching | Supported |
+| Company context retrieval | Supported |
+| Automatic GraphQL header management | Supported |
+| Customer group header management | Supported |
+| Real-time context change events | Supported |
+| Data isolation across companies | Supported |
+| Permission-based access control | Supported |
+| Session persistence | Supported |
+| GraphQL API integration | Supported |
+
+---
+
+# Company Switcher initialization
+
+The **Company Switcher initializer** configures the drop-in for managing multi-company contexts in B2B storefronts. Use initialization to customize company context management, header injection, session persistence, and GraphQL module integration.
+
+<strong>Version: 1.1.1</strong>
+
+## Configuration options
+
+The following table describes the configuration options available for the **Company Switcher** initializer:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
+| `companyHeader` | `string` | No | HTTP header name for company identification. Defaults to `X-Adobe-Company`. |
+| `customerGroupHeader` | `string` | No | HTTP header name for customer group identification. Defaults to `Magento-Customer-Group`. |
+| `companySessionStorageKey` | `string` | No | Session storage key for persisting company context. Defaults to `DROPIN__COMPANYSWITCHER__COMPANY__CONTEXT`. |
+| `groupSessionStorageKey` | `string` | No | Session storage key for persisting group context. Defaults to `DROPIN__COMPANYSWITCHER__GROUP__CONTEXT`. |
+| `fetchGraphQlModules` | `FetchGraphQL[]` | No | `GraphQL` modules that will have company headers applied. Defaults to `\[\]`. |
+| `groupGraphQlModules` | `FetchGraphQL[]` | No | `GraphQL` modules that will have group headers applied. Defaults to `\[\]`. |
+
+## Default configuration
+
+The initializer runs with these defaults when no configuration is provided:
+
+```javascript title="scripts/initializers/company-switcher.js"
+
+// All configuration options are optional
+await initializers.mountImmediately(initialize, {
+  langDefinitions: {}, // Uses built-in English strings
+  models: {}, // Uses default data models
+  // Drop-in-specific defaults:
+  // companyHeader: undefined // See configuration options below
+  // customerGroupHeader: undefined // See configuration options below
+  // companySessionStorageKey: undefined // See configuration options below
+  // groupSessionStorageKey: undefined // See configuration options below
+  // fetchGraphQlModules: undefined // See configuration options below
+  // groupGraphQlModules: undefined // See configuration options below
+});
+```
+
+## Language definitions
+
+Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override default text for the drop-in.
+
+```javascript title="scripts/initializers/company-switcher.js"
+
+const customStrings = {
+  'AddToCart': 'Add to Bag',
+  'Checkout': 'Complete Purchase',
+  'Price': 'Cost',
+};
+
+const langDefinitions = {
+  default: customStrings,
+};
+
+await initializers.mountImmediately(initialize, { langDefinitions });
+```
+
+> For complete dictionary customization including all available keys and multi-language support, see the [Company Switcher Dictionary](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-switcher/dictionary/) page.
+
+## Customizing data models
+
+Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
+
+### Available models
+
+The following models can be customized through the `models` configuration option:
+
+> No customizable models are available for this drop-in.
+
+The following example shows how to customize the `CustomModel` model for the **Company Switcher** drop-in:
+
+```javascript title="scripts/initializers/company-switcher.js"
+
+const models = {
+  CustomModel: {
+    transformer: (data) => ({
+      // Add custom fields from backend data
+      customField: data?.custom_field,
+      promotionBadge: data?.promotion?.label,
+      // Transform existing fields
+      displayPrice: data?.price?.value ? `${data.price.value}` : 'N/A',
+    }),
+  },
+};
+
+await initializers.mountImmediately(initialize, { models });
+```
+
+## Drop-in configuration
+
+The **Company Switcher initializer** configures the drop-in for managing multi-company contexts in B2B storefronts. Use initialization to customize company context management, header injection, session persistence, and GraphQL module integration.
+
+```javascript title="scripts/initializers/company-switcher.js"
+
+await initializers.mountImmediately(initialize, {
+  langDefinitions: {},
+  companyHeader: 'X-Custom-Header',
+  customerGroupHeader: 'X-Custom-Header',
+  companySessionStorageKey: 'customKey',
+  groupSessionStorageKey: 'customKey',
+  fetchGraphQlModules: [],
+  groupGraphQlModules: [],
+});
+```
+
+> Refer to the [Configuration options](#configuration-options) table for detailed descriptions of each option.
+
+## Configuration types
+
+The following TypeScript definitions show the structure of each configuration object:
+
+### langDefinitions
+
+Maps locale identifiers to dictionaries of key-value pairs. The `default` locale is used as the fallback when no specific locale matches. Each dictionary key corresponds to a text string used in the drop-in UI.
+
+```typescript
+langDefinitions?: {
+  [locale: string]: {
+    [key: string]: string;
+  };
+};
+```
+
+---
+
+# Company Switcher Quick Start
+
+Get started with the Company Switcher drop-in to enable multi-company context switching for B2B users.
+
+<strong>Version: 1.1.1</strong>
+
+## Quick example
+
+The Company Switcher drop-in is included in the https://github.com/hlxsites/aem-boilerplate-commerce. This example shows the basic pattern:
+
+```js
+// 1. Import initializer (handles all setup)
+
+// 2. Import the container you need
+
+// 3. Import the provider
+
+// 4. Render in your block
+export default async function decorate(block) {
+  await provider.render(CompanySwitcher, {
+    // Configuration options - see Containers page
+  })(block);
+}
+```
+
+**New to drop-ins?** See the [Using drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/quick-start/) guide for complete step-by-step instructions.
+
+## Quick reference
+
+**Import paths:**
+- Initializer: `import '../../scripts/initializers/company-switcher.js'`
+- Containers: `import ContainerName from '@dropins/storefront-company-switcher/containers/ContainerName.js'`
+- Provider: `import { render } from '@dropins/storefront-company-switcher/render.js'`
+
+**Package:** `@dropins/storefront-company-switcher`
+
+**Version:** 1.1.1 (verify compatibility with your Commerce instance)
+
+**Example container:** `CompanySwitcher`
+
+## Learn more
+
+- [Containers](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-switcher/containers/) - Available UI components and configuration options
+- [Initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-switcher/initialization/) - Customize initializer settings and data models
+- [Functions](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-switcher/functions/) - Control drop-in behavior programmatically
+- [Events](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-switcher/events/) - Listen to and respond to drop-in state changes
+- [Slots](https://experienceleague.adobe.com/developer/commerce/storefront/dropins-b2b/company-switcher/slots/) - Extend containers with custom content
+
+---
+
+# Company Switcher Slots
+
+The Company Switcher drop-in does not expose any slots for customization.
+
+## Why no slots?
+
+This drop-in provides functionality through API methods and configuration options rather than UI customization points. Slots may be added in future versions as the feature set for the drop-in expands.
+
+<strong>Version: 1.1.1</strong>
+
+---
+
+# Company Switcher styles
+
+Customize the Company Switcher drop-in using CSS classes and design tokens. This page covers the Company Switcher-specific container classes and customization examples. For comprehensive information about design tokens, responsive breakpoints, and styling best practices, see [Styling Drop-In Components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/styling/).
+
+<strong>Version: 1.1.1</strong>
+
+## Customization example
+
+Add this to the CSS file of the specific https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/ where you're using the Company Switcher drop-in.
+
+For a complete list of available design tokens (colors, spacing, typography, and more), see the [Design tokens reference](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/styling/#design-tokens-reference).
+
+```css title="styles/styles.css"
+/* Target Company Switcher containers */
+.company-switcher-container {
+  /* Use the browser DevTools to find the specific classes you need */
+}
+```
+
+## Container classes
+
+The Company Switcher drop-in uses BEM-style class naming. Use the browser DevTools to inspect elements and find specific class names.

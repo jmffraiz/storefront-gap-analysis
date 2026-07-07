@@ -1,44 +1,49 @@
+<!--
+Authoring reference — for whoever fills in this template. Do NOT copy this comment block into the generated document; it is defined once, here.
+
+Architecture: the storefront sits on Adobe Commerce as a Cloud Service (ACCS) + Edge Delivery Services (EDS) using the AEM Boilerplate Commerce repo (https://github.com/hlxsites/aem-boilerplate-commerce). Each page is hosted by a thin EDS block that mounts one or more `@dropins/storefront-*` drop-ins.
+
+Documentation links: every drop-in package name, container name, and named Adobe service mentioned in the document must be hyperlinked to its official Experience League page, using the URL reference table at the end of this file. Format: `[name](url)`.
+
+Complexity buckets (used in §1 Complexity column):
+- Low — theming / config / authored content / single slot fill.
+- Medium — new block logic, multi-slot wiring, drawer/state coordination, or initializing one additional drop-in.
+- High — multi-block coordination plus a new service dependency or external-system integration.
+-->
+
 # <Page name> — Gap Analysis
 
-> **Mockup source:** `<file>` (<Figma frame names>)
-> **Variants/states included:** <Default / Filter / OOS / Empty / …>
-> **Scope:** **IN:** <what this doc covers>. **OUT:** <what is excluded>.
 > **Author:** <name> · **Date:** <YYYY-MM-DD>
 
-The storefront sits on **Adobe Commerce as a Cloud Service (ACCS) + Edge Delivery Services (EDS)** using the **AEM Boilerplate Commerce** repo. Each page is hosted by a thin EDS block that mounts one or more `@dropins/storefront-*` drop-ins.
+![<alt text: what the mockup shows — page/frames/breakpoints, and what scope is highlighted>](<relative path to mockup image>)
 
-> **Documentation links:** Every drop-in package name, container name, and named Adobe service mentioned in this document must be hyperlinked to its official Experience League page. Use the URL reference table at the end of this document. Format: `[name](url)`.
+Description of the highlighted scope as a **bullet list, never a paragraph** — one bullet per functional input/constraint the user gave for this feature, polished but not merged or summarized together, no process/methodology notes:
 
-**Complexity buckets** (used in §2):
-- **Low** — theming / config / authored content / single slot fill.
-- **Medium** — new block logic, multi-slot wiring, drawer/state coordination, or initializing one additional drop-in.
-- **High** — multi-block coordination plus a new service dependency or external-system integration.
+- <polished restatement of one functional input/constraint the user gave for this feature>
+- <...>
 
 ---
 
-## 1. Feature decomposition
+## 1. Feature gap analysis
 
-One row per discrete feature observed in the design.
-
-| # | Feature | Description in the design | Variant/state | Type | Observations |
-|---|---------|---------------------------|---------------|------|--------------|
-| F1 | <short noun phrase> | <what the shopper sees / does, neutral of implementation> | <Default / Filter / OOS / All> | <Commerce / Authored content / Cross-cutting> | <caveats, ambiguities, edge cases> |
-| F2 | | | | | |
-
----
-
-## 2. Gap analysis
+One row per discrete feature observed in the design. Rows ordered by page position; group rows by variant/state where it helps readability.
 
 Legend — **Coverage:** ✅ provided · 🟡 partial (slot / theme / extend) · ❌ none.
 
-| # | Feature | Existing drop-in / block | Coverage | What it gives OOTB | Gap to close | Touch points | Dependencies | Complexity | Risk |
-|---|---------|--------------------------|:--------:|--------------------|--------------|--------------|--------------|:----------:|:----:|
-| F1 | <name> | [`@dropins/storefront-…`](<doc-url>) / block / `none` | <✅ / 🟡 / ❌> | <containers, slots, events, props — concrete names, each linked to its doc page> | <one sentence: what to build / wrap / restyle> | <blocks/slots/files expected to change> | <backend prereqs, third-party SDKs, design-token additions> | <Low/Medium/High> | <Low/Med/High> |
-| F2 | | | | | | | | | |
+Column guidance:
+- **Feature** — short noun phrase + one clause of what the shopper sees/does; note variant/state in *italics* when it is not Default (e.g. *OOS only*). Type tag: `[C]` Commerce · `[A]` Authored content · `[X]` Cross-cutting.
+- **OOTB basis** — the drop-in / container / slot that provides the closest starting point, with concrete names (containers, slots, events, props), each linked to its doc page. `none` if greenfield.
+- **Gap to close** — the deliverable: what to build / wrap / restyle / configure, stated so it can be estimated directly. This is the primary column.
+- **Dependencies & touch points** — backend prereqs, third-party SDKs, design tokens, plus the blocks/slots/files expected to change. Omit when trivial.
+
+| # | Feature | OOTB basis | Coverage | Gap to close | Dependencies & touch points | Complexity | Risk |
+|---|---------|------------|:--------:|--------------|-----------------------------|:----------:|:----:|
+| F1 | <noun phrase — what the shopper sees/does> `[C/A/X]` *<variant if not Default>* | [`@dropins/storefront-…`](<doc-url>) → <container / slot / event names> or `none` | <✅ / 🟡 / ❌> | <what to build / wrap / restyle — estimable in one read> | <prereqs · files/blocks that change> | <Low/Medium/High> | <Low/Med/High> |
+| F2 | | | | | | | |
 
 ---
 
-## 3. Overall assumptions and open questions
+## 2. Overall assumptions and open questions
 
 ### 1. Assumptions 
    -
@@ -54,7 +59,7 @@ Decisions blocking the estimate. Each carries a recommendation and the impact of
    - *Impact A — <option>:* <scope / complexity consequence>.
    - *Impact B — <option>:* <scope / complexity consequence>.
 
-## 4. Explicitly out of scope
+## 3. Explicitly out of scope
 
 What the estimate must **not** include — protects against scope creep in the estimation session.
 

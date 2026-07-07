@@ -1,0 +1,3422 @@
+<SYSTEM>This is the Setup — configuration bundle for Adobe Commerce Storefront on Edge Delivery Services</SYSTEM>
+
+# Setup — configuration
+
+> Configuration: endpoints, headers, CORS, gated content, multistore, prerender, CDN, AEM Assets, Storefront Compatibility Package
+> Generated: 2026-06-26T22:40:20.158Z
+> Source: https://experienceleague.adobe.com/developer/commerce/storefront
+
+
+---
+
+# AEM Assets integration
+
+The AEM Assets integration displays product images managed in AEM Assets instead of traditional Commerce-hosted images. The integration delivers enhanced image management capabilities: advanced optimization, cropping, and delivery through Adobe's Content Delivery Network (CDN). Learn more in the https://experienceleague.adobe.com/en/docs/commerce/aem-assets-integration/overview.
+
+## Boilerplate update required
+
+Only one update is required: set `"commerce-assets-enabled": true` in your [Storefront configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/).
+
+```json title="config.json" ins={'+':4}
+{
+  "public": {
+    "default": {
+      "commerce-assets-enabled": true
+    }
+  }
+}
+```
+
+The Commerce drop-ins automatically detect the `commerce-assets-enabled` configuration and adjust image handling accordingly. See the https://www.aemshop.net/config.json. 
+
+## Expected behaviors
+
+The following table describes what happens in different configuration scenarios. The **Image source** refers to where you store your images: either "Commerce" for traditional Commerce-hosted images or "AEM Assets" for images managed in AEM Assets. The **`commerce-assets-enabled setting`** column indicates whether this configuration is set to `true` or `false`.
+
+```text
+[
+    ['Image source', 'commerce-assets-enabled setting', 'Expected behavior'],
+    ['Commerce-hosted images', 'true', 'Images display correctly. The AEM Assets integration code passes through Commerce-hosted images without modification.'],
+    ['AEM Assets images', 'true', 'Images display correctly with proper AEM Assets CDN optimization parameters applied. This is the intended configuration for AEM Assets integration.'],
+    ['Commerce-hosted images', 'false', 'Images display correctly using standard Commerce image handling without AEM Assets optimization.'],
+    ['AEM Assets images', 'false', 'Images may not display correctly. AEM Assets images require specific optimization parameters that may conflict with standard Commerce image handling, potentially resulting in 400 errors or broken images.'],
+  ]
+```
+
+## How it works in the boilerplate
+
+The Commerce drop-ins automatically detect the `commerce-assets-enabled` configuration and adjust image handling accordingly. Here's how the boilerplate integrates this configuration:
+
+### Import the AEM Assets utility
+
+The Commerce blocks in the boilerplate import the `tryRenderAemAssetsImage` helper from the drop-ins tools package.
+
+```javascript showLineNumbers=false 
+```
+
+### Render images via drop-in slots
+
+The Commerce blocks use the `tryRenderAemAssetsImage` function inside its drop-in image slots, as shown below.
+
+```javascript showLineNumbers=false {"Container:":4-5} {"Container Image Slot:":6-8} {"AEM Assets integration:":10-17}
+
+export default async function decorate(block) {
+  
+  await dropinRenderer.render(DropinComponent, {
+
+    slots: {
+      DropinImageSlot: (ctx) => {
+        const { data, defaultImageProps } = ctx;
+
+        tryRenderAemAssetsImage(ctx, {
+          imageProps: defaultImageProps,
+          params: {
+            width: defaultImageProps.width,
+            height: defaultImageProps.height,
+          },
+        });
+      },
+    },
+  })(block);
+}
+```
+
+## Real-world examples from the boilerplate
+
+Based on the Commerce blocks in the boilerplate, AEM Assets integration uses the `tryRenderAemAssetsImage` function from `@dropins/tools/lib/aem/assets.js` as follows.
+
+### Product List SearchResults container
+
+```javascript showLineNumbers=false {"Container:":2-3} {"Container Image Slot:":4-6} {"AEM Assets integration:":11-20}
+
+provider.render(SearchResults, {
+
+  slots: {
+    ProductImage: (ctx) => {
+      const { product, defaultImageProps } = ctx;
+      const anchorWrapper = document.createElement('a');
+      anchorWrapper.href = rootLink(`/products/${product.urlKey}/${product.sku}`);
+
+      tryRenderAemAssetsImage(ctx, {
+        alias: product.sku,
+        imageProps: defaultImageProps,
+        wrapper: anchorWrapper,
+        params: {
+          width: defaultImageProps.width,
+          height: defaultImageProps.height,
+        },
+      });
+    },
+  },
+});
+```
+
+### Checkout OrderProductList container
+
+```javascript showLineNumbers=false  {"Container:":2-3} {"Container Image Slot:":4-6} {"AEM Assets integration:":8-16}
+
+OrderProvider.render(OrderProductList, {
+
+  slots: {
+    CartSummaryItemImage: (ctx) => {
+      const { data, defaultImageProps } = ctx;
+
+      tryRenderAemAssetsImage(ctx, {
+        alias: data.product.sku,
+        imageProps: defaultImageProps,
+        params: {
+          width: defaultImageProps.width,
+          height: defaultImageProps.height,
+        },
+      });
+    },
+    ...
+  },
+})($orderProductList);
+```
+
+## Using drop-ins outside the boilerplate (optional)
+
+If you use the boilerplate, AEM Assets works out of the box. Without the boilerplate, you need to implement the minimal config and slot usage below. See the [Commerce drop-ins overview](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/introduction/) for how slots and initializers work.
+
+To enable AEM Assets with standalone drop-ins, you'll need to implement the configuration system that drop-ins expect. See [Storefront configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/) for full configuration details.
+
+### Minimal configuration
+
+Set `commerce-assets-enabled: true` in a `public.default` config (JSON or config service). Align endpoints/headers to your environment as needed.
+
+> **Reference implementation** See the https://github.com/hlxsites/aem-boilerplate-commerce for complete examples.
+
+### Minimal integration steps
+
+1. Install `@dropins/tools`.
+1. Add the `assets.js` file from the boilerplate to your project.
+1. Import `tryRenderAemAssetsImage` into your drop-in components.
+1. In each image slot, call `tryRenderAemAssetsImage(ctx, { alias: <sku>, imageProps, params: { width, height } })`. Fallback to Commerce-hosted images is automatic from functions in `assets.js`—no extra code is required.
+1. Use the product SKU (or your configured alias) for `alias` so the correct asset is matched in AEM.
+1. When linking images, pass a `wrapper` element (for example, an anchor) in the options.
+1. Set the `width`/`height` params to the slot’s intended render size (e.g., from `defaultImageProps`).
+1. For more details, see [Commerce drop-ins overview](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/introduction/).
+
+**Minimal implementation results**: Uses AEM Assets when available; falls back to Commerce; applies correct CDN params automatically.
+
+> **AEM Assets API helpers** Outside the boilerplate, use these helpers from `@dropins/tools/lib/aem/assets.js` to detect enablement, generate optimized URLs, and render slots:
+  - `isAemAssetsEnabled()`
+  - `getDefaultAemAssetsOptimizationParams()`
+  - `isAemAssetsUrl(url)`
+  - `generateAemAssetsOptimizedUrl(assetUrl, alias, params)`
+  - `tryGenerateAemAssetsOptimizedUrl(assetUrl, alias, params)`
+  - `makeAemAssetsImageSlot(config)`
+  - `tryRenderAemAssetsImage(ctx, config)`
+
+## Troubleshooting
+
+### Images not displaying
+
+If product images are not displaying correctly:
+
+1. **Check your configuration:** Ensure `commerce-assets-enabled` is set to `true` if you're using AEM Assets.
+2. **Verify image URLs:** AEM Assets images typically include specific URL patterns that indicate they're served from AEM.
+3. **Check browser console:** Look for 400 errors that might indicate incompatible optimization parameters.
+4. **Test with mixed sources:** Try with both AEM Assets and Commerce-hosted images to isolate the issue.
+5. **Confirm slot integration:** If not using the boilerplate, ensure each drop-in image slot calls `tryRenderAemAssetsImage` with a valid `alias` (SKU).
+6. **Validate size params:** Ensure `params.width`/`params.height` match the slot's intended render size (for example, from `defaultImageProps`).
+
+### Configuration not taking effect
+
+1. **Clear cache:** Ensure your configuration changes are not cached.
+2. **Check config location:** Verify your https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/ is properly formatted.
+3. **Validate JSON:** Use a JSON validator to ensure your configuration file is valid.
+
+---
+
+# AEM Commerce Prerender
+
+The AEM Commerce Prerender solution lets your Edge Delivery Services (Adobe's hosting and delivery infrastructure that turns authored documents into fast HTML pages served from servers close to the shopper. You push code to GitHub; Edge Delivery Services builds and publishes automatically.) Commerce Storefront serve complete product page HTML to search engines and AI crawlers _before_ JavaScript runs. This can improve SEO rankings and make your product catalog readable by large language models (LLMs) and other AI systems.
+
+## How it works
+
+1. Deploy the App Builder (Adobe's serverless platform for building and deploying cloud-native apps. The AEM Commerce Prerender app runs on App Builder — it polls your catalog on a schedule, generates product page HTML, and publishes it to Edge Delivery Services.) app first, because your storefront integration depends on the HTML it generates. The app runs in Adobe's cloud on a schedule, polling your product catalog and generating HTML for each product.
+
+1. The app publishes that HTML to Edge Delivery Services as overlay (A complete HTML file that Edge Delivery Services serves at a specific page URL before any JavaScript runs. The prerender app generates one HTML file per product and registers it with Edge Delivery Services, so crawlers and shoppers receive full page content instantly.) content, where it becomes part of the initial page HTML served to visitors.
+
+1. Your `product-details` block adds interactive features to the prerendered HTML using the product detail page (PDP) drop-in (NPM packages that provide core Commerce storefront features such as cart, checkout, product details, and account flows.).
+
+> **Prerequisite: Bring Your Own Markup** The prerender solution uses Edge Delivery Services' https://www.aem.live/developer/byom API to publish HTML content. The app generates one HTML file per product and publishes it as overlay content, so Edge Delivery Services serves complete product HTML at your product page URLs.
+
+## Why use prerender?
+
+By default, Adobe Commerce on Edge Delivery Services renders product information with client-side JavaScript, which limits discoverability for search engines and AI systems that don't run JavaScript. Edge Delivery Services has no built-in server-side rendering, so the prerender solution is the closest equivalent. Prerendering generates complete HTML — including structured data — and publishes it via the Bring Your Own Markup (BYOM) API before any page is requested. Structured data is machine-readable product information embedded in the HTML, so search engines can read product details without running JavaScript.
+
+- **Enhanced SEO**: Complete HTML for search engines improves indexing and rankings.
+- **AI-readable catalog**: AI systems can read structured markup to understand and recommend your products.
+- **Content appears immediately**: Prerendered product content is visible while interactive drop-ins finish loading.
+- **Faster first load**: Pages start displaying content before JavaScript finishes running.
+- **Automated updates**: Monitors the product catalog and updates markup when products change.
+
+## Implementation roadmap
+
+To implement the prerender solution, you'll work in two repositories. Follow these steps in order:
+
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontSize':'16px'}}}%%
+flowchart LR
+    Start([<strong>Start Implementation</strong>]):::start
+
+    Step1["<strong>1. Check Prerequisites</strong>
+Verify access, tools, and storefront requirements"]:::step
+    Step2["<strong>2. Understand the Architecture</strong>
+Learn how the two repositories work together"]:::step
+    Step3["<strong>3. Install & Deploy App Builder App</strong>
+Repository: aem-commerce-prerender
+Clone, configure, and deploy to App Builder"]:::repo1
+    Step4["<strong>4. Integrate with Your Storefront</strong>
+Repository: Your Commerce Boilerplate
+Modify the product-details block to use prerendered markup"]:::repo2
+    Step5["<strong>5. Customize (Optional)</strong>
+Adjust templates, schemas, and queries"]:::optional
+
+    End([<strong>✓ Implementation Complete</strong>]):::complete
+
+    Start --> Step1
+    Step1 --> Step2
+    Step2 --> Step3
+    Step3 --> Step4
+    Step4 --> Step5
+    Step5 --> End
+
+    classDef start fill:#e3f2fd,stroke:#1976d2,stroke-width:3px,color:#000
+    classDef step fill:#f5f5f5,stroke:#666,stroke-width:2px,color:#000
+    classDef repo1 fill:#fff3e0,stroke:#f57c00,stroke-width:3px,color:#000
+    classDef repo2 fill:#e8f5e9,stroke:#388e3c,stroke-width:3px,color:#000
+    classDef optional fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000,stroke-dasharray: 5 5
+    classDef complete fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+
+    linkStyle default stroke-width:3px,stroke:#666
+```
+
+*Complete implementation workflow showing the step-by-step process for setting up prerendered product pages in your storefront.*
+
+## Prerequisites
+
+Before implementing the prerender solution, verify you have:
+
+### Required access and permissions
+
+- **Adobe Developer Console access** with "Developer" role for your organization
+- **App Builder workspace** (Stage and Production workspaces recommended)
+- **AEM Admin API access** for your Edge Delivery Services project (see https://www.aem.live/docs/admin.html documentation)
+- **Adobe Commerce instance** with Catalog Service (Adobe's fast, read-only GraphQL API for product data. Drop-ins call it instead of core Commerce GraphQL for product pages, search results, and category listings — up to ten times faster.) configured and operational
+
+*(AEM Live tools note — see the full documentation site for the complete callout.)*
+
+### Storefront requirements
+
+Your Edge Delivery Services Commerce Storefront must be:
+
+- Built on the https://github.com/hlxsites/aem-boilerplate-commerce
+- Configured with valid [storefront configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/) connecting to your Adobe Commerce backend
+- Using product URLs with consistent format (typically `/products/{urlKey}/{sku}`)
+
+### Technical requirements
+
+- **Node.js** (current LTS version) installed locally
+- **Adobe I/O CLI** (`@adobe/aio-cli`) installed globally
+- **Git** for cloning the prerender repository
+- Familiarity with JavaScript, Handlebars templates, and GraphQL
+
+## Detailed workflow
+
+The three steps in "How it works" describe the high-level flow. The steps below show how the prerender system carries out that process on a schedule in the background:
+
+1. The store admin manages products in Adobe Commerce.
+2. The prerender system detects product changes.
+3. The prerender system renders pages with semantic markup.
+4. The prerender system publishes the pages via the AEM Admin API.
+5. The prerender system updates the sitemap via the AEM Admin API.
+6. Shoppers access the prerendered product details pages.
+
+The diagram below shows how data moves through each stage, from the store admin's product update to the shopper's product page.
+
+```mermaid
+flowchart LR
+    A["<span style='font-size:80px'>👨‍💼</span>
+<span style='font-size:18px'>Store Admin</span>"]:::actor
+    B["Product"]:::product
+
+    subgraph subGraph0["<strong>Prerender system</strong>"]
+        direction TB
+        C["Product changed"]:::prerender
+        D["Render page"]:::prerender
+        C --> D
+    end
+
+    E["Store HTML in
+App Builder blob store"]:::action
+    F["AEM Admin API configures
+overlay & updates sitemap"]:::action
+    G["Product Details Page
+With embedded JSON-LD
+Metadata and Semantic Markup"]:::output
+    H["<span style='font-size:80px'>🛒</span>
+<span style='font-size:18px'>Store Customer</span>"]:::actor
+
+    A --> B
+    B --> subGraph0
+    subGraph0 --> E
+    E -->|AEM Admin API| F
+    F --> G
+    G --> H
+
+    classDef actor fill:none,stroke:none,color:#000000
+    classDef product fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef prerender fill:#fff3e0,stroke:#f57c00,stroke-width:2px,stroke-dasharray: 5 5
+    classDef action fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef output fill:#c8e6c9,stroke:#388e3c,stroke-width:2px
+```
+
+*High-level workflow showing how product data flows from Store Admin through the prerender system to deliver Product Details Pages to Store Customers.*
+
+### Architecture components
+
+The solution consists of these components:
+
+- **App Builder Actions**: Handle product fetching, change detection, and markup generation.
+- **Scheduled Triggers**: Invoke actions on a configurable schedule to keep content synchronized.
+- **Catalog Service Integration**: Queries product data from your Adobe Commerce backend.
+- **AEM Admin API**: Publishes generated markup to your Edge Delivery Services project.
+- **Storage Layer**: Maintains product state and generated markup in App Builder storage.
+- **Management UI**: Provides a web interface for monitoring, configuration, and troubleshooting.
+
+The diagram below shows how these components connect and work together to generate and serve prerendered product pages.
+
+```mermaid
+flowchart TB
+    subgraph subGraph0["<strong>App Builder Workspace</strong>"]
+        direction TB
+        A["Product Change Detector
+(publishes products upon change)"]:::appBuilder
+        B["Product List Scraper
+(fetch and store list)"]:::appBuilder
+        C["PDP Renderer
+(generates/stores pages)"]:::appBuilder
+        D[("Blob Store")]:::storage
+        A --> D
+        B --> D
+        C --> D
+    end
+
+    E["AEM Admin API
+configures overlay link
+to App Builder blob store"]:::api
+    F["Edge Delivery Services
+serves HTML from overlay
+at product URLs"]:::helix
+
+    subgraph subGraph1["<strong>Product Page</strong>"]
+        direction TB
+        G["Embedded markup with product data
+and attributes, injected ahead of time"]:::embedded
+        H["Description"]:::prerendered
+        I["Product image carousel"]:::prerendered
+        J["Price
+Stock qty"]:::dynamic
+        K["More
+Customer-defined fields"]:::dynamic
+    end
+
+    subgraph subGraph2["<strong>Consumers</strong>"]
+        direction TB
+        L["SEO / AI systems"]
+        M["AI Scrapers
+(read markup, no js)"]
+        N["Googlebot
+(reads JSON-LD, Rendered page)"]
+        O["Other crawlers
+(read markup, no js)"]
+    end
+
+    P["Catalog service
+(high frequency data)"]:::api
+    Q["API for price retrieval"]:::api
+
+    D -->|HTML stored in blob store| E
+    E -->|Overlay configured| F
+    F -->|Edge Delivery serves the final page| subGraph1
+    subGraph1 --> subGraph2
+    G --> H
+    G --> I
+    H --> subGraph2
+    I --> subGraph2
+    P -->|Provides data| J
+    Q -->|Provides data| J
+    P -->|Provides data| K
+
+    classDef appBuilder fill:#e3f2fd,stroke:#2962FF,color:#2962FF
+    classDef storage fill:#fff3e0,stroke:#f57c00
+    classDef helix fill:#e8f5e9,stroke:#388e3c
+    classDef embedded fill:#fff9c4,stroke:#f57f17
+    classDef prerendered fill:#c8e6c9,stroke:#388e3c
+    classDef dynamic fill:#ffcdd2,stroke:#c62828
+    classDef api fill:#fce4ec,stroke:#c2185b
+```
+
+*Complete architecture showing App Builder actions, content management, and how prerendered and dynamic content are delivered to consumers.*
+
+> **Catalog Size Considerations** For catalogs exceeding 50,000 products, consult the https://www.aem.live/docs/limits documentation for sitemap splitting strategies and scaling considerations.
+
+## Product lifecycle management
+
+The prerender solution publishes everything Catalog Service returns, without filtering by product status, visibility, or stock level. A product gets prerendered when Catalog Service includes it in search results and it has a valid URL key.
+
+### Draft product preview
+
+The prerender system does not have a draft mode. It renders every product that Catalog Service returns, regardless of whether that product is enabled, visible, or in stock. Whether a draft or inactive product appears in the prerendered site therefore depends entirely on your Commerce and Catalog Service configuration — not on any filtering in the prerender system.
+
+You can also preview the product template itself — the BYOM template document that provides the page structure for all product pages. Open it in Document Authoring (DA), Universal Editor (UE), or another supported editor, with a `defaultSku` configured to review the layout and content before any products go live.
+
+### Scheduled publishing
+
+Products become live on your storefront only when they have been prerendered and published to Edge Delivery Services. The prerender system runs two coordinated polling actions:
+
+- **`fetch-all-products`** — runs every 60 minutes to discover new products in the catalog
+- **`check-product-changes`** — runs every 5 minutes to detect changes, render updated markup, and publish product pages
+
+To schedule when a product goes live, control when it becomes visible in Catalog Service. When the product appears in Catalog Service search results, the `fetch-all-products` action discovers it within 60 minutes and the `check-product-changes` action publishes it within 5 minutes of discovery.
+
+See the https://github.com/adobe-rnd/aem-commerce-prerender for details on configuring polling intervals in `app.config.yaml`.
+
+### Offline product removal
+
+When a product is removed from Catalog Service — because it was disabled, deleted, or its visibility changed — the `mark-up-clean-up` action removes it from the published storefront. This action runs every 60 minutes and works by comparing the list of currently published product pages against current Catalog Service results: any product in the published index that is no longer returned by Catalog Service is unpublished and deleted.
+
+For faster, event-driven removal, you can build custom instrumentation that observes product changes in Commerce and calls the Edge Delivery Services unpublish API directly. The https://www.aem.live/docs/admin.html#tag/publish/operation/unpublishResource accepts a resource path and immediately removes it from your live site.
+
+## Installation and configuration
+
+The https://github.com/adobe-rnd/aem-commerce-prerender has complete installation instructions. The steps below cover the key configuration values for your deployment.
+
+1. **Clone the repository** and install dependencies:
+   ```bash
+   git clone https://github.com/adobe-rnd/aem-commerce-prerender.git
+   cd aem-commerce-prerender
+   npm install
+   ```
+
+2. **Run the setup wizard** to generate your `.env` configuration:
+   ```bash
+   npm run setup
+   ```
+   The wizard prompts for your App Builder workspace selection and Adobe I/O authentication.
+
+3. **Configure environment variables** in the generated `.env` file with your storefront-specific values:
+
+   
+
+   | Variable | Description | Example |
+   |----------|-------------|---------|
+   | `ORG` | Your GitHub organization or username | `adobe` |
+   | `SITE` | Your AEM site/repository name | `your-storefront` |
+   | `CONTENT_URL` | Your AEM content URL (auto-populated by setup wizard) | `https://main--your-storefront--adobe.aem.live` |
+   | `STORE_URL` | Your Commerce store URL (auto-populated by setup wizard) | `https://main--your-storefront--adobe.aem.live` |
+   | `PRODUCTS_TEMPLATE` | URL for the product template page (auto-populated by setup wizard) | `https://main--your-storefront--adobe.aem.live/products/default` |
+   | `PRODUCT_PAGE_URL_FORMAT` | URL pattern for product pages (auto-populated by setup wizard). Supports tokens: `{locale}`, `{urlKey}`, `{sku}` | `/{locale}/products/{urlKey}` |
+   | `LOCALES` | Comma-separated list of locales (for example, `en-us,en-gb,fr-fr`) or empty for non-localized sites | `en-us,fr-fr` |
+   | `AEM_ADMIN_API_AUTH_TOKEN` | Long-lived authentication token for AEM Admin API (valid for 1 year). The setup wizard exchanges your temporary token for this automatically. | `your-admin-token-here` |
+
+   
+
+   
+
+> **Token expiration** `AEM_ADMIN_API_AUTH_TOKEN` expires after one year. When it expires, product markup stops updating. Set a calendar reminder to rotate the token before expiration and redeploy with `npm run deploy`. See the Troubleshooting section for how to generate a new token.
+
+   
+
+> **Commerce configuration** The prerender app reads Commerce configuration (endpoints, headers, and store context) from your storefront configuration, not from environment variables. Ensure your storefront configuration includes Commerce endpoints and headers as documented in the /setup/configuration/commerce-configuration/ documentation. For Adobe Commerce Optimizer, configure the appropriate headers (`AC-View-ID`, `AC-Source-Locale`, `AC-Price-Book-ID`) in your storefront configuration.
+
+4. **Obtain required credentials**:
+   - **AEM Admin API token**: To obtain your token:
+     1. Log in to the https://admin.hlx.page/login (select the link from your preferred Identity Provider, where links suffixed by "_sa" let you pick a specific account instead of the one currently logged in)
+     2. Once redirected to the JSON response, open your browser's Developer Tools (F12)
+     3. Go to the Application tab (Chrome) or Storage tab (Firefox)
+     4. Under Cookies, find and copy the value of the `auth_token` cookie
+     5. Paste that token in the setup wizard textarea (the setup wizard exchanges your temporary token for a long-lived token automatically)
+
+     
+
+> **Keep this token secret** `AEM_ADMIN_API_AUTH_TOKEN` is a long-lived credential. Treat it like a password: never commit it to source control, and confirm your `.env` file is listed in `.gitignore` before you deploy.
+
+   - **App Builder credentials**: To configure the credentials:
+     1. Go to the https://developer.adobe.com/console
+     2. Open your project and navigate to the workspace you want to use (Stage or Production)
+     3. Click **Download All** in the top-right to download the App Builder configuration file (a `.json` file)
+     4. Run `aio app use <file_name>` in the root directory of your prerender project to activate the credentials
+   - **Commerce credentials** (Adobe Commerce as a Cloud Service): Access your Commerce Admin → System → Services → https://experienceleague.adobe.com/en/docs/commerce-merchant-services/user-guides/integration-services/saas for environment and API configuration
+   - **Commerce credentials** (Adobe Commerce Optimizer): Configure your Commerce backend connection according to your deployment type. See the /setup/configuration/commerce-configuration/ documentation for details on configuring Optimizer headers and endpoints.
+
+5. **Deploy to App Builder**:
+   ```bash
+   npm run deploy
+   ```
+   This deploys all actions and schedules to your selected workspace (Stage or Production).
+
+6. **Test the deployment**:
+   - Manually invoke actions using the Management UI or via CLI commands:
+     ```bash
+     # Fetch all products from Catalog Service and store them
+     aio rt action invoke aem-commerce-ssg/fetch-all-products
+
+     # Check for product changes and generate markup
+     aio rt action invoke aem-commerce-ssg/check-product-changes
+
+     # Clean up and unpublish deleted products
+     aio rt action invoke aem-commerce-ssg/mark-up-clean-up
+     ```
+   - Verify product markup generation for sample SKUs
+   - Check that pages publish successfully to your AEM project
+
+7. **Enable automated synchronization**:
+   - Use the https://prerender.aem-storefront.com to start the change detector
+   - Configure polling intervals in the `app.config.yaml` file (default: checks for changes every 5 minutes)
+   - Monitor the product index to verify continuous updates
+
+   
+
+> **app.config.yaml productDependencies** If your `app.config.yaml` includes a `productDependencies` array, ensure each entry includes the required `maxVersion` property. The Adobe I/O CLI validates this during `aio app build`. See the Troubleshooting section below for details if you encounter build errors.
+
+> **App Builder costs** The prerender app runs as a paid App Builder application. Actions, scheduled triggers, and blob storage all consume App Builder quota. For large catalogs or frequent polling intervals, review the https://developer.adobe.com/app-builder/docs/overview/pricing/ documentation before deploying to production.
+
+### Management UI
+
+After deployment, access the web-based https://prerender.aem-storefront.com to monitor and control your prerender deployment. Configure the UI with your App Builder workspace credentials before deployment-specific data appears.
+
+The Management UI provides:
+
+- **Monitoring capabilities** to view published products and track the product index
+- **Change detector controls** to start, stop, and configure scheduled product polling
+- **Markup preview** to view generated HTML for product pages before publication
+- **Logs and activations** for debugging App Builder action executions
+- **Storage management** to trigger manual product operations and manage App Builder file storage
+- **Configuration settings** to review environment variables and deployment parameters
+
+You configure access and authentication during the initial deployment. See the https://github.com/adobe-rnd/aem-commerce-prerender for details.
+
+## Storefront integration
+
+With the App Builder app deployed, you've completed the first repository. Now modify your Commerce boilerplate — the second repository — so product pages can read and enhance the prerendered HTML the app publishes.
+
+### The two-repository architecture
+
+The prerender solution involves two separate codebases that work together:
+
+1. **The aem-commerce-prerender repository** (App Builder app)
+   - This is the repository you cloned, configured, and deployed in the previous section
+   - Runs as a serverless application in Adobe App Builder
+   - Generates prerendered HTML and publishes it to your Edge Delivery Services site
+   - Operates independently as a background process
+
+2. **Your storefront repository** (Commerce boilerplate)
+   - Your customer-facing website code
+   - Built on the https://github.com/hlxsites/aem-boilerplate-commerce
+   - Needs code changes to read and use the prerendered HTML
+   - You'll make the integration changes in this repository.
+
+#### How they connect
+
+The prerender app and your storefront meet at each product page URL.
+
+The prerender app saves generated HTML in App Builder storage. The AEM Admin API tells Edge Delivery Services where to find those files so they can be served as an overlay: ready-made HTML at the same address as your product pages (for example, `/products/acme-widget/sku123`). When a shopper or search crawler opens that URL, Edge Delivery Services returns the prerendered HTML first, so product names, images, and descriptions appear without waiting for JavaScript.
+
+After the page loads, your storefront JavaScript runs and replaces that static HTML with the interactive product detail page (PDP) drop-in. Shoppers then see live prices, stock, and add-to-cart. Use lowercase SKUs in your product URLs because the drop-in reads the SKU from the `<meta name="sku">` tag (which preserves the original casing) rather than from the URL. See [URL format and SKU handling](#url-format-and-sku-handling) below.
+
+```mermaid
+flowchart LR
+ subgraph repo1[" "]
+    direction TB
+        A0["<strong>Repository 1</strong>
+aem-commerce-prerender
+(App Builder Application)"]
+        A1@{ label: "<span style=\"font-size:60px\">👨‍💻</span>
+<span style=\"font-size:18px\">Developer Actions</span>" }
+        A2["Clone repo
+Configure .env
+Deploy to App Builder"]
+  end
+ subgraph repo2[" "]
+    direction TB
+        D0["<strong>Repository 2</strong>
+Your Storefront
+(Commerce Boilerplate)"]
+        D1@{ label: "<span style=\"font-size:60px\">👨‍💻</span>
+<span style=\"font-size:18px\">Developer Actions</span>" }
+        D2["Modify product-details block
+to read prerendered HTML
+and enhance with PDP drop-in"]
+  end
+ subgraph repos["<strong>Developer Repositories</strong>"]
+    direction TB
+        repo1
+        repo2
+  end
+ subgraph appbuilder["<strong>App Builder Workspace</strong>"]
+    direction TB
+        B0["Runs Independently"]
+        B1["Detect product changes"]
+        B2["Generate prerendered HTML
+with semantic markup"]
+        B3["Store HTML in
+App Builder blob store"]
+        B4["AEM Admin API configures
+overlay link to blob store"]
+  end
+ subgraph eds["<strong>Edge Delivery Services</strong>"]
+    direction TB
+        C0["Content Delivery Layer"]
+        C1["Serves prerendered HTML
+from overlay at product URLs
+/products/{urlKey}/{sku}"]
+  end
+ subgraph delivery["<strong>Page Delivery Flow</strong>"]
+    direction TB
+        E1@{ label: "<span style=\"font-size:60px\">🤖</span>
+<span style=\"font-size:18px\">Crawler Request</span>" }
+        E2@{ label: "<span style=\"font-size:60px\">👤</span>
+<span style=\"font-size:18px\">User Request</span>" }
+        E3["Edge Delivery serves
+prerendered HTML"]
+        E4["Crawler reads
+static HTML"]
+        E5["Browser executes
+storefront JavaScript"]
+        E6["PDP drop-in replaces
+HTML with interactive UI"]
+  end
+    A0 -.-> A1
+    A1 --> A2
+    D0 -.-> D1
+    D1 --> D2
+    B0 L_B0_B1_0@--> B1
+    B1 L_B1_B2_0@--> B2
+    B2 L_B2_B3_0@--> B3
+    B3 L_B3_B4_0@--> B4
+    C0 -.-> C1
+    E1 --> E3
+    E2 --> E3
+    E3 --> E4 & E5
+    E5 --> E6
+    repo1 L_repo1_appbuilder_0@-. <strong>npm run deploy</strong> .-> appbuilder
+    repo2 == <strong>Deployed to</strong> ==> eds
+    B4 L_B4_eds_0@-. <strong>Overlay configured</strong> .-> eds
+    eds L_eds_delivery_0@-. <strong>Serves content</strong> .-> delivery
+    A1@{ shape: rect}
+    D1@{ shape: rect}
+    E1@{ shape: rect}
+    E2@{ shape: rect}
+     A0:::title
+     A1:::icon
+     A2:::action
+     D0:::title
+     D1:::icon
+     D2:::action
+     B0:::note
+     B1:::process
+     B2:::process
+     B3:::process
+     B4:::process
+     C0:::note
+     C1:::storage
+     E1:::icon
+     E2:::icon
+     E3:::delivery
+     E4:::crawlerEnd
+     E5:::delivery
+     E6:::delivery
+    classDef title fill:#f5f5f5,stroke:#666,stroke-width:1px,color:#333
+    classDef note fill:#fff,stroke:#999,stroke-width:1px,color:#666,font-style:italic
+    classDef icon fill:none,stroke:none,color:#000000
+    classDef action fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef process fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef storage fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    classDef delivery fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    classDef crawlerEnd fill:#c8e6c9,stroke:#388e3c,stroke-width:2px
+    style repo1 fill:#f3e5f5,stroke:#7b1fa2,stroke-width:1px
+    style repo2 fill:#fff3e0,stroke:#f57c00,stroke-width:1px
+    style appbuilder fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    style eds fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    style delivery fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    style repos fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    L_B0_B1_0@{ animation: slow }
+    L_B1_B2_0@{ animation: slow }
+    L_B2_B3_0@{ animation: slow }
+    L_B3_B4_0@{ animation: slow }
+    L_repo1_appbuilder_0@{ animation: slow }
+    L_B4_eds_0@{ animation: slow }
+    L_eds_delivery_0@{ animation: slow }
+```
+
+*Two-repository architecture showing how the App Builder prerender app publishes HTML that your storefront code consumes and enhances for visitors.*
+
+### How prerendered HTML reaches your storefront
+
+The prerendered HTML flows from the App Builder app to your storefront through App Builder storage and Edge Delivery Services overlay configuration:
+
+#### Publishing mechanism
+
+1. The App Builder app generates complete HTML files with prerendered product markup.
+2. The App Builder app saves those HTML files to its own file storage.
+3. The AEM Admin API configures the link to the App Builder file storage as an overlay in your Edge Delivery Services configuration.
+4. The AEM Admin API updates your sitemap to include the new and updated product pages.
+5. Edge Delivery Services serves the prerendered HTML from the overlay when product page URLs are requested.
+
+The Commerce Prerender app uses App Builder file storage and Edge Delivery Services overlay configuration. It does _not_ use events to trigger updates. Each time the App Builder app detects a product change and generates HTML, it saves the HTML to App Builder storage and configures the overlay link via the AEM Admin API. When the overlay is configured, the prerendered HTML is served at the product URLs automatically. The storefront needs no additional fetching or configuration.
+
+### How the storefront serves prerendered HTML
+
+When a visitor requests a product page URL (for example, `/products/acme-widget/sku123`), Edge Delivery Services serves the prerendered HTML as the actual page. The HTML already contains the `product-details` block populated with prerendered content. Your storefront doesn't fetch it separately.
+
+#### The delivery sequence
+
+1. **Request arrives** → Edge Delivery Services receives the URL request
+2. **HTML served** → Edge Delivery Services returns the prerendered HTML file (published by the App Builder app)
+3. **Page loads** → The browser displays the page with prerendered content (crawlers stop here)
+4. **JavaScript executes** → Your storefront code runs
+5. **Enhancement** → The `product-details` block's `decorate()` function replaces the static HTML with the interactive PDP drop-in, which fetches live prices, stock, and add-to-cart from Commerce APIs
+
+This process is called progressive enhancement (An approach where a page starts as complete, readable HTML and JavaScript upgrades it to an interactive experience when it runs. Shoppers with JavaScript get live prices, stock, and add-to-cart. Crawlers and shoppers without JavaScript still see all the product information from the prerendered HTML.): the prerendered HTML is the complete page that everyone sees first. The storefront code reads the page's existing HTML, extracts the SKU from the meta tag, and upgrades the page to a fully interactive experience for shoppers with JavaScript. Crawlers and shoppers without JavaScript always see complete product information from the prerendered HTML.
+
+### Modifying your `product-details` block
+
+To integrate prerendered markup with the PDP drop-in, you'll need to modify the `product-details` block in your https://github.com/hlxsites/aem-boilerplate-commerce.
+
+#### Location
+
+The https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/product-details lives in your boilerplate at:
+
+```
+blocks/product-details/product-details.js
+```
+
+#### Integration pattern
+
+By the time `decorate()` runs, Edge Delivery Services has already served the prerendered HTML to the browser, so crawlers have read that content before any JavaScript executes. When `decorate()` runs, it replaces the static block content with the interactive PDP layout.
+
+Your `decorate()` function should:
+
+1. **Retrieve the SKU**: Read the product SKU from the `<meta name="sku">` tag. The prerender system stores the original-casing SKU here, so the drop-in gets the correct value even after URL lowercasing.
+2. **Mount the PDP drop-in**: Call `mountImmediately` to initialize the PDP with the retrieved SKU.
+3. **Replace with PDP layout**: Clear the block content and render the interactive PDP containers.
+
+> **Simplified code example** This snippet is a minimal teaching version: it reads the SKU, runs `mountImmediately(initialize, { sku })`, clears the block, and mounts `ProductHeader` only. In the Commerce boilerplate, PDP is initialized from `scripts/initializers/pdp.js`, which calls `mountImmediately` with `langDefinitions`, `models`, fetched placeholders, and the other options documented on [Product Details initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/initialization/). The real `product-details` block builds a layout fragment and renders every region (for example, `ProductGallery`, `ProductHeader`, `ProductPrice`, and `ProductOptions`). For production patterns, see the https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/product-details in the Commerce boilerplate and the [containers overview](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/product-details/containers/).
+
+```js
+// File location: blocks/product-details/product-details.js
+// Import paths are relative to blocks/product-details/product-details.js
+
+export default async function decorate(block) {
+  // Edge Delivery Services served the prerendered HTML before this function ran.
+  // Crawlers have already read that content. decorate() now replaces it with the interactive layout.
+
+  // Step 1: Retrieve the SKU from the meta tag (with URL fallback), then initialize PDP
+  // getProductSku() reads the SKU from the <meta name="sku"> tag and falls back to URL parsing.
+  // In template preview mode (Universal Editor or Document Authoring), it reads a defaultSku value from the block config instead.
+  const sku = getProductSku();
+  await initializers.mountImmediately(initialize, { sku });
+
+  // Step 2: Replace prerendered HTML with interactive composed containers
+  // Production code builds a layout fragment and renders every region. This sample mounts ProductHeader only.
+  block.innerHTML = '';
+  await productRenderer.render(ProductHeader, {})(block);
+  // ... other rendering code
+}
+```
+
+#### URL format and SKU handling
+
+The prerender system generates markup files that match your storefront product URL structure. By default, this uses the format:
+
+```plaintext
+/products/{urlKey}/{sku}
+```
+
+The `PRODUCT_PAGE_URL_FORMAT` can be customized in your https://github.com/adobe-rnd/aem-commerce-prerender?tab=readme-ov-file#url-naming-and-sanitization.
+
+> **SKU lowercase requirement** Starting with the October 2025 Adobe Commerce Storefront release, all SKUs in product URLs are automatically converted to lowercase to ensure URL consistency and proper resolution. When the prerendered markup is generated, the actual SKU (with original casing) is stored in a meta tag:
+
+```html
+<meta name="sku" content="MY_PRODUCT_123">
+```
+
+This allows your PDP drop-in to retrieve the correct SKU regardless of URL transformations, which is why the code example above retrieves the SKU from the meta tag rather than parsing it from the URL.
+
+For complete implementation examples, refer to the https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/product-details in the Commerce boilerplate.
+
+## Customization
+
+The prerender solution provides these customization options:
+
+| Customization | Purpose and Configuration |
+|---------------|---------------------------|
+| **Templates** | Control HTML markup structure and styling. By default, markup is handled on the client side at `{store_url}/product/default`. If the default template is not available, you can edit the template at https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/pdp-renderer/templates/product-details.hbs |
+| **Structured Data** | Customize JSON-LD schemas in https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/pdp-renderer/ldJson.js to optimize product rich snippets for search engines |
+| **GraphQL Queries** | Extend product data by modifying GraphQL queries in https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/queries.js. The rendering logic that uses these queries is implemented in the `generateProductHtml` method in https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/pdp-renderer/render.js |
+| **URL Patterns** | Match your storefront URL structure by configuring `PRODUCT_PAGE_URL_FORMAT` in the `.env` file |
+| **Rendering Logic** | Transform product data before markup generation by implementing custom logic in App Builder actions |
+
+For implementation details, see the https://github.com/adobe-rnd/aem-commerce-prerender, particularly the `actions/` directory and repository root for templates and configuration files.
+
+## Troubleshooting
+
+For troubleshooting during development and operations, consult the https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/docs/RUNBOOK.md.
+
+Common issues include:
+
+- **Authentication failures**: Verify that your AEM Admin API token is valid (tokens expire after 1 year). To check the token expiration, decode the token using https://www.jwt.io/ or check your https://www.aem.live/docs/admin.html#setting-up-authentication-for-admin-api.
+  - Generate a new token if expired (see https://www.aem.live/docs/admin.html#tag/orgConfig/operation/createOrgApiKey) and update `AEM_ADMIN_API_AUTH_TOKEN` in your `.env` file
+  - Redeploy with `npm run deploy` after updating credentials
+
+- **Product not rendering**: Check that the product exists in Catalog Service and that the SKU matches.
+  - Query the Catalog Service directly using its https://developer.adobe.com/commerce/services/graphql/catalog-service/products/ to verify product data
+  - Use the Management UI to view the product index and confirm that the SKU is listed
+  - Run `aio rt activation list` to check action logs. For more details, see the https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/docs/RUNBOOK.md
+
+- **Markup not updating**: Review the Change Detector logs to ensure scheduled triggers are running.
+  - Access the https://prerender.aem-storefront.com to verify the change detector status (should show "Running")
+  - Run `aio rt activation list` to check activation logs. For more details, see the https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/docs/RUNBOOK.md
+  - Manually trigger the change detector from the Management UI to test functionality
+
+- **Build error: "Missing or invalid keys in app.config.yaml"**: This error occurs when `productDependencies` entries are missing the required `maxVersion` property.
+  - **Error message**: `must have required property 'maxVersion'` in `/productDependencies/0`
+  - **Solution**: Ensure each entry in the `productDependencies` array includes `maxVersion`. Example:
+    ```yaml
+    productDependencies:
+      - code: <PRODUCT_CODE>
+        minVersion: <MIN_VERSION>
+        maxVersion: <MAX_VERSION>  # Required field
+    ```
+  - Update your `app.config.yaml` file and redeploy with `npm run deploy`
+
+- **Deployment errors**: If you encounter 403 errors when running `npm run deploy`, the `aio` CLI may be authenticated to the wrong organization. Run `aio login --force` to re-authenticate and choose the correct organization.
+
+## Additional resources
+
+- **App Builder Documentation**: https://developer.adobe.com/app-builder/docs/overview/
+- **Catalog Service Guide**: https://experienceleague.adobe.com/en/docs/commerce/catalog-service/installation
+- **Edge Delivery Services**: https://www.aem.live/docs/publishing-from-authoring
+- **AEM Admin API**: https://www.aem.live/docs/admin.html (The prerender app automatically uses this API to publish content; useful for understanding the publishing mechanism and troubleshooting authentication issues)
+
+## Support
+
+For technical issues or questions during implementation, consult the https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/docs/RUNBOOK.md or contact Adobe Commerce support.
+
+- [Merchant documentation](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/content-customizations/prerendered-product-pages/) — Explain prerendering benefits to store administrators
+
+---
+
+# Storefront configuration
+
+In this section, you'll learn how Commerce blocks in your storefront connect to a Commerce backend using values from either the https://www.aem.live/docs/admin.html#schema/PublicConfig for your site or a config.json file in your code repo.
+
+The configuration is organized into several key sections:
+- **Endpoints** - GraphQL endpoints for Commerce and Catalog Services
+- **Headers** - HTTP headers required for API authentication and store context
+- **Analytics** - Store and environment metadata for tracking and reporting
+- **Plugins** - Configuration for various Edge Delivery Services plugins and features
+- **Multistore** - Settings for multiple store views and internationalization
+
+When implementing your own project, you must update the configuration values with:
+- The Adobe Commerce and Catalog Service GraphQL endpoint that you configured as part of the [content delivery network (CDN) setup](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/content-delivery-network/).
+- The header values specific to your Adobe Commerce Catalog Services environment.
+
+If you [set up your storefront](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/) using the boilerplate code, refer to the config generator tool to generate a `config.json` file for your Commerce backend. This file will contain the environment values for a Commerce backend including GraphQL endpoints and headers.
+
+If you set up your site using the https://da.live/app/adobe-commerce/storefront-tools/tools/site-creator/site-creator, the `config.json` file is created and added to the GitHub repository created for the boilerplate code. You can review and update the default values in the `config.json` file after the process completes.
+
+:::note
+**Need help configuring your Commerce backend?** Use the https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator to automatically generate the appropriate configuration structure for your Adobe Commerce, Adobe Commerce as a Cloud Service, or Adobe Commerce Optimizer backend. The tool will detect your backend type and generate the correct configuration, though you should validate and confirm the results.
+:::
+
+This page covers your storefront configuration (The JSON configuration object used by storefront code to resolve endpoints, headers, analytics, and plugin behavior.), when to replace sample default values (Starter values in a sample configuration that must be replaced with environment-specific values for your project.), and how helper APIs such as getConfigValue function (Helper function that reads a configuration value by dot-notation path from storefront config data.) and getHeaders function (Helper function that returns a header map for a given storefront scope based on configured header entries.) read resolved values.
+
+## Configuration Caching
+
+The storefront configuration is cached at multiple levels to optimize performance:
+
+- **CDN Caching**: The configuration file is cached by the EDS CDN with a `max-age=7200` (2 hours) cache control header. This means configuration changes can take up to 2 hours to be reflected on the CDN after deployment.
+
+- **Browser Caching**: When the configuration is loaded in the browser, it is stored in https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage, which persists until the browser session is cleared.
+
+**For developers**: After making configuration changes, it can take up to two hours for the CDN cache to expire. Clear your browser's session storage to see updates. Verify the current cache configuration by accessing `<site.com>/config.json` directly and checking the `last-modified` header.
+
+## Configuration Sections
+
+The following sections detail each part of your configuration for Adobe Commerce. Each section includes placeholders (marked with `{{PLACEHOLDER}}`) that you must replace with your specific Commerce environment details.
+
+You can find your configuration in your code repo at `/config.json`, or in the config service for your site. If you do not have a configuration yet, you can:
+- Copy and customize the demo config for the boilerplate: https://main--aem-boilerplate-commerce--hlxsites.aem.live/config.json.
+- Or use the https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator to generate a configuration with your backend values (may contain placeholders to fill in).
+
+Be sure to update all values to match your Commerce backend before deploying.
+
+### Endpoints
+
+The endpoints properties define the GraphQL API endpoints for your Commerce backend.
+
+```json
+{
+  "commerce-core-endpoint": "{{COMMERCE_CORE_ENDPOINT}}",
+  "commerce-endpoint": "{{COMMERCE_ENDPOINT}}"
+}
+```
+
+**Configuration Properties:**
+
+- **`commerce-core-endpoint`** (read/write) - Core GraphQL endpoint for queries and mutations. This endpoint handles all write operations and some read operations. See https://developer.adobe.com/commerce/webapi/reference/graphql/latest/ for details.
+
+- **`commerce-endpoint`** (read-only) - Services GraphQL endpoint optimized for read-only operations with Catalog Service, Live Search, and Product Recommendations. It is also optimized for performance for product data retrieval. For details, see the following documentation:
+   - For Adobe Commerce as a Cloud Service, see the https://experienceleague.adobe.com/en/docs/commerce/catalog-service/installation#access-the-service.
+   - For Adobe Commerce Optimizer, see the https://developer.adobe.com/commerce/services/optimizer/merchandising-services/using-the-api/#base-url.
+
+### Headers
+
+The headers section defines HTTP headers required for API authentication and store context. Headers are organized by scope to apply different authentication and context settings for different request types. The specific headers required depend on your Commerce environment type.
+
+### Adobe Commerce (PaaS)
+
+Adobe Commerce PaaS environments use standard Adobe Commerce header naming conventions and require API keys for SaaS services.
+
+```json
+{
+  "headers": {
+    "all": {
+      "Store": "{{STORE_VIEW_CODE}}"
+    },
+    "cs": {
+      "Magento-Store-Code": "{{STORE_CODE}}",
+      "Magento-Store-View-Code": "{{STORE_VIEW_CODE}}",
+      "Magento-Website-Code": "{{WEBSITE_CODE}}",
+      "x-api-key": "{{API_KEY}}",
+      "Magento-Environment-Id": "{{ENVIRONMENT_ID}}"
+    }
+  }
+}
+```
+
+**Header Scopes:**
+
+- **`all`** - Headers applied to all GraphQL requests
+  - **`Store`** - Store view code for Core GraphQL requests. See https://developer.adobe.com/commerce/webapi/graphql/usage/headers/ for details.
+
+- **`cs`** - Headers for Catalog Service requests
+  - **`Magento-Store-Code`** - Store to connect to. See https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-3-create-stores for details.
+  - **`Magento-Store-View-Code`** - Store view for Catalog Service requests. See https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/site-store/store-views for details.
+  - **`Magento-Website-Code`** - Website to connect to. See https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-2-create-websites for details.
+  - **`x-api-key`** - API key for SaaS services (Catalog Service, Live Search, Product Recommendations). See https://experienceleague.adobe.com/en/docs/commerce/user-guides/integration-services/saas for details.
+  - **`Magento-Environment-Id`** - Connects the storefront to the cloud instance serving it. See https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/project/overview#environment-overview for details.
+
+### Adobe Commerce as a Cloud Service (ACCS)
+
+Adobe Commerce as a Cloud Service uses standard Adobe Commerce header naming conventions but does not require API keys or environment IDs in the default configuration.
+
+```json
+{
+  "headers": {
+    "all": {
+      "Store": "{{STORE_VIEW_CODE}}"
+    },
+    "cs": {
+      "Magento-Store-Code": "{{STORE_CODE}}",
+      "Magento-Store-View-Code": "{{STORE_VIEW_CODE}}",
+      "Magento-Website-Code": "{{WEBSITE_CODE}}"
+    }
+  }
+}
+```
+
+**Header Scopes:**
+
+- **`all`** - Headers applied to all GraphQL requests
+  - **`Store`** - Store view code for Core GraphQL requests. See https://developer.adobe.com/commerce/webapi/graphql/usage/headers/ for details.
+
+- **`cs`** - Headers for Catalog Service requests
+  - **`Magento-Store-Code`** - Store to connect to. See https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-3-create-stores for details.
+  - **`Magento-Store-View-Code`** - Store view for Catalog Service requests. See https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/site-store/store-views for details.
+  - **`Magento-Website-Code`** - Website to connect to. See https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-2-create-websites for details.
+
+### Adobe Commerce Optimizer
+
+Adobe Commerce Optimizer uses different header naming conventions and requires Commerce Optimizer-specific headers as defined in the https://developer.adobe.com/commerce/services/optimizer/merchandising-services/using-the-api/#headers.
+
+```json
+{
+  "headers": {
+    "cs": {
+      "AC-View-ID": "{{CATALOG_VIEW_ID}}",
+      "AC-Price-Book-ID": "{{PRICE_BOOK_ID}}",
+      "AC-Policy-{{*}}": "{{ATTRIBUTE_VALUE}}"
+    }
+  }
+}
+```
+
+**Header Scopes:**
+
+- **`cs`** - Headers applied to all GraphQL requests
+  - **`AC-View-ID`** - (Required) The unique ID assigned to the catalog view that products will be sold through. You can find this in the https://experienceleague.adobe.com/en/docs/commerce/optimizer/setup/catalog-view.
+  - **`AC-Price-Book-ID`** - (Optional) Specifies the Price Book ID to use for pricing. Each catalog view defines a default Price Book. If a customer has an assigned Price Book, it is used when it falls within the allowed Price Books for the catalog view. Otherwise, the default Price Book for the catalog view is used. See /setup/configuration/price-book-setup/ for implementation details.
+  - **`AC-Policy-{{*}}`** - (Optional) Policy trigger for filtering products by attribute. The header should match the "name" of the trigger. For example, `AC-Policy-Brand:Cruz` for brand filtering using "Cruz". You can specify multiple policy headers per request.
+
+:::note[Troubleshooting Optimizer Headers]
+**Warning:** There is currently a bug (being resolved) that may require adding the `AC-Environment-ID` header in some Optimizer configurations. If you have all the requisite Optimizer headers configured correctly and are still experiencing problems, you may need to add this header:
+
+```json
+{
+  "headers": {
+    "cs": {
+      "AC-Environment-Id": "{{TENANT_ID}}",
+      // ... your other Optimizer headers
+    }
+  }
+}
+```
+:::
+
+### Analytics
+
+The analytics section contains store and environment metadata for tracking and reporting. The specific values depend on your Commerce environment type.
+
+### Adobe Commerce (PaaS) / SaaS
+
+For Adobe Commerce PaaS and Adobe Commerce as a Cloud Service environments, use standard Commerce store and website identifiers from your Commerce Environment. You can obtain these values using a `storeConfig` query.
+
+```json
+{
+  "analytics": {
+    "aep-ims-org-id": "{{IMS_ORG_ID}}",
+    "aep-datastream-id": "{{DATASTREAM_ID}}",
+    "base-currency-code": "{{CURRENCY_CODE}}",
+    "environment": "{{ENVIRONMENT_TYPE}}",
+    "environment-id": "{{ENVIRONMENT_ID}}",
+    "store-code": "{{STORE_CODE}}",
+    "store-id": {{STORE_ID}},
+    "store-name": "{{STORE_NAME}}",
+    "store-url": "{{STORE_URL}}",
+    "store-view-code": "{{STORE_VIEW_CODE}}",
+    "store-view-id": {{STORE_VIEW_ID}},
+    "store-view-name": "{{STORE_VIEW_NAME}}",
+    "website-code": "{{WEBSITE_CODE}}",
+    "website-id": {{WEBSITE_ID}},
+    "website-name": "{{WEBSITE_NAME}}"
+  }
+}
+```
+
+**Configuration Properties:**
+
+- **`aep-ims-org-id`** - (Optional) Adobe IMS Organization ID for Experience Platform integration (for example, `"1234567890ABCDEF7F000101@AdobeOrg"`)
+- **`aep-datastream-id`** - (Optional) Datastream ID for routing data to Adobe Experience Platform (for example, `"12345678-1234-1234-1234-123456789012"`)
+- **`base-currency-code`** - The base currency code for the store (for example, "USD", "EUR")
+- **`environment`** - Environment type ("Production", "Testing")
+- **`environment-id`** - Unique identifier for the Commerce environment
+- **`store-url`** - Base URL for the store
+- **`store-code`** - Code identifier for the store from your Commerce environment
+- **`store-id`** - Numeric ID for the store
+- **`store-name`** - Display name for the store
+- **`store-view-code`** - Code identifier for the store view
+- **`store-view-id`** - Numeric ID for the store view
+- **`store-view-name`** - Display name for the store view
+- **`website-code`** - Code identifier for the website from your Commerce environment
+- **`website-id`** - Numeric ID for the website
+- **`website-name`** - Display name for the website
+
+> **Adobe Experience Platform integration** To enable automatic event forwarding to Adobe Experience Platform, include both `aep-ims-org-id` and `aep-datastream-id` in your analytics configuration. When both values are present, events will automatically be sent to AEP. See the [Adobe Experience Platform integration guide](https://experienceleague.adobe.com/developer/commerce/storefront/setup/analytics/adobe-experience-platform/) for detailed setup instructions.
+
+### Adobe Commerce Optimizer
+
+For Adobe Commerce Optimizer environments, use a simplified analytics configuration structure:
+
+```json
+{
+  "analytics": {
+    "aep-ims-org-id": "{{IMS_ORG_ID}}",
+    "aep-datastream-id": "{{DATASTREAM_ID}}",
+    "base-currency-code": "{{CURRENCY_CODE}}",
+    "environment": "{{ENVIRONMENT_TYPE}}",
+    "environment-id": "{{YOUR_TENANT_ID}}",
+    "store-url": "{{STORE_URL}}",
+    "store-view-currency-code": "{{CURRENCY_CODE}}",
+    "storefront-template": "{{TEMPLATE_TYPE}}",
+    "view-id": "{{CATALOG_VIEW_ID}}"
+  }
+}
+```
+
+**Configuration Properties:**
+
+- **`aep-ims-org-id`** - (Optional) Adobe IMS Organization ID for Experience Platform integration (for example, `"1234567890ABCDEF7F000101@AdobeOrg"`)
+- **`aep-datastream-id`** - (Optional) Datastream ID for routing data to Adobe Experience Platform (for example, `"12345678-1234-1234-1234-123456789012"`)
+- **`base-currency-code`** - The base currency code for the store (for example, "USD", "EUR")
+- **`environment`** - Environment type ("Production", "Testing")
+- **`environment-id`** - The tenant ID for the Adobe Commerce Optimizer instance
+- **`store-url`** - Base URL for the store
+- **`store-view-currency-code`** - Currency code for the store view (for example, "USD", "EUR")
+- **`storefront-template`** - (Optional) Storefront template type (for example, "Other")
+- **`view-id`** - The unique ID assigned to the catalog view from the Adobe Commerce Optimizer UI
+
+### Plugins
+
+The plugins section configures various Commerce plugins and features.
+
+```json
+{
+  "plugins": {
+    "picker": {
+      "rootCategory": "{{ROOT_CATEGORY_ID}}"
+    }
+  }
+}
+```
+
+**Configuration Properties:**
+
+- **`picker.rootCategory`** - Root category ID for the product picker. This determines which category serves as the starting point when browsing products in the Commerce interface.
+
+### Multistore
+
+The multistore section manages configurations for multiple store views and internationalization. This allows different configurations for different locales or store views. Each non-"default" configuration will be merged with the default at runtime and used for the corresponding locale or store view. For example, the below would serve as a basis for configuration for the site at aemshop.net/fr.
+
+```json
+{
+  "/fr/": {
+    "headers": {
+      "all": {
+        "Store": "{{FRENCH_STORE_VIEW_CODE}}"
+      },
+      "cs": {
+        "Magento-Store-Code": "{{FRENCH_STORE_CODE}}",
+        "Magento-Website-Code": "{{FRENCH_WEBSITE_CODE}}",
+        "Magento-Store-View-Code": "{{FRENCH_STORE_VIEW_CODE}}"
+      }
+    }
+  }
+}
+```
+
+**Configuration Properties:**
+
+- **Path-based configuration** - Use URL paths (like `/fr/`, `/de/`, etc.) to define locale-specific or store-specific overrides
+- **Header overrides** - Override default headers for specific store views
+- **Store context** - Define different store, website, and store view codes for each locale
+
+### Additional Configuration Options
+
+Some configuration options can be set to enable or disable certain boilerplate features.
+
+```json
+{
+  "commerce-assets-enabled": boolean,
+  "commerce-b2b-enabled": boolean,
+  "commerce-companies-enabled": boolean,
+}
+```
+
+- **`commerce-assets-enabled`** - Boolean flag to enable or disable AEM Assets within the storefront
+- **`commerce-b2b-enabled`** - Boolean flag to enable or disable B2B-related global and shared logic within the storefront. When enabled, this flag is passed to the Auth initializer as `customerPermissionRoles: true` to enable customer role permissions API. This flag controls B2B functionality at the authentication and authorization level, enabling the drop-in to automatically fetch B2B customer role permissions on initialization and re-fetch when authentication state changes. See the [User Auth initialization documentation](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/user-auth/initialization/) for details.
+- **`commerce-companies-enabled`** - Boolean flag to enable or disable Commerce B2B company features within the storefront. This flag controls company-specific features such as company management, company structure, and company-related blocks.
+
+> **B2B Configuration Flags** **Understanding the difference:**
+
+- **`commerce-b2b-enabled`** - Controls B2B functionality at the authentication and authorization level. When set to `true`, this flag enables the customer role permissions API in the Auth drop-in (via the `customerPermissionRoles` parameter), which automatically fetches B2B customer role permissions including purchase order and company management capabilities. This is required for B2B features to work properly. See the [User Auth v3.0.0 changelog](https://experienceleague.adobe.com/developer/commerce/storefront/releases/changelog/) for implementation details.
+
+- **`commerce-companies-enabled`** - Controls company-specific features and blocks. This flag enables or disables company management features, company structure, and company-related commerce blocks.
+
+**Relationship:** While these flags serve different purposes, `commerce-b2b-enabled` is typically required for B2B features to function correctly, as it enables the underlying authentication and permission system. `commerce-companies-enabled` can be used independently to control company-specific features, but company features will only work properly when `commerce-b2b-enabled` is also set to `true`.
+
+For a complete B2B storefront with company features, set both flags to `true`:
+```json
+{
+  "commerce-b2b-enabled": true,
+  "commerce-companies-enabled": true
+}
+```
+
+**Implementation:** To use `commerce-b2b-enabled` in your storefront, read it from config in your Auth initializer and pass it to the Auth drop-in:
+
+```javascript title="scripts/initializers/user-auth.js"
+
+const isB2BEnabled = await getConfigValue('commerce-b2b-enabled');
+
+await initializers.mountImmediately(initialize, {
+  customerPermissionRoles: isB2BEnabled,
+  // ... other options
+});
+```
+
+This enables the customer role permissions API when B2B features are enabled in your configuration.
+
+## Configuration Examples
+
+The following examples show real `config.json` files from different Adobe Commerce environments. These examples demonstrate the actual structure and values used in production environments.
+
+### Adobe Commerce (PaaS)
+
+This example shows the configuration for an Adobe Commerce PaaS environment, which includes additional features like multistore support and asset management. This configuration is used on this site: https://www.aemshop.net/
+
+```json title="aemshop.net config.json example" showLineNumbers
+{
+  "public": {
+    "default": {
+      "commerce-core-endpoint": "https://www.aemshop.net/graphql",
+      "commerce-endpoint": "https://www.aemshop.net/cs-graphql",
+      "headers": {
+        "all": {
+          "Store": "default"
+        },
+        "cs": {
+          "Magento-Store-Code": "main_website_store",
+          "Magento-Store-View-Code": "default",
+          "Magento-Website-Code": "base",
+          "x-api-key": "4dfa19c9fe6f4cccade55cc5b3da94f7",
+          "Magento-Environment-Id": "f38a0de0-764b-41fa-bd2c-5bc2f3c7b39a"
+        }
+      },
+      "analytics": {
+        "aep-ims-org-id": null,
+        "aep-datastream-id": null,
+        "base-currency-code": "USD",
+        "environment": "Production",
+        "environment-id": "f38a0de0-764b-41fa-bd2c-5bc2f3c7b39a",
+        "store-code": "main_website_store",
+        "store-id": 1,
+        "store-name": "Main Website Store",
+        "store-url": "https://www.aemshop.net",
+        "store-view-code": "default",
+        "store-view-id": 1,
+        "store-view-name": "Default Store View",
+        "website-code": "base",
+        "website-id": 1,
+        "website-name": "Main Website"
+      },
+      "plugins": {
+        "picker": {
+          "rootCategory": "2"
+        }
+      },
+      "commerce-assets-enabled": false
+    },
+    "/fr/": {
+      "headers": {
+        "all": {
+          "Store": "fr"
+        },
+        "cs": {
+          "Magento-Store-Code": "fr_store",
+          "Magento-Website-Code": "fr_website",
+          "Magento-Store-View-Code": "fr"
+        }
+      }
+    }
+  }
+}
+```
+
+### Adobe Commerce as a Cloud Service (ACCS)
+
+This example shows the configuration for Adobe Commerce as a Cloud Service (ACCS). For ACCS you only need to set **`commerce-endpoint`** to your ACCS GraphQL URL; the same endpoint is used for catalog and core. This configuration is used on this site: https://main--boilerplate-accs--adobe-commerce.aem.live/
+
+```json title="ACCS config.json" showLineNumbers
+{
+  "public": {
+    "default": {
+      "commerce-endpoint": "https://na1-sandbox.api.commerce.adobe.com/LwndYQs37CvkUQk9WEmNkz/graphql",
+      "headers": {
+        "all": {
+          "Store": "default"
+        },
+        "cs": {
+          "Magento-Store-Code": "main_website_store",
+          "Magento-Store-View-Code": "default",
+          "Magento-Website-Code": "base"
+        }
+      },
+      "analytics": {
+        "base-currency-code": "USD",
+        "environment": "Testing",
+        "environment-id": "LwndYQs37CvkUQk9WEmNkz",
+        "store-code": "main_website_store",
+        "store-id": 1,
+        "store-name": "ACCS Store",
+        "store-url": "https://main--boilerplate-accs--adobe-commerce.aem.live",
+        "store-view-code": "default",
+        "store-view-id": 1,
+        "store-view-name": "Default Store View",
+        "website-code": "base",
+        "website-id": 1,
+        "website-name": "Main Website"
+      },
+      "plugins": {
+        "picker": {
+          "rootCategory": "2"
+        }
+      }
+    }
+  }
+}
+```
+
+### Adobe Commerce Optimizer (ACO)
+
+This example shows the configuration for Adobe Commerce Optimizer (ACO), which uses different header naming conventions and includes ACO-specific settings. For ACO, set commerce-endpoint (ACO GraphQL URL for catalog) at a minimum. Set commerce-core-endpoint (your core endpoint—PaaS or your own Adobe Commerce hosted environment) to enable transactional or other core-related functionality. Include "adobe-commerce-optimizer": true. This example is from https://main--boilerplate-aco--adobe-commerce.aem.live/ and does not include a core endpoint.
+
+```json title="ACO config.json" showLineNumbers
+{
+  "public": {
+    "default": {
+      "adobe-commerce-optimizer": true,
+      "commerce-endpoint": "https://na1-sandbox.api.commerce.adobe.com/8idEEDDiVwjCEJAyB5kjfi/graphql",
+      "headers": {
+        "cs": {
+          "ac-view-id": "0d3eebf7-b5fb-4904-9ccf-f35fcc61862b",
+          "ac-price-book-id": "west_coast_inc"
+        }
+      },
+      "analytics": {
+        "base-currency-code": "USD",
+        "environment": "Testing",
+        "environment-id": "8idEEDDiVwjCEJAyB5kjfi",
+        "store-url": "https://main--boilerplate-aco--adobe-commerce.aem.live/",
+        "store-view-currency-code": "USD",
+        "storefront-template": "Other",
+        "view-id": "0d3eebf7-b5fb-4904-9ccf-f35fcc61862b"
+      },
+      "plugins": {
+        "picker": {
+          "rootCategory": "2"
+        }
+      }
+    }
+  }
+}
+```
+
+## Local Development
+
+Understanding how storefront configuration resolution works is essential for effective local development and branch-based testing. This section explains how the browser retrieves configuration and how to manage it across different environments.
+
+### How Configuration Resolution Works
+
+When your storefront loads in the browser, the following sequence occurs:
+
+1. **Browser requests** `https://[site]/config.json`
+2. **EDS CDN checks** if a `config.json` file exists in the code repository root
+3. **If found** - The `config.json` file from the repository is served
+4. **If not found** - The CDN falls back to the `public` config from the EDS site config (Config Service)
+
+:::caution[Do not commit config.json to main]
+A `config.json` file in your repository **always** takes precedence over the Config Service. This means if `config.json` is committed to your `main` branch, your Config Service values will be silently ignored in production.
+
+`config.json` is intended for **local development and branch-based testing only**. For production, use the Config Service and ensure `config.json` is absent from the `main` branch.
+:::
+
+### Getting a starter configuration
+
+To get a configuration for your Commerce storefront, use one of these approaches:
+
+1. **Config Service (recommended for production)**: Use the Config Service to store and manage your production configuration. See the https://www.aem.live/docs/config-service-setup to get started. Your configuration is stored at `https://admin.hlx.page/config/{ORG}/sites/{SITE}/public.json` and served automatically — no `config.json` in the repository is needed.
+
+2. **Generate a local starter config**: Use the https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator to automatically generate a configuration for your Commerce backend. Use this as the basis for your Config Service upload or for local development. Note that the generated config may contain placeholders that you'll need to replace with actual values.
+
+3. **Copy the demo configuration**: Download and customize the live configuration for the boilerplate from https://main--aem-boilerplate-commerce--hlxsites.aem.live/config.json. This provides a working example with all required fields — useful as a reference for local development.
+
+**Important**: Always update the configuration values to match your specific Commerce backend. For production, push your configuration to the Config Service rather than committing `config.json` to your `main` branch.
+
+### Local Development Configuration
+
+To work with your own Commerce backend locally:
+
+1. **Get your configuration from the config generator tool:**
+   - Visit the https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator and enter your API url.
+   - Copy the configuration to your clipboard and paste it into your `config.json` file in your code repo.
+
+2. **Edit config.json** with your Commerce backend values:
+   - Update `commerce-endpoint` (required).
+   - Add/update `commerce-core-endpoint` if necessary.
+   - Update `headers`.
+   - Update `analytics` values for your store.
+   - Update any other values as needed, such as `commerce-assets-enabled`, etc.
+
+3. **Add config.json to .gitignore** (optional):
+   ```bash
+   echo "config.json" >> .gitignore
+   ```
+   This prevents you from accidentally committing your local configuration.
+
+4. **Clear session storage and reload:**
+   - Open browser DevTools (F12)
+   - Go to **Application** > **Session Storage**
+   - Delete the `config` entry
+   - Reload the page
+
+5. **Verify the configuration loaded:**
+   - Check `http://localhost:3000/config.json` in your browser
+   - Or check **Application** > **Session Storage** > `config` entry in DevTools
+
+### Branch-Based Configuration
+
+You can commit `config.json` to any branch to provide branch-specific configuration. Understanding the behavior based on which branch you commit to is crucial:
+
+**Committing to a feature/test branch:**
+- Commit `config.json` to your branch (for example, `feature/new-backend`).
+- When deployed, `https://[branch]--[site]--[org].aem.page/config.json` will serve the configuration for your branch.
+- The `main` branch and other branches are unaffected.
+- Public config is NOT used for this branch.
+
+**Committing to main branch:**
+- If you commit `config.json` to `main`, it will ALWAYS be served.
+- Public config from EDS site config will NEVER be used (unless you delete `config.json` from main).
+- All branches without their own `config.json` will inherit the configuration from main.
+- Use this approach only if you want repository-based configuration for production.
+
+**Using public config (Recommended for production):**
+- Do NOT commit `config.json` to `main`.
+- Configure the `public` property in your EDS site config via the https://www.aem.live/docs/config-service-setup.
+- Access at `https://admin.hlx.page/config/{ORG}/sites/{SITE}/public.json`.
+- Update configuration without code deployments.
+- Any branch with a committed `config.json` will be used (on that branch) instead of this public config.
+
+### Testing Configuration Changes
+
+After creating or updating your configuration (either in public config or `config.json`), follow these steps to verify the changes:
+
+1. **Deploy or save your changes:**
+   - For repository-based: Commit and push `config.json`
+   - For public config: Update via the Configuration Service API
+
+2. **Clear session storage:**
+   - Open browser DevTools (F12)
+   - Navigate to **Application** tab > **Session Storage**
+   - Find and delete the `config` entry for your domain
+
+3. **Reload the page:**
+   - Hard refresh (Ctrl+Shift+R or Cmd+Shift+R)
+   - Or simply reload after clearing session storage
+
+4. **Verify the configuration:**
+   - In DevTools, go to **Application** > **Session Storage**
+   - Check the `config` entry contains your updated values
+   - Or access `https://[your-site]/config.json` directly in the browser
+
+:::tip[Quick Verification]
+Always verify your configuration loaded correctly by checking the session storage `config` entry after reload. This ensures your storefront is using the expected configuration values.
+:::
+
+## Step-by-step
+
+We'll use a mock PDP / Catalog Service block to demonstrate how to utilize the config utilities and values. This example shows how to access the configuration sections detailed above.
+
+### 1. Import the configuration functions.
+
+First, import the `getConfigValue` and `getHeaders` functions from the `scripts/configs.js` file in your boilerplate.
+
+```javascript
+```
+
+### 2. Access endpoint configuration.
+
+Use the `getConfigValue` function to retrieve endpoint URLs from the configuration. This function takes a dot-notation path that matches the keys in your `config.json`.
+
+```javascript
+export default async function decorate(block) {
+  // Get the catalog service endpoint from the endpoints section
+  const catalogEndpoint = await getConfigValue('commerce-endpoint');
+  const coreEndpoint = await getConfigValue('commerce-core-endpoint');
+
+  console.log('Catalog Service endpoint:', catalogEndpoint);
+  console.log('Core Commerce endpoint:', coreEndpoint);
+}
+```
+
+### 3. Access header configuration.
+
+Use the `getHeaders` function to retrieve headers for specific scopes. This function automatically formats the headers for use in HTTP requests.
+
+```javascript
+export default async function decorate(block) {
+  // Get headers for Catalog Service requests
+  const csHeaders = await getHeaders('cs');
+
+  // Get headers for all requests
+  const allHeaders = await getHeaders('all');
+
+  console.log('CS headers:', csHeaders);
+  console.log('All headers:', allHeaders);
+}
+```
+
+### 4. Access analytics and other configuration.
+
+Use `getConfigValue` to access any configuration value using dot notation, including analytics data and plugin settings.
+
+```javascript
+export default async function decorate(block) {
+  // Get analytics configuration
+  const storeUrl = await getConfigValue('analytics.store-url');
+  const currency = await getConfigValue('analytics.base-currency-code');
+  const environment = await getConfigValue('analytics.environment');
+
+  // Get plugin configuration
+  const rootCategory = await getConfigValue('plugins.picker.rootCategory');
+
+  console.log('Store URL:', storeUrl, 'Currency:', currency, 'Environment:', environment);
+  console.log('Root category:', rootCategory);
+}
+```
+
+### 5. Make API requests with configuration.
+
+Combine the endpoint and header configuration to make authenticated API requests to your Commerce backend.
+
+```javascript
+export default async function decorate(block) {
+  // Get the catalog service endpoint
+  const endpoint = await getConfigValue('commerce-endpoint');
+
+  // Get the catalog service required headers
+  const headers = await getHeaders('cs');
+
+  // Make the API request
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...headers
+    },
+    body: JSON.stringify({
+      query: `query { products { items { name } } }`
+    })
+  });
+
+  const data = await response.json();
+  // Process the response data
+}
+```
+
+## Summary
+
+The Commerce configuration provides a structured approach to connecting your storefront to Adobe Commerce backends. By organizing settings into clear sections for endpoints, headers, analytics, plugins, and multistore configurations, you can easily customize your storefront for different Commerce environments. The configuration system supports Adobe Commerce (PaaS), Adobe Commerce as a Cloud Service (SaaS), and Adobe Commerce Optimizer, each with specific header requirements and authentication methods. For local development and testing, you can use a `config.json` file in your repository or the public config from the Configuration Service, with repository files taking precedence. Use the `getConfigValue` and `getHeaders` helper functions to access these settings in your Commerce blocks, ensuring consistent and maintainable integration with your Commerce backend.
+
+---
+
+# Content delivery network (CDN)
+
+A CDN is a critical component of your Commerce Storefront. It is responsible for delivering content to your customers in the most efficient and secure way possible.
+PaaS only (Applies to Adobe Commerce on Cloud projects (Adobe-managed PaaS infrastructure) and on-premises projects only.) 
+
+CDN features, usage, and provider details vary depending on your backend commerce implementation. By default, Adobe Commerce on Cloud projects use Fastly, while Adobe Commerce as a Cloud Service projects use an Adobe-managed CDN service.
+
+If necessary, you can configure your own CDN, also known as "Bring Your Own CDN" (BYO CDN). See https://www.aem.live/docs/byo-cdn-setup for required settings and vendor-specific setup instructions.
+
+> **Image optimization** Drop-in components automatically add image optimization parameters (such as width, height, and quality) to image URLs. CDN-based image optimization services rely on these parameters to optimize images. If you need to use different parameters or URL patterns for your CDN provider, you can override the defaults by using the [`setImageParamKeys`](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/initializer/#setimageparamkeysparams) method in the initializer configuration.
+
+For Adobe Commerce on Cloud projects, Fastly is included with your Adobe Commerce license and is the default CDN provider. The https://github.com/fastly/fastly-magento2 module exposes Fastly service configurations in the Commerce Admin.
+
+The remaining sections on this page provide instructions and guidance for configuring Adobe Commerce on Cloud projects with the Fastly module. It focuses on routing use cases, configuration, validation, and debugging.
+
+## Routing
+
+The main difference between the use cases described in this section is whether all paths should be routed by default to Commerce or Edge Delivery Services. If you plan to use Edge Delivery Services only for your homepage, all paths should default to Commerce. However, if you plan to migrate parts of your storefront over time, the Edge Delivery Services origins are more sensible.
+
+Defaulting to Edge Delivery Services is generally ideal because you'll have to log in to the Commerce Admin and understand Fastly VCLs to add the path for routing in the “default to Commerce” scenario when adding a new page in Edge Delivery Services. Therefore, the VCL snippets below focus on the “default to Edge” use case.
+
+The following table provides a high-level comparison of the three routing options:
+
+| Topic                          | Full storefront                              | Luma Bridge                                            | Homepage only                                                 |
+|--------------------------------|----------------------------------------------|--------------------------------------------------------|---------------------------------------------------------------|
+| **Routing logic**              | Default to Edge Delivery Services            | Default to Edge Delivery Services                      | Default to Commerce                                           |
+| **Paths routed to Commerce**   | Product images, GraphQL endpoints             | Transactional pages, account page, REST endpoints, etc | All paths except those explicitly                             |
+| **Paths routed to Edge**       | All other paths                              | Product catalog, content pages                         | Homepage                                                      |
+| **VCL snippets focus**         | Default to Edge Delivery Services            | Default to Edge Delivery Services                      | Default to Commerce                                           |
+| **Optimization tips**          | Avoid additional TLS handshake for API calls | Same as full storefront                                | Route resources (JS, CSS) to Edge Delivery Services           |
+| **Common patterns**            | Use CDN as proxy for Catalog Service         | Same as full storefront                                | Move Edge code to subfolder, such as `aem`                    |
+
+:::note
+All paths for the Adobe Commerce Admin should be routed to Commerce.
+:::
+
+### Full storefront
+
+The entire storefront experience is delivered by Edge Delivery Services. Only some paths (for example, images and API calls) are routed to Commerce.
+
+* By default, paths are routed to Edge Delivery Services
+* Product images must be routed to Commerce
+* Commerce GraphQL endpoint must be routed to Commerce
+* CDN must proxy requests to your Catalog Service API endpoints (https://catalog-service.adobe.io/graphql and https://catalog-service-sandbox.adobe.io/graphql).
+
+  :::tip
+  These API endpoints impact largest contentful paint (LCP), so we want to avoid an additional TLS handshake.
+  :::
+
+### Luma Bridge
+
+The product catalog and content pages are delivered by Edge Delivery Services. Transactional pages (for example, cart, checkout, and account) are delivered by Commerce.
+
+* [Luma Bridge](https://experienceleague.adobe.com/developer/commerce/storefront/setup/discovery/luma-bridge/) includes the same details as the full storefront option, plus the following:
+  * Transactional pages (for example, cart, checkout, and account) are routed to Commerce, depending on the Luma Bridge implementation
+  * Any additional endpoints (such as REST endpoints, `/customer/sections/load`) that are required by the Luma Bridge implementation are routed to Commerce
+
+### Homepage only
+
+Only the homepage is delivered by Edge Delivery Services. All Commerce functionality is delivered by Commerce.
+
+* All paths are routed to Commerce by default
+* The paths that are routed to Edge Delivery Services are explicitly set
+* Resources (for example, JS and CSS) that are required by the Edge Delivery Servicesw pages must be routed to Edge Delivery Services
+
+  :::note
+  A common pattern is to move all Edge Delivery Services code into a subfolder called `aem`, and then route any path starting with `aem` to Edge Delivery Services.
+  :::
+
+For general information on setting up Fastly for Adobe Commerce and accessing the Adobe Commerce Admin, see https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/cdn/fastly.
+
+## Backend configuration
+
+The first step is to configure a backend for each origin/service that Fastly needs to route to, which includes the following:
+
+* Edge Delivery Services
+* Catalog Service GraphQL API endpoint
+* Default Adobe Commerce backend
+
+:::note
+The Fastly configuration instructions on this page are based on the https://github.com/fastly/fastly-magento2 module, which exposes Fastly service configurations in the Adobe Commerce Admin.
+:::
+
+1. Log in to the Adobe Commerce Admin.
+
+1. Click **Stores** > **Settings** > **Configuration** > **Advanced** > **System** > **Full Page Cache** > **Fastly Configuration** > **Backend Settings** > **Create**.
+
+1. Enter a name for the Edge Delivery Services backend.
+
+   For example: `edge delivery`.
+
+1. Enter the address for the Edge Delivery Services backend.
+
+   For example: `main--aem-boilerplate-commerce--hlxsites.aem.live`
+
+1. Click **Attach condition**.
+
+1. Click **Create a new request condition**.
+
+1. Enter a name for the condition.
+
+   For example: `false`.
+
+1. Enter `false` in the **Apply if** field.
+
+1. Accept the default (`10`) in the **Priority** field
+
+1. Click **Create**.
+
+1. Select your new condition from the **Condition** drop-down list.
+
+   ![Backend configuration for Commerce](https://experienceleague.adobe.com/developer/commerce/storefront/images/implementation/backend-config-example.png)
+
+   :::caution
+   Remember to also set this condition for the default Adobe Commerce backend. Otherwise, this condition can overwrite the changes made by the VCL conditions that you configure in the custom VCL snippets. You could also lose access to the Admin, which may require an Adobe Commerce Support ticket to resolve.
+   :::
+
+1. Set Shielding to **(none)**.
+
+   If you choose to use shielding, see the [shielding section](#shielding) for additional guidance.
+
+Repeat these steps for the Catalog Service GraphQL API endpoints (plus any other backends that you may require):
+
+* `https://catalog-service.adobe.io/graphql`
+* `https://catalog-service-sandbox.adobe.io/graphql`
+
+:::tip
+You can also rename the Adobe Commerce backend from the generated name to simply `commerce`.
+:::
+
+## VCL configuration
+
+Your routing setup requires the following VCL snippets:
+
+* `recv`
+* `pass`
+* `miss`
+* `fetch`
+* `deliver`
+
+See https://www.fastly.com/documentation/guides/vcl/using/ in the Fastly documentation for more information.
+
+The VCL snippets on this page are a starting point that you can alter or extend to fit your use cases. There are also examples of potential extended use cases listed further down the page. The main purposes of the VCL snippets are to:
+
+* Correctly set the backend based on request path
+* Set the recommended priority setting for each snippet to determine the order in which they are executed (lower numbers are executed first)
+* Ensure that the requests do not receive extra caching or headers if they are going to a non-Adobe Commerce backend (achieved by returning early)
+* Improve performance for non-Adobe Commerce backends by rewriting some features, like compression, that would be provided by the default Adobe Commerce VCL
+
+:::tip
+If you make a change or apply a new VCL snippet, it can take some time to propagate and apply to Fastly's system. It's a best practice to validate the latest change before continuing to other changes, otherwise you may introduce a bug and find it challenging to determine the root cause.
+
+If you need to rename a snippet, delete it first and then recreate it with the new name to avoid this https://github.com/fastly/fastly-magento2/issues/708.
+:::
+
+To apply these custom VCL snippets to your Adobe Commerce Fastly CDN service, see https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/cdn/custom-vcl-snippets/fastly-vcl-custom-snippets or use the https://github.com/fastly/fastly-magento2 Admin module.
+
+### recv
+
+The following `recv` snippet does a simple redirect if `host` does not contain `www`. The snippet adds the string and then redirects to `https` using a https://www.fastly.com/documentation/reference/http/http-statuses/. This is done in place of the **Auto-redirect to Base URL** setting in the Commerce Admin. The steps in the [Commerce configuration](#commerce-configuration) section instruct you to set **Auto-redirect to Base URL** to **No** based on this snippet.
+
+**Type**: `recv`
+
+**Priority**: `4`
+
+```txt
+if (req.http.host == "aemshop.net") {
+  set req.http.host = "www.aemshop.net";
+  error 801;
+}
+```
+
+The following `recv` snippet has the following purpose:
+
+* Path-based routing for Edge Delivery Services, Catalog Service, and Adobe Commerce backends
+* Preparing the requests for the respective backends
+* Blocking access to non-production environments (non-production environments should not be indexed by search engines)
+
+**Type**: `recv`
+
+**Priority**: `100`
+
+```txt
+unset req.http.x-commerce;
+
+# Catalog Service
+if (req.url.path ~ "^/cs-graphql$") {
+    # Disable Commerce WAF as it can interfere with some queries
+    set req.http.bypasswaf = "true";
+
+    # Forward to Catalog Service GraphQL
+    set req.backend = F_catalog_service;
+    set req.http.host = "catalog-service.adobe.io";
+    set req.url = regsub(req.url, "^/cs-graphql", "/graphql");
+
+    # Remove cookies
+    unset req.http.Cookie;
+}
+else if (req.url.path ~ "^/(graphql|rest|oauth|media|checkout|customer|admin|static)($|/)") {
+    # Commerce routes, e.g. for product images, core GQL/Rest, Luma Bridge (any paths which should load Commerce origin)
+    set req.backend = F_commerce;
+    set req.http.x-commerce = "true";
+}
+else
+{
+    # Block access to non-prod configs
+    if (req.url ~ "^/configs-(stage|dev)\.json$") {
+        error 404 "Not Found";
+    }
+
+    # Everything else is considered Edge Delivery Services
+    set req.backend = F_edge_delivery;
+    # Restore accepted encoding
+    set req.http.Accept-Encoding = req.http.Fastly-Orig-Accept-Encoding;
+    if (req.url.path !~ "/media_[0-9a-f]{40,}[/a-zA-Z0-9_-]*\.[0-9a-z]+$"
+        && req.url.ext !~ "(?i)^(gif|png|jpe?g|webp)$"
+        && req.url.ext != "json"
+        && req.url.path != "/.auth") {
+        # trim the query string to improve caching
+        set req.url = req.url.path;
+        # replace some special characters with a dash because Edge doesn't support them
+        set req.url = regsuball(req.url, "[()]", "-");
+
+    }
+}
+```
+
+### pass
+
+In the `pass` snippet, we set the correct host URL to fetch from depending on the backend that was selected in the `recv` snippet.
+
+If it's not a request to Adobe Commerce, we skip (return `pass` will invoke `fetch`) the rest of the default `pass` VCL.
+
+**Type**: `pass`
+
+**Priority**: `30`
+
+```txt
+if (req.backend == F_edge_delivery) {
+    set bereq.http.Host = "main--aem-boilerplate-commerce--hlxsites.aem.live";
+    set bereq.http.X-BYO-CDN-Type = "fastly";
+    set bereq.http.X-Push-Invalidation = "enabled";
+}
+
+if (!req.http.x-commerce) {
+    return(pass);
+}
+```
+
+:::note
+Changes to the host header set here will require a Commerce Fastly cache purge due to https://docs.fastly.com/en/guides/manipulating-the-cache-key#redefining-the-cache-key.
+:::
+
+### miss
+
+Same as `pass`.
+
+**Type**: `miss`
+
+**Priority**: `30`
+
+```txt
+if (req.backend == F_edge_delivery) {
+    set bereq.http.Host = "main--aem-boilerplate-commerce--hlxsites.aem.live";
+    set bereq.http.X-BYO-CDN-Type = "fastly";
+    set bereq.http.X-Push-Invalidation = "enabled";
+}
+
+if (!req.http.x-commerce) {
+    return(fetch);
+}
+```
+
+:::note
+Changes to the Host header set here will require a Commerce Fastly cache purge due to https://docs.fastly.com/en/guides/manipulating-the-cache-key#redefining-the-cache-key.
+:::
+
+### fetch
+
+If fetching from a backend other than Adobe Commerce, skip the rest of the https://github.com/fastly/fastly-magento2/blob/fdd616cd0f945530e02e92e594ca00fd7990f557/etc/vcl_snippets/fetch.vcl because this is only relevant to Adobe Commerce backends.
+
+**Type**: `fetch`
+
+**Priority**: `30`
+
+```txt
+if (!req.http.x-commerce) {
+    unset beresp.http.Set-Cookie;
+    return(deliver);
+}
+```
+
+### deliver
+
+This comes from the Edge Delivery Services https://www.aem.live/docs/byo-cdn-fastly-setup#:~:text=Finally%20create%20a%20deliver%20snippet.
+
+**Type**: `deliver`
+
+**Priority**: `30`
+
+```txt
+if (req.backend == F_edge_delivery) {
+    unset resp.http.Age;
+
+    if (req.url.path !~ "\.plain\.html$") {
+        unset resp.http.X-Robots-Tag;
+    }
+}
+```
+
+## Optional configuration
+
+The following are optional configurations that can be added to the VCL snippets to handle specific use cases.
+
+### URL rewrites
+
+Be aware that URLs in Edge Delivery Services may only contain a-z, 0-9, and the dash (`-`) character (see https://www.aem.live/docs/limits#document-naming). You may need to create a CDN rule to rewrite/remove these characters.
+
+As an example, consider one possible case where this applies with login referrer links. Luma may redirect to a page like `/login/referrer/<base64string>`. If the login page is implemented in Edge Delivery Services (with a Luma Bridge) and the base 64 string contains unsupported characters, this page will 404. Since the base64 part is only needed on the Edge Delivery Services client side to handle redirecting after a successful sign-in, this could be stripped for the request to the Edge Delivery Services backend.
+
+:::note
+The exact cases where this needs to be performed, and the steps required, depend on the implementation of the Luma Bridge as well as customizations of Adobe Commerce.
+:::
+
+### GeoIP
+
+The following example redirects users to a country-specific path based on their IP address. It uses the `country_to_store` table, which is a built-in Fastly table that maps country codes to store codes. You must install the Fastly CDN https://commercemarketplace.adobe.com/fastly-magento2.html or https://github.com/fastly/fastly-magento2 to use this example.
+
+Add the following to the `recv` snippet:
+
+```txt
+# Enable the GeoIP feature, allowing the VCL to use GeoIP data for various purposes, such as redirecting users based on their geographic location.
+
+pragma optional_param geoip_opt_in true;
+
+# Snippet GeoIpRedirect
+ declare local var.countryCode STRING;
+
+# Only apply redirection if the URL has no country-specific path
+
+# This snippet performs a GeoIP-based redirection. It checks if the request is made to the
+# "example.com" domain and if the URL path is either the root ("/") or empty. If these conditions are met, it
+# retrieves the user's country code based on their IP address using the `client.geo.country_code` variable.
+# It then looks up the corresponding store code from the `country_to_store` table. The user is redirected
+# to the appropriate country-specific URL.
+
+if ((req.http.host ~ "example.com") && ((req.url.path == "/") || (req.url.path == "")))  {
+      # Retrieve the user's country based on IP address
+      set var.countryCode = table.lookup(country_to_store, client.geo.country_code,"us");
+      set req.http.X-Redirect-Url = "https://" + req.http.host + "/" + var.countryCode;
+      if (req.url.qs != "") {
+                   set req.http.X-Redirect-Url = req.http.X-Redirect-Url + "?" + req.url.qs;
+      }
+        error 701;
+   }
+# End of Snippet GeoIpRedirect
+
+# This table maps country codes to store codes. It is used in the GeoIP redirect logic to determine
+# the appropriate store URL based on the user's geographic location.
+
+table country_to_store {
+    "FR": "fr",
+    "AU": "au",
+    "NZ": "nz",
+    "CA": "ca",
+    ...
+}
+```
+
+### Proxy RUM through the origin to avoid a TLS handshake
+
+Add a new backend called `hlx_rum` that points to `rum.hlx.page`. Also, change the https://www.aem.live/docs/rum implementation in `aem.js` to use a relative path to the origin instead of `rum.hlx.page`.
+
+Add the following to the `recv` snippet:
+
+```txt
+if (req.url.path ~ "^/\.rum/") {
+    # AEM Real User Monitoring
+    set req.backend = F_hlx_rum;
+    unset req.http.Cookie;
+}
+```
+
+### Shielding
+
+If you enable shielding in a backend, then conditions like `req.backend == F_commerce` may not work. For this reason, the snippets above use a header like `http.x-commerce` that is set/unset, which is then used instead of the direct backend variable.
+
+### Compression
+
+In `fetch`, you can add compression for non-Adobe Commerce resources by adding this snippet to the `fetch` VCL:
+
+```txt
+if (!req.http.x-commerce) {
+    unset beresp.http.Set-Cookie;
+    if (beresp.http.content-type ~ "(text/|/json|/javascript)") {
+        if (!beresp.http.Vary ~ "Accept-Encoding") {
+            set beresp.http.Vary:Accept-Encoding = "";
+        }
+        if (req.http.Accept-Encoding == "br") {
+            set beresp.brotli = true;
+        } else if (req.http.Accept-Encoding == "gzip") {
+            set beresp.gzip = true;
+        }
+    }
+    return(deliver);
+}
+```
+
+Since the `deliver` VCL skips all the subsequent steps, the default compression settings are skipped. The snippet above is the same as in the default VCL, but copied again to be applied to responses that are not going to the Adobe Commerce backend.
+
+### Failover
+
+We can support automatic failover from Edge Delivery Services to Adobe Commerce Luma pages on a 404 in Edge Delivery Services. To do this, add the following in your custom `fetch` snippet:
+
+```txt
+if (req.backend == F_edge && http_status_matches(beresp.status, "404")) {
+      # See <https://www.fastly.com/documentation/solutions/examples/failover-to-a-secondary-backend/>
+      set beresp.http.Vary:restarts = ""; # Add restart to vary key
+      set beresp.cacheable = true; # Errors are not cacheable by default, so enable them
+      set beresp.ttl = 5s; # Set a short ttl so the unfindable object expires quickly
+      set beresp.http.do_failover = "yes";
+   }
+```
+
+Then, in your custom `recv` snippet:
+
+```txt
+if (req.http.try-alt-origin) {
+    set req.backend = F_commerce;
+    set req.http.x-commerce = "true";
+    set req.http.restarts = req.restarts; # Use restart value for vary key
+    set req.http.Fastly-Force-Shield = "1";
+}
+```
+
+Factly-Force-Shield may be required to turn on clustering (not related to shielding despite the name).
+
+Flow of EDS request: In `recv`, hits Edge Delivery Services case, then goes to `miss`, then goes to `fetch`, `fetch` returns 404 and sets retry (as snippet above), and `deliver` calls `restart`.
+
+If we are using Fastly shielding, we need to have `fastly.ff.visits_this_service == 0` in the `deliver` snippet, before `restart`, otherwise it can be that ESI doesn't work.
+
+```txt
+if (fastly.ff.visits_this_service == 0 && !req.http.try-alt-origin && resp.http.do_failover == "yes") {
+    set req.http.try-alt-origin = "1";
+    set req.url = req.http.Magento-Original-URL;
+    return (restart);
+}
+```
+
+It is not recommended to handle all paths that need to be routed to Luma like this, but still hardcode those that are known, in order to reduce load of 404s on Edge Delivery Services.
+
+### API Mesh
+
+API Mesh has a header size limit. You must remove third-party cookies if you're using API mesh. Add this in the graphql section of `recv` snippet:
+
+```txt
+if (req.http.Cookie) {
+        # Remove all 3rd-party cookies
+        # API Mesh has a header size limit
+        set req.http.Cookie = ";" + req.http.Cookie;
+        set req.http.Cookie = regsuball(req.http.Cookie, "; +", ";");
+        set req.http.Cookie = regsuball(req.http.Cookie, ";(PHPSESSID|X-Magento-Vary|form_key|private_content_version|mage-messages|persistent_shopping_cart|fastly_geo_store)=", "; \\1=");
+        set req.http.Cookie = regsuball(req.http.Cookie, ";[^ ][^;]*", "");
+        set req.http.Cookie = regsuball(req.http.Cookie, "^[; ]+|[; ]+$", "");
+        if (req.http.cookie ~ "^\\s*$") {
+            unset req.http.cookie;
+        }
+    }
+```
+
+### Branch names on staging
+
+You can enable the use of Edge Delivery Services branches on a staging URL (for example, `branch1.my-staging.com`). Use regex to get the domain name with this addition to the `miss` snippet:
+
+```txt
+if (req.backend == F_edge) {
+    if (req.http.Host ~ "^([^.]+)\\.([^.]+)\\.example\\.com$") {
+        set bereq.http.Host = re.group.1 + "--your-eds-url.aem.page";
+    } else {
+        set bereq.http.Host = "your-eds-url.aem.live";
+    }
+    set bereq.http.X-BYO-CDN-Type = "fastly";
+    set bereq.http.X-Push-Invalidation = "enabled";
+}
+```
+
+In the domains configuration, you must use a wildcard. Since the Commerce Admin doesn't let you do this, you must do it using the Fastly CLI (which also shows the wildcard URL in the Admin).
+
+### Maintenance page workaround
+
+The maintenance page can block requests to API Mesh/GraphQL. The solution is to create a VCL snippet with low priority that comes before the maintenance check in VCL and allows GraphQL requests through.
+
+### Multiple set-cookie headers workaround
+
+There's a known issue with multiple `set-cookie` headers in API Mesh. See the following snippet for a workaround
+
+```txt
+if (req.http.x-mesh == "true") {
+    # There's a bug in API MESH that combines multiple set-cookie headers
+    # Let's remove these cookies from the response
+    declare local var.ignored BOOL;
+    set var.ignored = setcookie.delete_by_name(beresp, "private_content_version");
+    set var.ignored = setcookie.delete_by_name(beresp, "form_key");
+    set var.ignored = setcookie.delete_by_name(beresp, "authentication_flag");
+    set var.ignored = setcookie.delete_by_name(beresp, "dataservices_customer_id");
+    set var.ignored = setcookie.delete_by_name(beresp, "dataservices_customer_group");
+    set var.ignored = setcookie.delete_by_name(beresp, "dataservices_cart_id");
+    return (pass);
+}
+```
+
+:::note
+`x-mesh` header is just an example. It would be added in API Mesh to use as determination in routing of VCL (for example, `x-commerce-bypass-fastly-cache`).
+:::
+
+## Commerce configuration
+
+If you are using the VCL to do the APEX redirect (`aemshop.net` → `www.aemshop.net` with 801 error), you should do two things in the Adobe Commerce backend:
+
+1. Disable `auto-redirect`.
+1. Set the `base_url` and `secure_base_url` settings to your domain, including `www`.
+
+Follow these steps:
+
+1. Log in to the Adobe Commerce Admin.
+
+1. Click **Stores** > _Settings_ > **Configuration** > **General** > **Web**.
+
+1. Expand the **URL options** section.
+
+1. Set **Auto-redirect to Base URL** to **No**.
+
+1. Expand the **Base URLs** section.
+
+1. Set the **Base URL** and **Secure Base URL** to your domain, including `www`.
+
+   For example: `https://www.aemshop.net/`
+
+1. Expand the **Base URLs (Secure)** section.
+
+1. Set the **Secure Base URL** to your domain, including `www`.
+
+   For example: `https://www.aemshop.net/`
+
+1. Click **Save Config**.
+
+## Edge Delivery Service configuration
+
+To obtain a purge API token for Fastly, you must contact Adobe Commerce Customer Support.
+
+Then, follow the instructions in https://www.aem.live/docs/byo-cdn-fastly-setup#setup-push-invalidation-for-fastly. The remaining configuration described on this page is already taken care of by applying the VCL snippets above.
+
+## Validation
+
+To validate your CDN setup, use `curl` requests to check expected responses from the paths you have configured.
+
+### Content encoding, surrogate key, and cache
+
+Validate that surrogate key, cache hits, and content encoding are working as expected by requesting an Edge Delivery Services-served asset from your Commerce domain. Ensure you are checking a warm cache by making the request at least twice. The following examples are to a warmed cache.
+
+Here is an example of validation against an Adobe staging environment:
+
+```bash
+curl -sI -H 'Fastly-Debug: 1' https://www.aemshop.net/scripts/aem.js | grep 'x-cache\|surrogate-key\|cache-control'
+```
+
+```txt
+content-encoding: gzip
+surrogate-key: develop--aem-boilerplate-commerce--hlxsites develop--aem-boilerplate-commerce--hlxsites_code E3hjdgev7F5OyPUD
+x-cache: MISS, HIT, HIT, HIT
+x-cache-hits: 0, 37, 1, 0
+```
+
+* `content-encoding`: Should be `gzip` or `br` for things like JS assets and HTML files, which should be encoded from origin.
+* `surrogate-key`: Should not be `text`. If the value is `text`, make sure you have correctly configured the `fetch` VCL snippet to return `deliver` for Edge Delivery Servicespaths.
+
+   The reason for this validation step is that the https://github.com/fastly/fastly-magento2/blob/fdd616cd0f945530e02e92e594ca00fd7990f557/etc/vcl_snippets/fetch.vcl#L113 sets this. This overwrites the Edge Delivery Services surrogate key, which is required for cache invalidation to work correctly when a page is re-published.
+
+* `x-cache`: Should contain `HIT` entries. The last entry should be `HIT` (`MISS`, `HIT`, `MISS`, `HIT`) is ok.
+
+Also, make sure that you validate `gzip` encoding is applied to HTML pages:
+
+```bash
+curl -sI -H 'accept-encoding: gzip, deflate, br, zstd' https://www.aemshop.net | grep content-encoding
+```
+
+```txt
+content-encoding: gzip
+```
+
+```bash
+curl -sI -H 'accept-encoding: gzip, deflate, br, zstd' https://www.aemshop.net/index.plain.html | grep content-encoding
+```
+
+```txt
+content-encoding: gzip
+```
+
+Validate the CDN configuration with the BYOCDN https://tools.aem.live/. Additionally, preview and publish a document and validate that the changes are correctly reflected.
+
+```bash
+curl -Is --http2 https://www.aemshop.net | grep 'HTTP/2'
+```
+
+```txt
+HTTP/2 200
+```
+
+Validate that all requests are using `HTTP/2` or `HTTP/3` connections.
+
+```bash
+curl -Is -L https://aemshop.net | grep location
+```
+
+```txt
+location: https://www.aemshop.net/
+```
+
+To validate the APEX redirect, observe the location header returned by a request to the domain without `www`.
+
+### Image optimization
+
+Validate that images are encoded with the expected format. If you get back `image/jpeg` this indicates an issue, probably Commerce Fastly is rewriting the content type header. You'll need to validate the VCL snippets.
+
+To validate Edge Delivery Services, ensure you check some content expected to be served from the Edge Delivery Services origin (such as the hero banner).
+
+```bash
+curl -sI -H "Accept: image/webp" 'https://www.aemshop.net/media_1b6ab8fa5166c1d9ab57a109f4f97b8e950a3ed84.png?width=2000&format=webply&optimize=medium' | grep 'content-type'
+```
+
+```txt
+content-type: image/webp
+```
+
+To validate Commerce, ensure you check some content expected to be served from the Adobe Commerce origin (such as a product image).
+
+```bash
+curl -sI  -H "Accept: image/webp" 'https://www.aemshop.net/media/catalog/product/adobestoredata/ADB150.jpg?auto=webp&quality=80&crop=false&fit=cover&width=960&height=1191' | grep 'content-type'
+```
+
+```txt
+content-type: image/webp
+```
+
+### Commerce cache
+
+Ensure that GraphQL `GET` requests result in cache HITs.
+
+```bash
+curl -sI 'https://www.aemshop.net/graphql?query=query+STORE_CONFIG_QUERY+%7B+storeConfig+%7B+minicart_display%7D+%7D' | grep x-cache
+```
+
+```txt
+x-cache: HIT
+x-cache-hits: 1
+```
+
+### Commerce base URL
+
+Ensure that the base URL change is propagated to Catalog Service. You can do this with a query against your Catalog Service API to verify that the URLs for product images contain the APEX domain, including `www`. This is to prevent a redirect and subsequent load for images not including the APEX domain.
+
+![Commerce base URL](https://experienceleague.adobe.com/developer/commerce/storefront/images/implementation/commerce-base-url.png)
+
+## Troubleshooting
+
+> **It** Fastly VCL and CDN configuration can be a bit overwhelming at first. Here's a collection of troubleshooting steps that might help you if you have problems.
+
+### Fastly API quick reference
+
+With your Fastly API Token you can make requests against the Fastly API for information or data that may be otherwise inaccessible. You can find your API Token in your Commerce Admin view under **Stores** > **Settings** > **Configuration** > **Advanced** > **System** > **Full Page Cache** > **Fastly Configuration**.
+
+Here's a quick reference of things you can do with your API Token. See https://www.fastly.com/documentation/reference/api/ for more details.
+
+```bash
+# retrieve active version
+curl -H "Fastly-Key: API_TOKEN" "https://api.fastly.com/service/SERVICE_ID/version"
+
+# retrieve full, generated VCL
+curl -H "Fastly-Key: API_TOKEN" "https://api.fastly.com/service/SERVICE_ID/version/VERSION/generated_vcl"
+
+# retrieve all snippets
+curl -H "Fastly-Key: API_TOKEN" "https://api.fastly.com/service/SERVICE_ID/version/VERSION/snippet"
+```
+
+### Missing snippets
+
+Fastly maintains a "version" of your snippets remotely on their servers. These versions are never pulled "down" to your Commerce environment, but can be "pushed" from your environment to Fastly. Unintentional local changes can cause things to become out of sync.
+
+For example, renaming a snippet actually creates a new snippet with the new name, and does not delete the old one. You should not rename snippets unless you must. See https://github.com/fastly/fastly-magento2/issues/708 for more information.
+
+Your environment stores custom VCL snippets in the `var/vcl_snippets_custom/` directory. If you delete that directory or its contents, you will not be able to view, edit, or modify the snippets, even though they remain active in Fastly."
+
+To resolve this, you should use the Fastly API to "pull" all snippets and then place them back in that folder (with permission **775**). The following table details how to construct the file correctly:
+
+| `var` directory filename | Admin Panel Field | Fastly Fields |
+|--------------------------------|----------------------------------------------|--------------------------------------------------------|
+| _recv_100_snippetrecv.vcl_ | Type: _recv_ 
+ Priority: _100_ 
+ Name: _snippetrecv_ | Type: _recv_ 
+ Priority: _100_ 
+ Name: _magentomodule_snippetrecv_ |
+
+---
+
+# CORS Setup
+
+Cross-Origin Resource Sharing (CORS) is a browser security feature that restricts web pages from making requests to a different domain than the one serving the page. CORS is required when your storefront runs on a different domain or port than your Adobe Commerce backend.
+
+PaaS only 
+
+> **Production recommendation** CORS should be a last resort for production. Prefer same-origin delivery of the storefront and API (for example, via Fastly VCL) to avoid CORS entirely.
+
+But during development, it's a common scenario for storefronts to run on a different domain or port than the Adobe Commerce backend, so CORS is required. Without CORS, browsers will block cross-origin requests and you'll see errors like the following in the browser console:
+
+```txt
+Access to fetch at 'https://commerce.example.com/graphql' from origin 'http://localhost:3000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present
+```
+
+## Quick test: Is CORS working?
+
+Adobe Commerce uses `/graphql` as the GraphQL endpoint, and this is the primary endpoint that requires CORS configuration. If you already have CORS configured, test it by replacing `YOUR_STOREFRONT_URL` with your actual frontend URL:
+
+```bash
+curl -I -X OPTIONS https://your-commerce-backend.com/graphql \
+  -H "Origin: YOUR_STOREFRONT_URL" \
+  -H "Access-Control-Request-Method: POST"
+```
+
+Look for these headers in the response:
+- `Access-Control-Allow-Origin: YOUR_STOREFRONT_URL` (or `*` if using a wildcard)
+- `Access-Control-Allow-Methods: GET, POST, OPTIONS`
+
+If you see these headers with your storefront URL, CORS is configured correctly. If not, follow the setup steps below.
+
+## Quick steps
+
+### 1. Add CORS support
+
+To add CORS headers to your Adobe Commerce GraphQL endpoints, you have several options:
+
+- **Server configuration**: Configure CORS headers at the web server level (https://enable-cors.org/server_nginx.html, https://enable-cors.org/server_apache.html)
+- **Third-party module**: Use a community module such as https://github.com/graycoreio/magento2-cors
+- **Custom module**: Implement a custom Adobe Commerce module to add CORS headers
+
+> **Support scope** Third-party modules and custom module implementations are outside the scope of Adobe Commerce support. For production environments, Adobe recommends server-level configuration or same-origin delivery to avoid CORS requirements entirely.
+
+Refer to your chosen implementation's documentation for specific configuration steps.
+
+### 2. Configure CORS settings
+
+Configure your CORS implementation to allow requests from your storefront domain(s) to your Adobe Commerce GraphQL endpoint.
+
+At minimum, you'll need to configure:
+- **Allowed origins**: Your storefront domain(s) (for example, `http://localhost:3000`, `https://your-storefront.com`)
+- **Allowed methods**: `GET`, `POST`, `OPTIONS`
+- **Allowed headers**: `Content-Type`, `Authorization`, `X-Requested-With`
+
+Refer to your chosen implementation's documentation for specific configuration steps.
+
+### 3. Test your CORS configuration
+
+Open your storefront in a browser and check the Network tab in DevTools:
+- Look for preflight `OPTIONS` requests to your GraphQL endpoint
+- Verify the response includes headers like:
+  - `Access-Control-Allow-Origin: <your-storefront-url>` (or `*` if using a wildcard)
+  - `Access-Control-Allow-Methods: GET, POST, OPTIONS`
+  - `Access-Control-Allow-Headers: Content-Type, Authorization`
+
+If configured correctly, your GraphQL requests should succeed without CORS errors.
+
+## Common pitfalls
+
+> **Avoid these common mistakes** **Forgetting to clear cache:** After changing CORS settings, always run `bin/magento cache:flush`. A stale cache is the primary cause of "it's not working" reports.
+
+**Using `*` with credentials:** You cannot use a wildcard `*` origin when `Allow Credentials` is enabled. Browsers will block the request.
+
+**Missing the `OPTIONS` method:** All CORS requests start with an OPTIONS preflight request. If you forget to include `OPTIONS` in **Allowed Methods**, all CORS requests will fail.
+
+## Next steps
+
+If you encounter issues or need detailed configuration guidance, see [CORS Troubleshooting](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/cors-troubleshooting/)
+
+## References
+
+- https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS - MDN Web Docs on Cross-Origin Resource Sharing
+- https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors - MDN documentation on common CORS error messages
+
+---
+
+# CORS Troubleshooting
+
+This guide helps you diagnose and resolve CORS issues with Adobe Commerce GraphQL endpoints.
+
+PaaS only
+
+## Common CORS errors
+
+The following are standard CORS errors enforced by browser security policies. These error messages appear in the browser console (DevTools).
+
+### No 'Access-Control-Allow-Origin' header
+
+```txt
+Access to fetch at 'https://commerce.example.com/graphql' from origin 'http://localhost:3000' 
+has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the 
+requested resource.
+```
+
+#### Cause
+
+CORS headers are not being sent by your Commerce backend. This could mean:
+- CORS support is not configured
+- The origin is not in the allowed list
+- The configuration cache needs to be cleared
+
+#### Solution
+
+- Verify CORS is configured. See [CORS Setup](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/cors-setup/) if not configured yet.
+- Add your storefront origin to the allowed origins list
+- Clear the cache: `bin/magento cache:flush`
+
+### Origin not allowed
+
+```txt
+Access to fetch at 'https://commerce.example.com/graphql' from origin 'http://localhost:3000' 
+has been blocked by CORS policy: The 'Access-Control-Allow-Origin' header has a value 
+'https://storefront.example.com' that is not equal to the supplied origin.
+```
+
+#### Cause
+
+The requesting origin is not in the allowed origins list.
+
+#### Solution
+
+Add the exact origin (including protocol and port) to the Allowed Origins configuration.
+
+### Credentials flag issue
+
+```txt
+Access to fetch at 'https://commerce.example.com/graphql' from origin 'http://localhost:3000' 
+has been blocked by CORS policy: The value of the 'Access-Control-Allow-Origin' header in the 
+response must not be the wildcard '*' when the request's credentials mode is 'include'.
+```
+
+#### Cause
+
+You have `Allow Credentials` enabled but are using `*` for allowed origins.
+
+#### Solution
+
+Replace `*` with specific origins when credentials are required.
+
+### Common issues
+
+If you encounter CORS errors after installing `adobe-commerce/storefront-compatibility`, verify that your CORS implementation is compatible with Adobe Commerce Storefronts. If using the graycore module, ensure v2.x or later is installed.
+
+## Debug checklist
+
+### Verify CORS is configured
+
+If using a CORS module, check that it's installed and enabled:
+
+```bash
+# List all enabled modules
+bin/magento module:status | grep -i cors
+```
+
+If using a custom CORS implementation, verify your code is deployed and active.
+
+### Verify CORS configuration
+
+Check your CORS configuration and confirm:
+- Your storefront origin is in the Allowed Origins list
+- Origins match exactly (including protocol and port)
+- No trailing slashes in origins
+- Allowed Methods includes `OPTIONS`
+- Allowed Headers includes all headers your storefront sends
+
+See [CORS Setup](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/cors-setup/) for configuration details.
+
+### Inspect browser network traffic
+
+Open DevTools > Network tab and look for:
+
+#### Preflight OPTIONS request
+
+```txt
+Request URL: https://commerce.example.com/graphql
+Request Method: OPTIONS
+```
+
+Expected response headers:
+```txt
+Access-Control-Allow-Origin: http://localhost:3000
+Access-Control-Allow-Methods: GET, POST, OPTIONS
+Access-Control-Allow-Headers: Content-Type, Authorization
+Access-Control-Max-Age: 86400
+```
+
+#### Actual GraphQL POST request
+
+```txt
+Request URL: https://commerce.example.com/graphql
+Request Method: POST
+```
+
+Expected response headers:
+```txt
+Access-Control-Allow-Origin: http://localhost:3000
+Access-Control-Allow-Credentials: true
+```
+
+### Check server logs
+
+If CORS headers are present but requests still fail:
+
+```bash
+tail -f var/log/system.log
+tail -f var/log/exception.log
+```
+
+Look for PHP errors, GraphQL exceptions, or module conflicts.
+
+### Clear all caches
+
+After any configuration changes:
+
+```bash
+bin/magento cache:flush
+bin/magento cache:clean
+```
+
+Some CORS configurations may also be cached in Varnish/Fastly if applicable.
+
+## Distinguishing CORS errors from server-side errors
+
+When debugging, it's important to distinguish CORS policy failures from server-side GraphQL exceptions. Here's an example of a server-side error that might be mistaken for a CORS issue: 
+
+```txt
+{
+  "message": "Internal server error",
+  "extensions": {
+    "debugMessage": "Magento\\InventoryConfiguration\\Model\\IsSourceItemManagementAllowedForProductType\\Interceptor::execute(): Argument #1 ($productType) must be of type string, null given"
+  }
+}
+```
+
+This indicates a PHP/GraphQL issue (inventory configuration or compatibility) and not a missing Access-Control-Allow-Origin header.
+
+## Edge cases and special scenarios
+
+### Docker and containerized environments
+
+When running Commerce in Docker, you may need to add multiple origin variations:
+
+```txt
+http://localhost:3000
+http://127.0.0.1:3000
+http://host.docker.internal:3000
+```
+
+> **Docker hostname variations** Docker networking can cause your browser to use different hostnames for the same service, so you need to add all variations.
+
+### Multiple storefronts
+
+For multiple storefronts accessing the same Commerce backend, add each origin separately:
+
+```txt
+https://storefront-us.example.com
+https://storefront-eu.example.com
+https://storefront-asia.example.com
+```
+
+Each storefront is treated as a separate origin and must be explicitly allowed.
+
+## Production best practices
+
+The recommended production approach is to avoid CORS entirely by serving both the storefront and the backend from the same domain using a CDN proxy.
+
+### Same-origin architecture (recommended)
+
+Serve both your storefront and Commerce backend from the same domain:
+
+- Storefront: `https://example.com` → CDN serves static assets
+- GraphQL API: `https://example.com/graphql` → CDN proxies to Commerce backend
+
+This requires configuring your CDN to proxy `/graphql` requests to your Commerce backend.
+
+**Benefits:**
+- No CORS complexity
+- Better performance (fewer preflight requests)
+- Simpler security model
+- Better caching control
+
+**Implementation approaches:**
+
+1. **Fastly VCL routing:**
+   Configure Fastly to route GraphQL requests to your Commerce backend using VCL (Varnish Configuration Language). The VCL detects requests to `/graphql` and proxies them to your backend origin while serving other requests from your storefront origin.
+
+2. **Cloudflare Workers / CDN Edge Functions:**
+   Use edge functions to route API requests to your backend dynamically.
+
+3. **Reverse proxy (Nginx/Apache):**
+   Configure your web server to proxy `/graphql` requests to the backend.
+
+**Note:** This approach requires CDN/infrastructure expertise. If you don't have these resources, use CORS configuration instead.
+
+### CORS configuration
+
+If you must use different domains (for example, `storefront.example.com` → `commerce.example.com`), use CORS configuration. Use specific allowed origins for single production domains, or a wildcard `*` when you have multiple dynamic preview URLs (such as Edge Delivery Services branch previews).
+
+## References
+
+### CORS standards and specifications
+
+- https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS - MDN Web Docs on Cross-Origin Resource Sharing
+- https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors - MDN documentation on common CORS error messages
+- https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers#cors - Complete list of CORS-related HTTP headers
+- https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request - How browsers use OPTIONS requests for CORS
+
+### Adobe Commerce
+
+- https://experienceleague.adobe.com/docs/commerce-operations/configuration-guide/cli/common-cli-commands.html - Official documentation for Magento CLI commands used in this guide
+- https://developer.adobe.com/commerce/webapi/graphql/ - GraphQL API documentation
+
+### Additional tools and platforms
+
+- https://getcomposer.org/doc/ - PHP dependency manager used for module installation
+- https://docs.docker.com/network/ - Understanding Docker hostname resolution for CORS origins
+- https://developer.fastly.com/reference/vcl/ - For implementing same-origin architecture with Fastly CDN routing
+
+---
+
+# Gated content
+
+If your site is not managed by Adobe Commerce, you might want to restrict access to certain content, such as videos, images, or pages on your site. This content resides on the edge and cannot be controlled using customer segments or other Commerce functionality. You can restrict access to these non-Commerce assets using gated content.
+
+## Big picture
+
+There are several things to know to implement this feature.
+
+* Gated content is displayed only if the customer is logged in and their authentication token is valid. Anonymous users cannot access gated content.
+
+* You must define the gated content. In most cases, you define the path to the gated content in the `header` document. This file contains a list of URLs that are gated and defines a key/value pair for your custom code to evaluate. (You can also hardcode URLs in your custom code, but this information is easier to maintain in the spreadsheet.) The spreadsheet contains three columns:
+
+  * `url` - The path to the gated content. Wildcards are supported.
+  * `key` - Any key that you want to use to evaluate whether the content is gated.
+  * `value` - `True` or other value to be evaluated.
+
+* You must create custom code that evaluates whether access to the content is gated. CDNs typically do not provide the ability to evaluate whether a user is authenticated. As a result, you must implement an auxiliary service, such as Fastly Compute, Amazon Lambda, or Cloudflare workers to perform the evaluation. This code must be able to send an authentication request to Adobe Commerce and process the result. The request is typically a simple GraphQL query, such as the `customer` query, but you can use any query or mutation that checks if the customer is authenticated.
+
+## Workflow
+
+The following diagram illustrates the workflow when gated content is enabled.
+
+![Gated content workflow](https://experienceleague.adobe.com/developer/commerce/storefront/images/gated-content.svg)
+
+*Gated content workflow*
+
+The shopper requests a page on the storefront. The request is sent to the CDN (Fastly in this case), which then routes it to Edge Delivery Services. Edge Delivery Services returns the requested document with headers defined in the `header` document. Fastly Compute checks whether the requested page is considered gated content based on the headers returned by Edge Delivery Services or by comparing it with a hardcoded list of gated content. If the header defined in the `header` document is not present, or if the requested URL is not in the hardcoded gated content list, the request is processed normally.
+
+If the requested page is gated, the Fastly Compute code uses the customer token to construct an authorization request to Adobe Commerce. If the customer is authenticated, the request is allowed to pass through. If the customer is not authenticated, the request is redirected to a fallback page, such as a login page.
+
+## Example implementation
+
+You can [download a sample solution](https://experienceleague.adobe.com/developer/commerce/storefront/samples/fastly-compute-sample.zip) that provides an outline of how to implement gated content using Fastly Compute. This sample is based on Fastly's https://www.fastly.com/documentation/solutions/starters/compute-starter-kit-javascript-default/.
+
+> **Important** Adobe does not support this example implementation. It is provided as a reference only.
+
+The README provides an overview of the solution and how to install the starter kit. The `index.js` file contains a Fastly Compute@Edge script that handles incoming HTTP requests and performs user authentication for specific protected URLs.
+
+---
+
+# Overview
+
+Setting up an Adobe Commerce Storefront project is similar to other Edge Delivery Services projects. The main difference is that you need to connect your storefront to your Adobe Commerce backend.
+
+## Big picture
+
+Launching a headless Adobe Commerce Storefront on Edge Delivery Services requires some basic setup before you do any custom development. Adobe recommends starting with the https://github.com/hlxsites/aem-boilerplate-commerce to simplify the process. The Commerce boilerplate GitHub repository is a fork of the https://github.com/adobe/aem-boilerplate. It includes additional code specifically for Commerce use cases.
+
+:::note[Note]
+All implementation guidance in this documentation is based on the Commerce boilerplate.
+:::
+
+The [Create your storefront tutorial](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/) provides all the information that you need to quickly set up a starter project that uses a pre-configured sample Adobe Commerce backend. After you complete the tutorial, you can [connect](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/) your own Adobe Commerce backend to the project.
+
+Here's an overview of the process:
+
+![Project setup process.](https://experienceleague.adobe.com/developer/commerce/storefront/images/implementation/setup-overview-v2.svg)
+
+*Project setup process.*
+
+1. **Storefront configuration**: Connect your Edge Delivery Services storefront to your Adobe Commerce backend.
+1. **CDN configuration**: Set up the content delivery network (CDN) to deliver your project.
+1. **Storefront compatibility package**: Install the Storefront Compatibility Package to enable drop-in component functionality.
+
+---
+
+# Multistore setup
+
+**Multistore** enables you to run multiple storefronts from a single codebase and content repository. Each storefront can serve different languages, currencies, regions, or brands while sharing core code and maintaining unified content delivery.
+
+## What is multistore?
+
+Multistore is useful for:
+
+- **Localization**: Serving different languages and currencies (for example, English/US, French/Canada) from the same site, with localized content and Commerce data.
+- **Multiple Brands or Regions**: Operating several brands or regional storefronts, each with their own configuration, but sharing core code and content.
+
+There are two main approaches to multistore:
+
+1. **Multiple Domains**: Each domain points to a different commerce backend or configuration, but shares the same code and content.
+2. **Subfolders (Root Folders)**: A single domain with subfolders (such as `/en/`, `/fr/`) for each locale or store. Each subfolder can have its own localized content and Commerce configuration.
+
+**Key features:**
+- **Editorial and Commerce Localization**: Editorial content (pages, blocks) and commerce data (products, prices, currencies) are both localized.
+- **Automated Translation Tools**: Tools are provided to automate translation of content and manage updates across languages.
+- **Configurable Headers**: Storefronts can send different headers to the commerce backend to select the correct store, language, and currency.
+- **Store Switcher**: Out-of-the-box UI enables users to switch between stores and locales.
+- **Automatic Link Management**: Links are automatically updated to point to the correct localized version as users navigate.
+
+## How it works
+
+Adobe Commerce uses a https://experienceleague.adobe.com/en/docs/commerce-admin/start/setup/websites-stores-views to manage multiple stores within a single instance. This structure consists of three levels: websites, stores, and store views. Localization is managed at the store view level, allowing merchants to present the store in different languages and apply the proper currency.
+
+Each store or locale is defined in configuration files, specifying which headers to send to the commerce backend, which content folders to use, and how to structure localized content. The content hierarchy follows https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/edge-delivery/overview best practices, emphasizing a single-tier structure.
+
+### Content organization
+
+Content is organized primarily by language. US English files should be placed in the `en` directory of the project root. All other language- and region-specific files should be placed in a directory that is named in the format `language-code-region-code` (using hyphens). For example, the `/en/` directory contains data for the US market, while the `/en-ca/` directory contains data for Canada. French content should be placed in directories with names like `fr-fr` for France and `fr-ca` for Canada.
+
+- **/en/** _-- English store (Default root language)_
+  - placeholders/ _-- Stores JSON files for text and UI components for the English US store._
+  - index _-- The home page of the English US store._
+  - store-switcher _-- Manages the list of stores and their URL for the English US store._
+- **/en-ca/** _-- English Canadian Store_
+  - placeholders/ _-- Defines JSON files for text and UI components for the Canadian store._
+  - index _-- The home page of the English Canadian store._
+  - store-switcher _-- Manages the list of stores and their URL for the Canadian store._
+
+### Store-specific files
+
+Each store view requires specific files to define the customer experience:
+
+**Store switcher**: Each store view has its own `store-switcher` document file (called a fragment). This fragment provides the list of stores to select from by language. The store-switcher component renders a button in the footer that opens a modal containing the stores listed in this document.
+
+**Content files**: The content files provide the structure of the pages served to your shoppers. They are located in the store view directories and contain the content for each store view. These files are documents hosted on da.live (Document Authoring environment), SharePoint, or Google Docs that are used to generate the store view pages.
+
+**Placeholders**: JSON files that define reusable variables for text and UI components. Each drop-in component has its own placeholder file—`cart.json`, `checkout.json`, `pdp.json`. These files replace variables in your content files with text values.
+
+**Merchant guidance:** For translating placeholder files, see [Commerce localization tasks](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/quick-start/content-localization-commerce-tasks/).
+
+**Developer guidance:** For technical implementation details, see [Labeling and Localizing Drop-In Components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/labeling/).
+
+## Prerequisites
+
+Before implementing multistore functionality, ensure you have:
+
+- Your storefront repository linked to Document Authoring environment (da.live) via Edge Delivery Services
+- Access to Adobe Commerce Admin for https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/site-store/store-views
+- Your [Storefront Configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/) set up and pointing to the Adobe Commerce instance
+- Familiarity with https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/edge-delivery/document-authoring/authoring
+- Understanding of [Storefront Configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/)
+- Knowledge of https://experienceleague.adobe.com/en/docs/commerce-admin/config/scope-change
+
+---
+
+## Implementation walkthrough
+
+This walkthrough demonstrates the complete process from initial planning to final validation, using a real-world scenario where the Acme brand expands from the United States to the Canadian market with two new locales: Canadian English (`en-ca`) and Canadian French (`fr-ca`).
+
+### 1. Verify environment setup
+
+Before implementing multistore functionality, confirm your environment is properly configured.
+
+1. **Verify the code sync bot** is installed on your repository. This automatically configures your site's content pointer to the Document Authoring environment at da.live.
+
+2. **Verify the `config.json` file** (or Configuration Service) is connected to your Adobe Commerce instance to enable content preview, publishing, and editing.
+
+> **Environment setup** This verification step is crucial as it ensures you can properly preview and publish content for your new store views.
+
+### 2. Create the content folder structure
+
+Set up the folder structure in your Document Authoring environment to support the new store views.
+
+1. **Navigate to the connected content folder** in da.live.
+
+2. **Create the Canadian English folder**:
+   - Select "New folder"
+   - Name it `en-ca`
+
+3. **Create the Canadian French folder**:
+   - Select "New folder"
+   - Name it `fr-ca`
+
+4. **Copy content from the default root folder** into each new store view folder:
+   - Select all content from the `/en/` folder
+   - Copy the content
+   - Navigate to the `en-ca` folder and paste
+   - Repeat for the `fr-ca` folder
+
+> **Folder naming** **Standard format:** Use hyphens for locale folders (`en-ca`, `fr-ca`) following the `language-code-region-code` pattern. This aligns with:
+- ISO 639-1 (language codes) and ISO 3166-1 (country codes)
+- Web URL conventions
+- Adobe/AEM.live best practices
+
+Ensure folder names match exactly with Adobe Commerce store view codes and can be used in web addresses.
+
+### 3. Configure Adobe Commerce store views
+
+Create the corresponding store views in Adobe Commerce Admin to match your content folder structure.
+
+1. **Access Adobe Commerce Admin** and navigate to Stores → Settings → All Stores.
+
+2. **Create the Canadian English store view**:
+   - Follow the store view creation process
+   - Configure as: one website, one store, one store view
+   - Set the store view code to match your folder name (`en-ca`)
+
+3. **Create the Canadian French store view**:
+   - Repeat the process for the French locale
+   - Set the store view code to match your folder name (`fr-ca`)
+
+> **Store view codes** The store view codes in Adobe Commerce Admin must exactly match the folder names created in da.live for proper integration.
+
+### 4. Update folder mapping
+
+Product Detail Pages (PDP) are mapped to a single document at `products/default`. When adding a new store view, you must add a corresponding folder mapping for the new URLs using the **Config Service API**.
+
+#### Step 1: Authenticate
+
+Go to `https://admin.hlx.page/login`, then go to your selected IDP login URL, and sign in. Retrieve the auth token from your browser's cookie storage (available in Developer Tools → Application → Cookies). Use that token to authenticate Admin API requests, with the headers and request format described in the https://www.aem.live/docs/config-service-setup and the https://www.aem.live/docs/admin.html.
+
+#### Step 2: Get the current folder configuration
+
+```http
+GET https://admin.hlx.page/config/{ORG}/sites/{SITE}/folders.json
+Authorization: token {YOUR_AUTH_TOKEN}
+```
+
+The response is a JSON object mapping URL path prefixes to template document paths, for example:
+
+```json
+{
+  "/products/": "/products/default"
+}
+```
+
+If you don't receive a response, you may not have folder mapping yet. In that case, move on to step 3 and create the JSON object manually.
+
+#### Step 3: Modify and POST the updated configuration
+
+Add your new store view mappings and POST the complete object back to the same endpoint:
+
+```http
+POST https://admin.hlx.page/config/{ORG}/sites/{SITE}/folders.json
+Authorization: token {YOUR_AUTH_TOKEN}
+Content-Type: application/json
+```
+
+```json
+{
+  "/en/products/": "/en/products/default",
+  "/en-ca/products/": "/en-ca/products/default",
+  "/fr-ca/products/": "/fr-ca/products/default"
+}
+```
+
+:::caution
+The POST **replaces** the entire `folders.json` object. Always start from the current GET response and include all existing mappings alongside your new ones.
+:::
+
+For full details, see the https://www.aem.live/docs/config-service-setup and the https://www.aem.live/docs/admin.html.
+
+### 5. Update site configuration
+
+You must update your [storefront config](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/) to include configuration overrides for the new store view. In this file, you'll define store-view specific settings, such as service headers and analytics values.
+
+The `key` of each overridden object must match the root folder path of the corresponding store view. These values will be merged into the default configuration.
+
+```json
+{
+  "public": {
+    "default": {
+      // default configuration
+    },
+    "/en/": {}, // inherits the default
+    "/en-ca/": {
+      "headers": {
+        "all": {
+          "Store": "en-ca"
+        },
+        "cs": {
+          "Magento-Store-Code": "ca-store",
+          "Magento-Website-Code": "base",
+          "Magento-Store-View-Code": "en-ca"
+        }
+      },
+      "analytics": {
+        // overrides values from the default analytics configuration
+      }
+    },
+    "/fr-ca/": {
+      "headers": {
+        "all": {
+          "Store": "fr-ca"
+        },
+        "cs": {
+          "Magento-Store-Code": "ca-store",
+          "Magento-Website-Code": "base",
+          "Magento-Store-View-Code": "fr-ca"
+        }
+      }
+    }
+  }
+}
+```
+
+**Headers configuration details:**
+- **`Magento-Store-Code`**: Must match the store code from the Commerce Admin
+- **`Magento-Website-Code`**: Typically "base" for single-website setups
+- **`Magento-Store-View-Code`**: Must match the store view code from the Admin
+
+The `analytics` section contains the Adobe Commerce environment variables for the store view. These variables are used by the Analytics API. For more details, see [Analytics](https://experienceleague.adobe.com/developer/commerce/storefront/setup/analytics/instrumentation/).
+
+> **Configuration Service** If you are using the Config Service, read the https://www.aem.live/docs/admin.html#tag/siteConfig/operation/updateConfigSite to learn how to publish your updates to the Config Service for your site.
+
+### 6. Configure store switcher
+
+Create a `store-switcher` file in each store view root folder containing a bulleted list. Each line must define the display name of your store with an active link to the store.
+
+```text
+**Select a store:**
+
+- Canada (CAD)
+  - [Canada (EN)](https://main--aem-boilerplate-commerce--hlxsites.aem.page/en-ca/#nolocal)
+  - [Canada (FR)](https://main--aem-boilerplate-commerce--hlxsites.aem.page/fr-ca/#nolocal)
+- United States (USD)
+  - [United States (USD)](https://main--aem-boilerplate-commerce--hlxsites.aem.page/en/#nolocal)
+```
+
+**Important:** The boilerplate automatically localizes internal links to keep users within their current locale (see [Localizing links](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/linking/) for technical details). For links that should always point to a specific locale (such as store switcher links), add the hash `#nolocal` to prevent automatic localization:
+
+```markdown
+[United States (USD)](https://yoursite.com/en/#nolocal)
+```
+
+**Best practice:** Prioritize the current store view in the display order for better user experience. For example, in the `en-ca` folder's store switcher, list "Canada (EN)" first.
+
+### 7. Preview and validate content
+
+Test your new store views to ensure proper functionality before publishing.
+
+1. **Push configuration changes** to your storefront repository.
+
+2. **Return to the content files** in both `en-ca` and `fr-ca` folders in da.live.
+
+3. **Preview content files**:
+   - Navigate to the `en-ca` folder
+   - Open the `index` file
+   - Click "Preview" to test the store view
+
+4. **Verify configuration in browser**:
+   - Check that the URL structure includes the store view path
+   - Open browser Developer Tools
+   - Navigate to Application → Session Storage
+   - Look for the `config` key and expand the JSON object
+   - Navigate to `public` → `[your store path]` → `headers` → `cs`
+   - Verify the correct header values:
+     - `Magento-Store-Code`
+     - `Magento-Website-Code`
+     - `Magento-Store-View-Code`
+
+5. **Test the store switcher**:
+   - Verify the store switcher correctly shows the current store view
+   - Confirm customers can see and select other available stores
+   - Check that switching stores navigates to the correct URLs
+
+> **Session storage verification** Use session storage to verify configuration loads properly and identifies the correct store view.
+
+### 8. Localize and translate content
+
+After setting up infrastructure, prepare content for each locale.
+
+1. **Translate content files** in the `/en-ca/` and `/fr-ca/` folders using your chosen authoring tool:
+   - **Document Authoring**: Follow the [Localization (Document Authoring Tool)](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/quick-start/content-localization/) workflow
+   - **Universal Editor**: Follow the [Localization (Universal Editor)](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/quick-start/content-localization-universal-editor/) workflow
+
+2. **Complete Commerce-specific tasks**: Follow the [Commerce localization tasks](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/quick-start/content-localization-commerce-tasks/) guide to:
+   - Translate drop-in placeholder files (`cart.json`, `checkout.json`, `pdp.json`)
+   - Verify store view configuration aligns with folder structure
+   - Test Commerce functionality across all locales
+
+### 9. Final validation and publishing
+
+Complete the implementation with thorough testing and team coordination.
+
+1. **Test all store views** to ensure:
+   - Proper URL structure
+   - Correct content loading
+   - Functional store switcher
+   - Accurate header configuration
+   - Proper currency and pricing display
+
+2. **Preview all files** in the updated folders (`/en-ca/`, `/fr-ca/`) with https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/edge-delivery/resources/sidekick/sidekick.
+
+3. **Validate the storefront experience** by accessing each new language/region and testing the rendering, navigation, and data accuracy.
+
+4. **Publish the store views**:
+   - Publish the updated folders using AEM Sidekick when ready
+   - Update all `store-switcher` content documents to include links to the new store views
+
+5. **Prepare for marketing handoff**:
+   - Inform the marketing team that content folders are ready
+   - Provide directory structure documentation
+   - Share access to content folders for ongoing management
+
+> **Success!** Your multistore infrastructure is now ready to support multiple locales with proper content management and customer experience.
+
+## Best practices
+
+### Folder structure
+- Use clear, consistent naming conventions (`en-ca`, `fr-ca`)
+- Ensure that folder names can be used in web URLs
+- Match folder names exactly with the Adobe Commerce store view codes
+- Maintain the same content structure across all store views
+
+### Configuration management
+- Keep header values synchronized between `config.json` and Adobe Commerce Admin
+- Document all store view codes and their corresponding folders
+- Test configuration changes in preview before publishing
+- Use version control for all configuration files
+
+### Content management
+- Maintain separate content folders for each locale
+- Use automated translation tools where possible
+- Keep placeholder files synchronized across store views
+- Test all localized content before publishing
+
+## Troubleshooting
+
+### Common Issues
+
+#### Store View Not Loading
+- **Check the folder mapping**: Verify that the folder mapping is correct by querying the Config Service: `GET https://admin.hlx.page/config/{ORG}/sites/{SITE}/folders.json`. All folder mapping changes must go through the Config Service API.
+- **Verify the headers**: Ensure that the headers in `config.json` or Configuration Service match the store view codes in Adobe Commerce Admin
+- **Check the session storage**: Use browser developer tools to verify that the correct headers are being sent
+
+#### Content Not Displaying
+- **Verify the content structure**: Ensure that all required files (index, store-switcher, placeholders) exist in the store view folder
+- **Check the file permissions**: Verify that content files are properly published in da.live
+- **Validate the JSON syntax**: Check that placeholder JSON files have valid syntax
+
+#### Store Switcher Issues
+- **Check the links**: Ensure that all store switcher links use the correct URLs and include `#nolocal` for absolute links
+- **Verify the file structure**: Confirm that each store view has its own store-switcher file
+- **Test the navigation**: Verify that switching between stores works correctly
+
+### Debugging Steps
+
+1. **Check the browser console** for JavaScript errors
+2. **Verify the network requests** in browser developer tools
+3. **Check the session storage** for configuration values
+4. **Validate the configuration files** for syntax errors
+5. **Test in different browsers** to rule out browser-specific issues
+
+### Performance considerations
+- Monitor site performance across all store views
+- Optimize images and assets for each locale
+- Consider CDN configuration for different regions
+- Test loading times from the target markets
+
+## Related resources
+
+- [Content localization](https://experienceleague.adobe.com/developer/commerce/storefront/merchants/quick-start/content-localization/) - Automated translation using da.live
+- [Storefront Configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/) - Complete config.json reference
+- [Analytics](https://experienceleague.adobe.com/developer/commerce/storefront/setup/analytics/instrumentation/) — Analytics configuration for store views
+- https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/site-store/store-views - Adobe Commerce Admin guide
+- https://www.aem.live/developer/folder-mapping - Edge Delivery Services documentation
+- https://www.aem.live/docs/config-service-setup - Configuration Service documentation
+
+---
+
+# Price Book ID setup
+
+This guide shows you how to enable Adobe Commerce Optimizer Price Book ID functionality in the Adobe Commerce boilerplate. Price Books in Adobe Commerce Optimizer allow you to deliver personalized pricing based on customer segments, contracts, or other business rules. Each https://experienceleague.adobe.com/en/docs/commerce/optimizer/setup/pricebooks#view-price-books-in-commerce-optimizer and may restrict which Price Books are allowed for that view. Customers can have their own assigned Price Books, which are used if they fall within the allowed Price Books for the catalog view.
+
+> **Adobe Commerce Optimizer only** This guide is specifically for **Adobe Commerce Optimizer** implementations. If you are using Adobe Commerce as a Cloud Service or Adobe Commerce PaaS without Optimizer, this feature does not apply to your setup. Adobe Commerce as a Cloud Service uses customer groups and shared catalogs for pricing instead of Price Book IDs. See the /setup/configuration/commerce-configuration/ documentation for configuration options for your Commerce environment.
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- An active Adobe Commerce Optimizer subscription.
+- The storefront is /setup/configuration/commerce-configuration/#headers.
+- Access to your https://github.com/hlxsites/aem-boilerplate-commerce code.
+- The /dropins/user-auth/quick-start/ installed and configured in your storefront.
+
+## Enable Price Book ID
+
+1. **Enable Adobe Commerce Optimizer in the Auth drop-in initializer**
+
+   Open the /dropins/user-auth/initialization/ file at `scripts/initializers/auth.js` and add the `adobeCommerceOptimizer: true` option:
+
+   ```javascript
+   // Initialize auth
+   return initializers.mountImmediately(initialize, {
+     langDefinitions,
+     adobeCommerceOptimizer: true // Enable ACO
+   });
+   ```
+
+1. **Replace the customer group header function**
+
+   Open the main initializers file at `scripts/initializers/index.js` and replace the `setCustomerGroupHeader` function with the `setAdobeCommerceOptimizerHeader` function:
+
+   ```javascript
+   const setAdobeCommerceOptimizerHeader = (adobeCommerceOptimizer) => {
+     if (adobeCommerceOptimizer?.priceBookId) {
+       CS_FETCH_GRAPHQL.setFetchGraphQlHeader('AC-Price-Book-ID', adobeCommerceOptimizer.priceBookId);
+     } else {
+       CS_FETCH_GRAPHQL.removeFetchGraphQlHeader('AC-Price-Book-ID');
+     }
+   };
+   ```
+
+1. **Update the event listener**
+
+   In the same `scripts/initializers/index.js` file, replace the `auth/group-uid` event listener with the `auth/adobe-commerce-optimizer` /dropins/all/events/:
+
+   ```javascript
+   events.on('auth/adobe-commerce-optimizer', setAdobeCommerceOptimizerHeader, { eager: true });
+   ```
+   
+   The `{ eager: true }` option ensures the event handler executes immediately if the event has already been emitted. See /dropins/all/events/#subscription-options for more details.
+
+1. **Test the implementation**
+
+   After making these changes, verify that the Price Book ID header is being sent with GraphQL requests:
+
+   - Log in to your storefront as a customer.
+   - Open your browser's developer tools and navigate to the Network tab.
+   - Look for GraphQL requests and verify the `AC-Price-Book-ID` header is present in the request headers.
+
+## Troubleshooting
+
+### Price Book ID header is not being sent
+
+If the `AC-Price-Book-ID` header is not appearing in your GraphQL requests:
+
+- Verify that `adobeCommerceOptimizer: true` is set in the Auth drop-in initializer.
+- Confirm that the catalog view has a default Price Book configured in Adobe Commerce Optimizer.
+- Verify that the customer has a valid Price Book assigned (or that the default Price Book for the catalog view is configured).
+- Check the browser console for any JavaScript errors that might prevent the event from firing.
+
+### Pricing is not changing
+
+If the header is being sent but pricing remains unchanged:
+
+- Verify that the default Price Book for the catalog view is correctly configured in Adobe Commerce Optimizer.
+- If the customer has an assigned Price Book, confirm it is within the allowed Price Books for the catalog view.
+- Confirm that your Adobe Commerce backend is configured to recognize and process the `AC-Price-Book-ID` /setup/configuration/commerce-configuration/#headers.
+- Check that the Price Book has active pricing rules.
+
+## How it works
+
+When Adobe Commerce Optimizer is enabled:
+
+1. Each catalog view in Commerce Optimizer defines a default Price Book and may restrict which Price Books are allowed for that view.
+1. The /dropins/user-auth/ emits the `auth/adobe-commerce-optimizer` event when a customer logs in.
+1. The event includes the Price Book ID for the authenticated customer (if the customer has an assigned Price Book).
+1. Adobe Commerce Optimizer validates that the Price Book for the customer is within the allowed Price Books for the catalog view. If valid, the Price Book for the customer is used. Otherwise, the default Price Book for the catalog view is used.
+1. The `setAdobeCommerceOptimizerHeader` function adds the `AC-Price-Book-ID` header to all GraphQL requests.
+1. Adobe Commerce uses this header to return pricing specific to the determined Price Book.
+
+> The `eager: true` option ensures the event handler is registered before any authentication occurs, preventing race conditions. Learn more about /dropins/all/events/#subscription-options.
+
+> Each catalog view in Commerce Optimizer https://experienceleague.adobe.com/en/docs/commerce/optimizer/setup/pricebooks#view-price-books-in-commerce-optimizer and may restrict which Price Books are allowed. Customers can have their own assigned Price Books. The `commerceOptimizer` GraphQL query returns the appropriate Price Book ID for the authenticated customer, ensuring it falls within the allowed Price Books for the catalog view. For more information about Commerce Optimizer setup, see the https://experienceleague.adobe.com/en/docs/commerce/optimizer/setup/catalog-view documentation.
+
+## Additional resources
+
+- https://experienceleague.adobe.com/en/docs/commerce/optimizer/setup/pricebooks
+- [Storefront configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/)
+- [Auth drop-in documentation](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/user-auth/quick-start/)
+
+---
+
+# Storefront Compatibility B2B Package
+
+SaaS only (Applies to Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer projects only (Adobe-managed SaaS infrastructure).)
+
+The Storefront Compatibility B2B Package contains changes to the Adobe Commerce B2B codebase that enable drop-in component functionality. On https://experienceleague.adobe.com/en/docs/commerce/cloud-service/overview, it is installed and updated automatically.
+
+Most of these changes enhance the Adobe Commerce B2B GraphQL schema. However, miscellaneous bug fixes are also included. The drop-in components require this package along with the Storefront Compatibility Package.
+
+## Major features
+
+The Storefront Compatibility B2B Package defines the following queries and mutations:
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/b2b/company/mutations/assign-child-company/ mutation - Company administrators can assign a child company to a parent company within the company hierarchy.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/b2b/requisition-list/mutations/import-shared-requisition-list/ mutation - Imports or clones a shared requisition list for recipients within the same company based on the provided token.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/b2b/negotiable-quote/queries/templates/ query - Retrieves negotiable quote templates with details, including their expiration dates.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/b2b/negotiable-quote/mutations/place-order-v2/ mutation - Transforms a negotiable quote into an order and returns full order details, including an errors array for standardized response handling.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/b2b/negotiable-quote/mutations/set-quote-template-expiration-date/ mutation - Sets an expiration date on negotiable quote templates.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/b2b/requisition-list/queries/shared-requisition-list/ query - Retrieves a read-only shared requisition list for B2B customers, including sender details and associated items, based on the provided token.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/b2b/requisition-list/mutations/share-requisition-list-by-token/ mutation - Generates a shareable storefront token that enables B2B customers to share a requisition list with colleagues within the same company.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/b2b/requisition-list/mutations/share-requisition-list-by-email/ mutation - Sends a requisition list to colleagues within the same company via email for B2B customers.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/b2b/company/mutations/unassign-child-company/ mutation - Company administrators can unassign a child company from its parent company within the company hierarchy.
+
+## Release information
+
+To see release notes for each version of the Storefront Compatibility B2B Package, go to the [changelog](https://experienceleague.adobe.com/developer/commerce/storefront/releases/changelog/).
+
+---
+
+# Storefront Compatibility Package Installation
+
+The Storefront Compatibility Package contains changes to the Adobe Commerce codebase that enable drop-in component functionality. On https://experienceleague.adobe.com/en/docs/commerce/cloud-service/overview, it is installed and updated automatically.
+
+PaaS only (Applies to Adobe Commerce on Cloud projects (Adobe-managed PaaS infrastructure) and on-premises projects only.)
+
+## Installation
+
+:::note[Note]
+You must have Adobe Commerce 2.4.7, 2.4.8, or 2.4.9 installed. Magento Open Source is not supported.
+:::
+
+  
+
+### Cloud infrastructure
+
+Use this method to install the Storefront Compatibility Package using the Cloud infrastructure.
+
+    1. On your local workstation, change to the project directory for your Adobe Commerce on cloud infrastructure project.
+
+    1. Check out the environment branch to update using the Adobe Commerce Cloud CLI.
+
+       ```bash
+       magento-cloud environment:checkout <environment-id>
+       ```
+
+    1. Add the Storefront Compatibility module.
+
+       Use the appropriate package version based on your Adobe Commerce version:
+
+       For Adobe Commerce 2.4.7, run:
+
+       ```bash
+       composer require adobe-commerce/storefront-compatibility:4.7.13
+       ```
+
+       For Adobe Commerce 2.4.8, run:
+
+       ```bash
+       composer require adobe-commerce/storefront-compatibility:4.8.8
+       ```
+
+       For Adobe Commerce 2.4.9, run: PaaS + Commerce Optimizer only (Applies to Adobe Commerce as a Cloud Service and Commerce Optimizer projects only (Adobe-managed SaaS infrastructure).)
+
+       ```bash
+       composer require adobe-commerce/storefront-compatibility:4.9.0
+       ```
+
+       To check the latest version of the Storefront Compatibility Package, go to the [changelog](https://experienceleague.adobe.com/developer/commerce/storefront/releases/changelog/).
+
+    1. Update package dependencies.
+
+       ```bash
+       composer update "adobe-commerce/storefront-compatibility"
+       ```
+
+    1. Commit and push code changes for the `composer.json` and `composer.lock` files.
+
+    1. Add, commit, and push the code changes for the `composer.json` and `composer.lock` files to the cloud environment
+
+       ```bash
+       git add -A
+       git commit -m "Add module"
+       git push origin <branch-name>
+       ```
+
+       Pushing the updates to the cloud environment initiates the https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/develop/deploy/process to apply the changes. Check the deployment status from the https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/develop/test/log-locations#deploy-log.
+
+  
+  
+
+### On premises
+
+Use this method to install the Storefront Compatibility Package for an on-premises instance.
+
+1. Use Composer to add the package module to your project:
+
+   Use the appropriate package version based on your Adobe Commerce version:
+
+   For Adobe Commerce 2.4.7, run:
+
+   ```bash
+   composer require adobe-commerce/storefront-compatibility:4.7.13
+   ```
+
+   For Adobe Commerce 2.4.8, run:
+
+   ```bash
+   composer require adobe-commerce/storefront-compatibility:4.8.8
+   ```
+
+   For Adobe Commerce 2.4.9, run: PaaS + Commerce Optimizer only (Applies to Adobe Commerce as a Cloud Service and Commerce Optimizer projects only (Adobe-managed SaaS infrastructure).)
+
+   ```bash
+   composer require adobe-commerce/storefront-compatibility:4.9.0
+   ```
+
+   To check the latest version of the Storefront Compatibility Package, go to the [changelog](https://experienceleague.adobe.com/developer/commerce/storefront/releases/changelog/).
+
+1. Upgrade Adobe Commerce:
+
+   ```bash
+   bin/magento setup:upgrade
+   ```
+
+## Update the package
+
+Use the following procedure to update patch versions of the Storefront Compatibility Package.
+
+1. Run the following command to update the package:
+
+   ```bash
+   composer update adobe-commerce/storefront-compatibility
+   ```
+
+1. Run the following commands to upgrade Adobe Commerce and clear the cache.
+
+   ```bash
+   bin/magento setup:upgrade && bin/magento cache:clean
+   ```
+
+---
+
+# Storefront Compatibility Package for Adobe Commerce 2.4.7
+
+The Storefront Compatibility Package contains changes to the Adobe Commerce 2.4.7 codebase that enable drop-in component functionality.
+
+Most of these changes enhance the Adobe Commerce GraphQL schema. However, miscellaneous bugfixes are also included. The drop-in components require this package.
+
+:::note[Note]
+This Storefront Compatibility Package can be installed on Adobe Commerce 2.4.7 only. Fixes in this package are already included in Adobe Commerce 2.4.8. Lower versions of Adobe Commerce are not supported. Magento Open Source is not supported.
+:::
+
+## Major features
+
+The Storefront Compatibility Package defines the following queries and mutations:
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/wishlist/mutations/clear/ mutation - Allows all items to be removed from a wishlist in a single action.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/orders/mutations/confirm-cancel-order/ mutation - Cancels the specified order for a guest.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/orders/mutations/confirm-return/ mutation - Confirms a guest or customer return request.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer-group/ query - Retrieves information about specified customer group.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer-segments/ query - Retrieves information about specified customer segment.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/delete-address-v2 mutation - Deletes a customer's billing or shipping address based on the provided customer UID.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/exchange-external-customer-token/ mutation - Authenticates users using an integration token and returns both the customer token and associated customer data.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/estimate-totals/ mutation - Estimates totals for cart based on the address.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/generate-token/ mutation - Creates a new customer token.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/orders/queries/guest-order/ query - Retrieves guest order information for the specified order number, email, and billing last name.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/orders/queries/guest-order-by-token/ query - Retrieves guest order data associated with a given order token.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/recaptcha-form-config/ query - Returns information about the reCaptcha configuration for the specified form type.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/orders/mutations/request-guest-order-cancel/ mutation - Cancels the specified guest order.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/orders/mutations/request-guest-return/ mutation - Requests a return for a specified order on behalf of a guest.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/resend-confirmation-email/ mutation - Resends a confirmation email to the specified customer upon request.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/update-address-v2 mutation - Updates a customer's billing or shipping address based on the provided customer UID.
+
+## Release information
+
+To see release notes for each version of the Storefront Compatibility Package, go to the [changelog](https://experienceleague.adobe.com/developer/commerce/storefront/releases/changelog/).
+
+---
+
+# Storefront Compatibility Package for Adobe Commerce 2.4.8
+
+The Storefront Compatibility Package contains changes to the Adobe Commerce 2.4.8 codebase that enable drop-in component functionality.
+
+Most of these changes enhance the Adobe Commerce GraphQL schema. However, miscellaneous bugfixes are also included. The drop-in components require this package.
+
+:::note[Note]
+This Storefront Compatibility Package can be installed on Adobe Commerce 2.4.8 only. Fixes in this package up to `SCP-4.8.8` will be included automatically in Adobe Commerce 2.4.9. Lower versions of Adobe Commerce are not supported. Magento Open Source is not supported.
+:::
+
+## Major features
+
+The Storefront Compatibility Package defines the following queries and mutations:
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/wishlist/mutations/clear/ mutation - Allows all items to be removed from a wishlist in a single action.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer-group/ query - Retrieves information about specified customer group.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer-segments/ query - Retrieves information about specified customer segment.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/delete-address-v2 mutation - Deletes a customer's billing or shipping address based on the provided customer UID.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/exchange-external-customer-token/ mutation - Authenticates users via an integration token and returns both the customer token and associated customer data.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/exchange-otp-customer-token/ mutation - Authenticates admins as customers for seller-assisted buying by exchanging a one-time password (OTP) and email for a customer token.
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/update-address-v2 mutation - Updates a customer's billing or shipping address based on the provided customer UID.
+
+## Release information
+
+To see release notes for each version of the Storefront Compatibility Package, go to the [changelog](https://experienceleague.adobe.com/developer/commerce/storefront/releases/changelog/).
+
+---
+
+# Storefront Compatibility Package for Adobe Commerce 2.4.9
+
+The Storefront Compatibility Package contains changes to the Adobe Commerce 2.4.9 codebase that enable drop-in component functionality.
+
+Most of these changes enhance the Adobe Commerce GraphQL schema. However, miscellaneous bugfixes are also included. The drop-in components require this package.
+
+SaaS only (Applies to Adobe Commerce as a Cloud Service and Commerce Optimizer projects only (Adobe-managed SaaS infrastructure).)
+
+:::note[Note]
+This Storefront Compatibility Package can be installed on Adobe Commerce 2.4.9 with Commerce Optimizer only. Lower versions of Adobe Commerce are not supported. Magento Open Source is not supported.
+:::
+
+## Major features
+
+The Storefront Compatibility Package defines the following queries and mutations:
+
+- https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/exchange-otp-customer-token/ mutation - Authenticates admins as customers for seller-assisted buying by exchanging a one-time password (OTP) and email for a customer token.
+
+## Release information
+
+To see release notes for each version of the Storefront Compatibility Package, go to the [changelog](https://experienceleague.adobe.com/developer/commerce/storefront/releases/changelog/).

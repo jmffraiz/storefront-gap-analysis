@@ -1,0 +1,4397 @@
+<SYSTEM>This is the Cart drop-in bundle for Adobe Commerce Storefront on Edge Delivery Services</SYSTEM>
+
+# Cart drop-in
+
+> Cart drop-in containers, slots, events, and customization APIs
+> Generated: 2026-06-26T22:40:20.158Z
+> Source: https://experienceleague.adobe.com/developer/commerce/storefront
+
+
+---
+
+# CartSummaryGrid container
+
+The `CartSummaryGrid` container manages and displays the contents of the shopping cart in a grid layout. Its state is managed by the `CartModel` interface, which contains the cart's initial data and is passed down to any child components.
+
+![CartSummaryGrid container](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/cart/cart-summary-grid-small.png)
+
+*CartSummaryGrid container*
+
+## Configurations
+
+The `CartSummaryGrid` container provides the following configuration options:
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `children` | `CartModel` | Yes | Child elements to be rendered inside the container. |
+| `initialData` | `string` | Yes | Initial cart data to preload the component. Defaults to null. |
+| `routeProduct` | `function` | No | Callback function that returns a product. |
+| `routeEmptyCartCTA` | `function` | No | Callback function that returns an empty cart. |
+
+The `CartModel` object has the following shape:
+
+```ts
+export interface CartModel {
+  id: string;
+  totalQuantity: number;
+  errors?: ItemError[];
+  items: Item[];
+  miniCartMaxItems: Item[];
+  total: {
+    includingTax: Price;
+    excludingTax: Price;
+  };
+  discount?: Price;
+  subtotal: {
+    excludingTax: Price;
+    includingTax: Price;
+    includingDiscountOnly: Price;
+  };
+  appliedTaxes: TotalPriceModifier[];
+  totalTax?: Price;
+  appliedDiscounts: TotalPriceModifier[];
+  shipping?: Price;
+  isVirtual?: boolean;
+  addresses: {
+    shipping?: {
+      countryCode: string;
+      zipCode?: string;
+      regionCode?: string;
+    }[];
+  };
+  isGuestCart?: boolean;
+  hasOutOfStockItems?: boolean;
+  hasFullyOutOfStockItems?: boolean;
+  appliedCoupons?: Coupon[];
+}
+
+interface TotalPriceModifier {
+  amount: Price;
+  label: string;
+  coupon?: Coupon;
+}
+
+interface FixedProductTax {
+  amount: Price;
+  label: string;
+}
+
+export interface Item {
+  taxedPrice: Price;
+  rowTotal: Price;
+  rowTotalIncludingTax: Price;
+  itemType: string;
+  uid: string;
+  url: ItemURL;
+  quantity: number;
+  sku: string;
+  name: string;
+  image: ItemImage;
+  links?: ItemLinks;
+  price: Price;
+  total: Price;
+  discountedTotal?: Price;
+  discount?: Price;
+  regularPrice: Price;
+  discounted: boolean;
+  bundleOptions?: { [key: string]: any };
+  selectedOptions?: { [key: string]: any };
+  customizableOptions?: { [key: string]: any };
+  message?: string;
+  recipient?: string;
+  recipientEmail?: string;
+  sender?: string;
+  senderEmail?: string;
+  lowInventory?: boolean;
+  insufficientQuantity?: boolean;
+  onlyXLeftInStock?: number | null;
+  outOfStock?: boolean;
+  notAvailableMessage?: string;
+  stockLevel?: String;
+  discountPercentage?: number;
+  savingsAmount?: Price;
+  productAttributes?: Attribute[];
+  fixedProductTaxes?: FixedProductTax[];
+}
+
+interface ItemError {
+  id: string;
+  text: string;
+}
+
+interface ItemImage {
+  src: string;
+  alt: string;
+}
+
+export interface Price {
+  value: number;
+  currency: string;
+}
+
+interface ItemURL {
+  urlKey: string;
+  categories: string[];
+}
+
+interface ItemLinks {
+  count: number;
+  result: string;
+}
+
+interface AttributeOption {
+  value: string;
+  label: string;
+}
+
+interface Attribute {
+  code: string;
+  value?: string;
+  selected_options?: AttributeOption[];
+}
+
+interface Coupon {
+  code: string;
+}
+```
+
+## Example configuration
+
+The following example demonstrates how to render the `CartSummaryGrid` container with the `routeProduct` and `routeEmptyCartCTA` callbacks:
+
+```js
+provider.render(CartSummaryGrid, {
+  routeProduct: (item) => {
+    return `${item.url.categories.join('/')}/${item.url.urlKey}`;
+  },
+  routeEmptyCartCTA: () => '#empty-cart',
+})(document.getElementById('@dropins/CartSummaryGrid'));
+```
+
+---
+
+# CartSummaryList container
+
+The `CartSummaryList` container displays a summary of the items in the shopping cart by rendering a list of `CartItem` components. Each `CartItem` represents an individual item in the cart.
+
+![CartSummaryList container](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/cart/cart-summary-list.png)
+
+*CartSummaryList container*
+
+## Configurations
+
+The `CartSummaryList` container provides the following configuration options:
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `children` | `CartModel` | Yes | Child elements to be rendered inside the container. |
+| `routeProduct` | `function` | No | Callback function that returns a product. |
+| `routeEmptyCartCTA` | `function` | No | Callback function that returns an empty cart. |
+| `initialData` | `string` | Yes | Initial cart data to preload the component. Defaults to null. |
+| `hideHeading` | `boolean` | No | Whether to hide the heading of the cart. |
+| `hideFooter` | `boolean` | No | Whether to hide the footer of the cart. |
+| `routeCart` | `function` | No | Callback function that navigates to the cart. |
+| `onItemUpdate` | `function` | No | Callback function that updates the item. |
+| `onItemRemove` | `function` | No | Callback function that removes the item. |
+| `maxItems` | `number` | No | Maximum number of items to display. |
+| `slots` | `function` | No | Allows passing a container or custom component. |
+| `attributesToHide` | `string[]` | No | Attributes to hide. |
+| `enableRemoveItem` | `boolean` | No | Enable remove item. |
+| `enableUpdateItemQuantity` | `boolean \| { removeOnZero?: boolean }` | No | Enables the quantity stepper. Pass `{ removeOnZero: true }` to also remove the item when the quantity reaches `0`; defaults to `false`. |
+| `onItemsErrorsChange` | `function` | No | Callback function that changes the items errors. |
+| `accordion` | `boolean` | No | Toggle accordion view. |
+| `variant` | `primary \| secondary` | No | Cart variant. |
+| `isLoading` | `boolean` | No | Toggle loading state. |
+| `showMaxItems` | `boolean` | No | Toggle show max items. |
+| `showDiscount` | `boolean` | No | Toggle show discount. |
+| `showSavings` | `boolean` | No | Toggle show savings. |
+| `quantityType` | `stepper \| dropdown` | No | Display quantity changes as a stepper or in a dropdown menu. |
+| `dropdownOptions` | `string[]` | No | An array of items to display in a dropdown menu. |
+| `undo` | `boolean` | No | Enables the undo banner to restore recently removed items to the cart. |
+| `includeOutOfStockItems` | `boolean` | No | Display out-of-stock and insufficient-quantity items in the main cart item list alongside in-stock items. Default: `false`. |
+| `confirmBeforeDelete` | `boolean` | No | Enables the confirmation banner when an item is removed from the cart. When set to true, clicking the remove button shows an inline confirmation banner instead of immediately deleting the item. |
+
+The `CartModel` object has the following shape:
+
+```ts
+export interface CartModel {
+  id: string;
+  totalQuantity: number;
+  errors?: ItemError[];
+  items: Item[];
+  miniCartMaxItems: Item[];
+  total: {
+    includingTax: Price;
+    excludingTax: Price;
+  };
+  discount?: Price;
+  subtotal: {
+    excludingTax: Price;
+    includingTax: Price;
+    includingDiscountOnly: Price;
+  };
+  appliedTaxes: TotalPriceModifier[];
+  totalTax?: Price;
+  appliedDiscounts: TotalPriceModifier[];
+  shipping?: Price;
+  isVirtual?: boolean;
+  addresses: {
+    shipping?: {
+      countryCode: string;
+      zipCode?: string;
+      regionCode?: string;
+    }[];
+  };
+  isGuestCart?: boolean;
+  hasOutOfStockItems?: boolean;
+  hasFullyOutOfStockItems?: boolean;
+  appliedCoupons?: Coupon[];
+}
+
+interface TotalPriceModifier {
+  amount: Price;
+  label: string;
+  coupon?: Coupon;
+}
+
+interface FixedProductTax {
+  amount: Price;
+  label: string;
+}
+
+export interface Item {
+  taxedPrice: Price;
+  rowTotal: Price;
+  rowTotalIncludingTax: Price;
+  itemType: string;
+  uid: string;
+  url: ItemURL;
+  quantity: number;
+  sku: string;
+  name: string;
+  image: ItemImage;
+  links?: ItemLinks;
+  price: Price;
+  total: Price;
+  discountedTotal?: Price;
+  discount?: Price;
+  regularPrice: Price;
+  discounted: boolean;
+  bundleOptions?: { [key: string]: any };
+  selectedOptions?: { [key: string]: any };
+  customizableOptions?: { [key: string]: any };
+  message?: string;
+  recipient?: string;
+  recipientEmail?: string;
+  sender?: string;
+  senderEmail?: string;
+  lowInventory?: boolean;
+  insufficientQuantity?: boolean;
+  onlyXLeftInStock?: number | null;
+  outOfStock?: boolean;
+  notAvailableMessage?: string;
+  stockLevel?: String;
+  discountPercentage?: number;
+  savingsAmount?: Price;
+  productAttributes?: Attribute[];
+  fixedProductTaxes?: FixedProductTax[];
+}
+
+interface ItemError {
+  id: string;
+  text: string;
+}
+
+interface ItemImage {
+  src: string;
+  alt: string;
+}
+
+export interface Price {
+  value: number;
+  currency: string;
+}
+
+interface ItemURL {
+  urlKey: string;
+  categories: string[];
+}
+
+interface ItemLinks {
+  count: number;
+  result: string;
+}
+
+interface AttributeOption {
+  value: string;
+  label: string;
+}
+
+interface Attribute {
+  code: string;
+  value?: string;
+  selected_options?: AttributeOption[];
+}
+
+interface Coupon {
+  code: string;
+}
+```
+
+## Supported slots
+
+The `CartSummaryList` container supports the following slots:
+
+* Heading
+* EmptyCart
+* Footer
+* Thumbnail
+* ProductAttributes
+* CartSummaryFooter
+* CartItem
+* UndoBanner
+* ConfirmDeleteBanner
+* ItemTitle
+* ItemPrice
+* ItemQuantity
+* ItemTotal
+* ItemSku
+* ItemRemoveAction
+
+## Example configuration
+
+The following example demonstrates how to render the `CartSummaryList` container with the `routeProduct` and `routeEmptyCartCTA` callbacks:
+
+```js
+provider.render(CartSummaryList, {
+  enableRemoveItem: true,
+  enableUpdateItemQuantity: true,
+  showDiscount: true,
+  // confirmBeforeDelete: true,
+  // accordion: true,
+  // includeOutOfStockItems: true,
+  // showMaxItems: false,
+  // maxItems: 6,
+  // routeCart: () => '#cart',
+  // showSavings: true,
+  // quantityType: 'dropdown',
+  // dropdownOptions: [
+  //   { value: '1', text: '1' },
+  //   { value: '2', text: '2' },
+  //   { value: '3', text: '3' },
+  // ],
+  routeProduct: (item) => {
+    return `${item.url.categories.join('/')}/${item.url.urlKey}`;
+  },
+  routeEmptyCartCTA: () => '#empty-cart',
+  slots: {
+    Footer: (ctx) => {
+      // Runs on mount
+      const wrapper = document.createElement('div');
+      ctx.appendChild(wrapper);
+
+      // Append Product Promotions on every update
+      ctx.onChange((next) => {
+        wrapper.innerHTML = '';
+
+        next.item?.discount?.label?.forEach((label) => {
+          const discount = document.createElement('div');
+          discount.style.color = '#3d3d3d';
+          discount.innerText = label;
+          wrapper.appendChild(discount);
+        });
+      });
+    },
+  },
+})($cartSummaryList);
+
+---
+
+# CartSummaryTable container
+
+The `CartSummaryTable` container displays a summary of the items in the shopping cart by rendering a table of cart items. Each row represents an individual item in the cart, with columns for the item details, price, quantity, subtotal, and actions.
+
+![CartSummaryGrid container](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/cart/cart-summary-table.png)
+
+*CartSummaryTable container*
+
+## Features
+
+The `CartSummaryTable` container includes the following features:
+
+- Automatic loading state with skeleton UI
+- Support for out-of-stock items with visual indicators
+- Quantity update functionality with error handling
+- Item removal capability
+- Tax price display (including/excluding)
+- Product image display with lazy loading
+- Configurable product routing
+- Customizable slots for all major components
+- Support for product configurations
+- Warning and alert message display
+- Discount and savings display
+
+## Configurations
+
+The `CartSummaryTable` container provides the following configuration options:
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `initialData` | `CartModel \| null` | No | Initial data for the cart. Defaults to null. |
+| `className` | `string` | No | Optional CSS class name for custom styling. |
+| `routeProduct` | `function` | No | Function for getting the product page route. |
+| `allowQuantityUpdates` | `boolean` | No | Whether to allow quantity updates. Defaults to true. |
+| `allowRemoveItems` | `boolean` | No | Whether to allow removing items. Defaults to true. |
+| `onQuantityUpdate` | `function` | No | Callback function when quantity is updated. |
+| `onItemRemove` | `function` | No | Callback function when an item is removed. |
+| `routeEmptyCartCTA` | `function` | No | Function to generate the URL for the empty cart call-to-action button. |
+| `undo` | `boolean` | No | Enables the undo banner to restore recently removed items to the cart. |
+
+The `CartModel` object has the following shape:
+
+```ts
+export interface CartModel {
+  id: string;
+  totalQuantity: number;
+  errors?: ItemError[];
+  items: Item[];
+  miniCartMaxItems: Item[];
+  total: {
+    includingTax: Price;
+    excludingTax: Price;
+  };
+  discount?: Price;
+  subtotal: {
+    excludingTax: Price;
+    includingTax: Price;
+    includingDiscountOnly: Price;
+  };
+  appliedTaxes: TotalPriceModifier[];
+  totalTax?: Price;
+  appliedDiscounts: TotalPriceModifier[];
+  shipping?: Price;
+  isVirtual?: boolean;
+  addresses: {
+    shipping?: {
+      countryCode: string;
+      zipCode?: string;
+      regionCode?: string;
+    }[];
+  };
+  isGuestCart?: boolean;
+  hasOutOfStockItems?: boolean;
+  hasFullyOutOfStockItems?: boolean;
+  appliedCoupons?: Coupon[];
+}
+
+interface TotalPriceModifier {
+  amount: Price;
+  label: string;
+  coupon?: Coupon;
+}
+
+interface FixedProductTax {
+  amount: Price;
+  label: string;
+}
+
+export interface Item {
+  taxedPrice: Price;
+  rowTotal: Price;
+  rowTotalIncludingTax: Price;
+  itemType: string;
+  uid: string;
+  url: ItemURL;
+  quantity: number;
+  sku: string;
+  name: string;
+  image: ItemImage;
+  links?: ItemLinks;
+  price: Price;
+  total: Price;
+  discountedTotal?: Price;
+  discount?: Price;
+  regularPrice: Price;
+  discounted: boolean;
+  bundleOptions?: { [key: string]: any };
+  selectedOptions?: { [key: string]: any };
+  customizableOptions?: { [key: string]: any };
+  message?: string;
+  recipient?: string;
+  recipientEmail?: string;
+  sender?: string;
+  senderEmail?: string;
+  lowInventory?: boolean;
+  insufficientQuantity?: boolean;
+  onlyXLeftInStock?: number | null;
+  outOfStock?: boolean;
+  notAvailableMessage?: string;
+  stockLevel?: String;
+  discountPercentage?: number;
+  savingsAmount?: Price;
+  productAttributes?: Attribute[];
+  fixedProductTaxes?: FixedProductTax[];
+}
+
+interface ItemError {
+  id: string;
+  text: string;
+}
+
+interface ItemImage {
+  src: string;
+  alt: string;
+}
+
+export interface Price {
+  value: number;
+  currency: string;
+}
+
+interface ItemURL {
+  urlKey: string;
+  categories: string[];
+}
+
+interface ItemLinks {
+  count: number;
+  result: string;
+}
+
+interface AttributeOption {
+  value: string;
+  label: string;
+}
+
+interface Attribute {
+  code: string;
+  value?: string;
+  selected_options?: AttributeOption[];
+}
+
+interface Coupon {
+  code: string;
+}
+```
+
+## Supported slots
+
+The `CartSummaryTable` container supports the following slots for customization:
+
+* **Item**: Customize the item cell content
+  * Context: `{ item: CartModel['items'][number] }`
+
+* **Price**: Customize the price cell content
+  * Context: `{ item: CartModel['items'][number] }`
+
+* **Quantity**: Customize the quantity cell content
+  * Context: `{ 
+      item: CartModel['items'][number],
+      isUpdating: boolean,
+      quantityInputValue: number,
+      handleInputChange: (e: Event) => void,
+      itemUpdateErrors: Map<string, string>
+    }`
+
+* **Subtotal**: Customize the subtotal cell content
+  * Context: `{ item: CartModel['items'][number] }`
+
+* **Thumbnail**: Customize the thumbnail image on an item
+  * Context: `{ 
+      item: CartModel['items'][number],
+      defaultImageProps: ImageProps,
+      index: number
+    }`
+
+* **ProductTitle**: Customize the product title on an item
+  * Context: `{ item: CartModel['items'][number] }`
+
+* **Sku**: Customize the product SKU on an item
+  * Context: `{ item: CartModel['items'][number] }`
+
+* **Configurations**: Customize the product configurations on an item
+  * Context: `{ item: CartModel['items'][number] }`
+
+* **ItemAlert**: Customize the product alert on an item
+  * Context: `{ item: CartModel['items'][number] }`
+
+* **ItemWarning**: Customize the product warning on an item
+  * Context: `{ item: CartModel['items'][number] }`
+
+* **Actions**: Customize the actions on an item
+  * Context: `{ 
+      item: CartModel['items'][number],
+      itemsUpdating: Map<string, { isUpdating: boolean, updatedValue: number }>,
+      setItemUpdating: (uid: string, state: boolean) => void,
+      setItemUpdateError: (uid: string, error: string) => void
+    }`
+
+## Example configuration
+
+The following example demonstrates how to render the `CartSummaryTable` container with the some of the configuration options and slots:
+
+```js
+provider.render(CartSummaryTable, {
+  initialData: cartData,
+  allowQuantityUpdates: true,
+  allowRemoveItems: true,
+  routeProduct: (item) => `/products/${item.urlKey}`,
+  onQuantityUpdate: (item, quantity) => {
+    // Handler after quantity update
+  },
+  onItemRemove: (item) => {
+    // Handler after item removal
+  },
+  slots: {
+    Item: (ctx) => {
+      // Custom item cell content
+    },
+    Price: (ctx) => {
+      // Custom price cell content
+    },
+    // ... other slot customizations
+  }
+});
+```
+
+---
+
+# Coupons container
+
+The `Coupons` container manages the application of coupons to the shopping cart. It provides a text box for users to enter coupon codes. The container uses the `applyCouponsToCart` function to apply the coupon to the cart.
+
+![Coupons container](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/cart/apply-coupon.png)
+
+*Coupons container*
+
+## Configurations
+
+The `Coupons` container has no public configuration options. Render it without any props inside an `OrderSummary` slot.
+
+## Example configuration
+
+The following example demonstrates how to render the `Coupons` container as part of the OrderSummary slot:
+
+```js
+{
+  provider.render(OrderSummary, {
+    routeCheckout: () => '#checkout',
+    slots: {
+      Coupons: (ctx) => {
+        const coupons = document.createElement('div');
+
+        provider.render(Coupons)(coupons);
+
+        ctx.appendChild(coupons);
+      },
+    },
+    showTotalSaved: true,
+  })('.cart__order-summary'),
+}
+
+---
+
+# EmptyCart container
+
+The `EmptyCart` container renders a message or component indicating that the cart is empty.
+It can provide navigation options to continue shopping or explore products.
+
+![EmptyCart container](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/cart/empty-cart.png)
+
+*EmptyCart container*
+
+## Configurations
+
+The `EmptyCart` container provides the following configuration options:
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `routeCTA` | `function` | No | Callback function that returns an empty cart. |
+
+## Example configuration
+
+The following example demonstrates how to render the `EmptyCart` container:
+
+```js
+provider.render(EmptyCart, {
+  routeCTA: startShoppingURL ? () => startShoppingURL : undefined,
+})($emptyCart),
+```
+`;
+
+---
+
+# EstimateShipping container
+
+The `EstimateShipping` container renders a form that allows shoppers to estimate shipping costs based on their specified location. The form includes fields for the shopper to enter their country, state, and postal code.
+
+![EstimateShipping container](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/cart/estimate-shipping.png)
+
+*EstimateShipping container*
+
+## Configurations
+
+The `EstimateShipping` container provides the following configuration options:
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `showDefaultEstimatedShippingCost` | `boolean` | Yes | Displays the default estimated shipping cost before the shopper enters location details. |
+
+## Example configuration
+
+The following example demonstrates how to render the `EstimateShipping` container:
+
+```js
+EstimateShipping: (ctx) => {
+  const estimateShippingForm = document.createElement('div');
+
+provider.render(EstimateShipping, {
+    showDefaultEstimatedShippingCost: true,
+})('#estimate-shipping');
+
+---
+
+# GiftCards container
+
+The `GiftCards` container manages the application and removal of gift cards to the shopping cart. It provides a text box for users to enter gift card codes. The container uses the `applyGiftCardToCart` and `removeGiftCardFromCart` functions to apply the coupon to the cart. When a gift card code is applied, the corresponding amount is subtracted from the total order value, and the discount is displayed in the cart and order summary.
+
+The Adobe Commerce merchant can manage gift card configuration from **Marketing** > **Gift Card Accounts**.
+
+![GiftCards container](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/cart/gift-cards.png)
+
+*GiftCards container*
+
+## Configurations
+
+The `GiftCards` container provides the following configuration options:
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `className` | `string` | No | CSS class applied to the container. |
+
+## Example configuration
+
+The following example demonstrates how to render the `GiftCards` container as part of the OrderSummary slot:
+
+```js
+provider.render(OrderSummary, {
+ routeProduct: (product) => rootLink(`/products/${product.url.urlKey}/${product.topLevelSku}`),
+ routeCheckout: checkoutURL ? () => rootLink(checkoutURL) : undefined,
+ slots: {
+   GiftCards: (ctx) => {
+     const giftCards = document.createElement('div');
+
+     provider.render(GiftCards)(giftCards);
+
+     ctx.appendChild(giftCards);
+   },
+ },
+})($summary);
+
+```
+
+---
+
+# GiftOptions container
+
+The `GiftOptions` container allows shoppers to personalize their orders by adding gift wrapping and a gift message for each cart item or by applying gift-related options to the entire order. It can be displayed in a product or order view, with each view supporting both editable and non-editable modes, controlled via props.
+
+Products can have the following gift options:
+
+* Gift wrapping
+* Gift message
+
+Orders can have the following gift options:
+
+* Gift receipt
+* Printed card
+* Gift wrapping
+* Gift message
+
+The following diagrams illustrate how gift options can be rendered.
+
+![GiftOptions container with all available options](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/cart/gift-options-unset.png)
+
+*GiftOptions container with all available options*
+
+![GiftOptions container with options that have been set](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/cart/gift-options-set.png)
+
+*GiftOptions container with options that have been set*
+
+## Admin configuration
+
+Gift options highly configurable, allowing merchants to manage gift options at both the global and product levels. This flexibility ensures that gift options can be tailored to meet the specific needs of the store and its products. These configurations determine how your frontend code will behave and what options will be available to customers during the shopping experience.
+
+### Global configuration
+
+The merchant can manage global gift option configurations from the Admin at **Stores** > Configuration > **Sales** > **Sales** > **Gift Options**. The following options are available:
+
+* **Allow Gift Messages on Order Level**
+* **Allow Gift Messages for Order Items**
+* **Allow Gift Wrapping on Order Level**
+* **Allow Gift Wrapping for Order Items**
+* **Allow Gift Receipt**
+* **Allow Printed Card**
+* **Default Price for Printed Card**
+
+Global configurations apply to all products unless overridden by product level configurations.
+
+### Product-level configuration
+
+Each product can have its own gift option configuration, which takes precedence over the global configurations. To manage product-level configurations, the administrator must ensure that the product is enabled for gift options. This can be done by setting the following options in the product configuration (**Catalog** > **Products** > _Product_ > **Gift Options**):
+
+**Allow Gift Message** - If enabled, customers can add a personalized gift message for this product even if gift messages are globally disabled. If disabled, gift messages will not be available for this product, even if globally enabled.
+
+**Allow Gift Wrapping** - If enabled, customers can select a gift wrapping for this product even if gift wrapping is globally disabled. If disabled, gift wrapping will not be available for this product, even if globally enabled. If gift wrapping is disabled at least for one product in cart, you cannot apply gift wrapping to the whole order, even if order-level gift wrapping is enabled globally.
+
+**Price for Gift Wrapping** - If set, overrides the pricing for all gift-wrapping options for this product.
+
+### Gift wrapping configuration
+
+Gift wrapping options can be configured and managed from **Stores** > Configuration > **Gift Wrapping**. Settings include a title, price, and image for each gift wrapping option.
+
+### Tax Display configuration
+
+Tax display settings define how taxes for gift options are shown on different pages, such as the cart and order summary. These settings can be configured under **Stores** > Configuration > **Sales** > **Tax**.
+
+## Container configurations
+
+The `GiftOptions` container provides the following configuration options:
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `dataSource` | `cart \| order` | No | Coupon code input field. |
+| `view` | `product \| order` | No | Defines which view of the GiftOptions container should be rendered based on the insertion location. |
+| `isEditable` | `Boolean` | No | Determines whether the GiftOptions container should be rendered in an editable mode. |
+| `item` | `Object` | No | The item prop is required for initializing the product view. It is used to retrieve available gift options and product-level configurations. |
+| `initialLoading` | `Boolean` | No | Indicates the initial state of the component, which can be used for UX purposes. |
+| `readOnlyFormOrderView` | `primary \| secondary` | No | Determines the styling of the GiftOptions container in order view - non-editable mode. |
+| `handleItemsLoading` | `Function` | No | Used to integrate GiftOptions with the CartSummaryList container provided by cart drop-in. |
+| `handleItemsError` | `Function` | No | Used to integrate GiftOptions with cart CartSummaryList container provided by cart drop-in. |
+| `onItemUpdate` | `Function` | No | Used to integrate GiftOptions with cart CartSummaryList container provided by cart drop-in. |
+| `onGiftOptionsChange` | `Function` | No | Used to build custom GiftOptions container integrations. |
+
+For the `dataSource` prop, specify `cart` when the source of truth is the cart page, meaning gift options are applied at the cart level and the container should initialize with the currently selected gift options. Also, specify card on any other page where the cart drop-in fires a `cart/data` event. Specify `order` when the source of truth is a previously-placed order or if the page is controlled by the order drop-in and initialized by an `order/data` event.
+
+For the `view` prop, specify `product` when the `GiftOptions` container is rendered at the product level, allowing users to configure gift options for a specific product. Use `order` when the container is rendered at the order level, enabling users to configure gift options for the entire order.
+
+Set the `isEditable` prop to `true` when gift options should be editable, such as on the cart page, where users can modify options before placing an order. Use `false` when gift options should be non-editable, such as on the Order Details page, where users view gift options for an already placed order.
+
+The `items` prop accepts:
+
+* A cart item object (for seamless integration with the cart and checkout pages).
+* A custom-shaped object with the required fields:
+
+  ```js
+  export type ProductGiftOptionsConfig = {
+    giftWrappingAvailable: boolean;
+    giftMessageAvailable: boolean;
+    giftWrappingPrice?: Price;
+    giftMessage?: {
+        recipientName?: string;
+        senderName?: string;
+        message?: string;
+    };
+    productGiftWrapping: GiftWrappingConfigProps[];
+  };
+  ```
+
+## Example configurations
+
+The following examples demonstrate how to configure the `GiftOptions` container in different scenarios.
+
+### Product view: editable
+
+The following example demonstrates how to render the `GiftOptions` container in an editable mode at the product level:
+
+```js
+provider.render(CartSummaryList, {
+ hideHeading: hideHeading === 'true',
+ routeProduct: (product) => rootLink(`/products/${product.url.urlKey}/${product.topLevelSku}`),
+ routeEmptyCartCTA: startShoppingURL ? () => rootLink(startShoppingURL) : undefined,
+ maxItems: parseInt(maxItems, 10) || undefined,
+ attributesToHide: hideAttributes
+   .split(',')
+   .map((attr) => attr.trim().toLowerCase()),
+ enableUpdateItemQuantity: enableUpdateItemQuantity === 'true',
+ enableRemoveItem: enableRemoveItem === 'true',
+ slots: {
+   Footer: (ctx) => {
+     const giftOptions = document.createElement('div');
+
+     provider.render(GiftOptions, {
+       item: ctx.item,
+       view: 'product',
+       dataSource: 'cart',
+       handleItemsLoading: ctx.handleItemsLoading,
+       handleItemsError: ctx.handleItemsError,
+       onItemUpdate: ctx.onItemUpdate,
+     })(giftOptions);
+
+     ctx.appendChild(giftOptions);
+   },
+ },
+})($list);
+```
+
+### Product View: non-editable
+
+The following example demonstrates how to render the `GiftOptions` container in a non-editable mode at the product level:
+
+```js
+CartProvider.render(CartSummaryList, {
+ variant: 'secondary',
+ slots: {
+   Heading: (headingCtx) => {
+     const title = 'Your Cart ({count})';
+
+     const cartSummaryListHeading = document.createElement('div');
+     cartSummaryListHeading.classList.add('cart-summary-list__heading');
+
+     const cartSummaryListHeadingText = document.createElement('div');
+     cartSummaryListHeadingText.classList.add(
+       'cart-summary-list__heading-text',
+     );
+
+     cartSummaryListHeadingText.innerText = title.replace(
+       '({count})',
+       headingCtx.count ? `(${headingCtx.count})` : '',
+     );
+     const editCartLink = document.createElement('a');
+     editCartLink.classList.add('cart-summary-list__edit');
+     editCartLink.href = rootLink('/cart');
+     editCartLink.rel = 'noreferrer';
+     editCartLink.innerText = 'Edit';
+
+     cartSummaryListHeading.appendChild(cartSummaryListHeadingText);
+     cartSummaryListHeading.appendChild(editCartLink);
+     headingCtx.appendChild(cartSummaryListHeading);
+
+     headingCtx.onChange((nextHeadingCtx) => {
+       cartSummaryListHeadingText.innerText = title.replace(
+         '({count})',
+         nextHeadingCtx.count ? `(${nextHeadingCtx.count})` : '',
+       );
+     });
+   },
+   Footer: (ctx) => {
+     const giftOptions = document.createElement('div');
+
+     CartProvider.render(GiftOptions, {
+       item: ctx.item,
+       view: 'product',
+       dataSource: 'cart',
+       isEditable: false,
+       handleItemsLoading: ctx.handleItemsLoading,
+       handleItemsError: ctx.handleItemsError,
+       onItemUpdate: ctx.onItemUpdate,
+     })(giftOptions);
+
+     ctx.appendChild(giftOptions);
+   },
+ },
+})($cartSummary);
+```
+
+### Order view: editable
+
+The following example demonstrates how to render the `GiftOptions` container in an editable mode at the order level:
+
+```js
+provider.render(GiftOptions, {
+ view: 'order',
+ dataSource: 'cart',
+})($giftOptions);
+```
+
+### Order view: non-editable
+
+The following example demonstrates how to render the `GiftOptions` container in a non-editable mode at the order level:
+
+```js
+CartProvider.render(GiftOptions, {
+ view: 'order',
+ dataSource: 'cart',
+ isEditable: false,
+})($giftOptions);
+```
+
+## Custom integrations
+
+You can build additional custom integrations for gift option functionality using the GiftOptions container.
+As an example, we can integrate the GiftOptions container on the Product Detail Page (PDP), allowing customers to select gift options for products before adding them to the cart. The code examples provided below demonstrate the general approach to building custom integrations with the GiftOptions container.
+
+---
+
+# Cart Containers
+
+The **Cart** drop-in provides pre-built container components for integrating into your storefront.
+
+<strong>Version: 3.2.0</strong>
+
+## What are Containers?
+
+Containers are pre-built UI components that combine functionality, state management, and presentation. They provide a complete solution for specific features and can be customized through props, slots, and CSS.
+
+## Available Containers
+
+| Container | Description |
+| --------- | ----------- |
+| [CartSummaryGrid](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/containers/cart-summary-grid/) | Learn about the `CartSummaryGrid` container. |
+| [CartSummaryList](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/containers/cart-summary-list/) | Learn about the `CartSummaryList` container. |
+| [CartSummaryTable](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/containers/cart-summary-table/) | Learn about the `CartSummaryTable` container. |
+| [Coupons](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/containers/coupons/) | Learn about the Coupons container. |
+| [EmptyCart](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/containers/empty-cart/) | Learn about the `EmptyCart` container. |
+| [EstimateShipping](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/containers/estimate-shipping/) | Learn about the `EstimateShipping` container. |
+| [GiftCards](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/containers/gift-cards/) | Learn about the `GiftCards` container. |
+| [GiftOptions](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/containers/gift-options/) | Learn about the `GiftOptions` container. |
+| [MiniCart](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/containers/mini-cart/) | Displays a summary of the shopper's shopping cart. |
+| [OrderSummary](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/containers/order-summary/) | Learn about the `OrderSummary` container. |
+| [OrderSummaryLine](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/containers/order-summary-line/) | Learn about the `OrderSummaryLine` container. |
+
+> Each container is designed to work independently but can be composed together to create comprehensive user experiences.
+
+---
+
+# MiniCart container
+
+The `MiniCart` container displays a summary of the shopper's shopping cart. It shows a list of products currently in the cart and subtotal amounts. It also provides call-to-action buttons for proceeding to checkout or updating the cart.
+
+![MiniCart drop-in UI showing cart line items, quantities, subtotal, and buttons to view the full cart or continue to checkout](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/cart/mini-cart.png)
+
+*MiniCart container*
+
+## Configurations
+
+The `MiniCart` container provides the following configuration options:
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `children` | `VNode[]` | No | The child elements to be rendered inside the mini cart. |
+| `initialData` | `CartModel \| null` | No | The initial data for the mini cart. Defaults to null. |
+| `hideFooter` | `boolean` | No | Flag to hide the footer in the mini cart. Defaults to true. |
+| `slots` | `{ ProductList?: SlotProps }` | No | Slot props for customizing the product list display. |
+| `routeProduct` | `function` | No | Function to generate the URL for a product. |
+| `routeCart` | `function` | No | Function to generate the URL for the cart page. |
+| `routeCheckout` | `function` | No | Function to generate the URL for the checkout page. |
+| `routeEmptyCartCTA` | `function` | No | Function to generate the URL for the empty cart call-to-action. |
+| `displayAllItems` | `boolean` | No | Flag to show all items. |
+| `showDiscount` | `boolean` | No | Flag to show discounts in the mini cart. |
+| `showSavings` | `boolean` | No | Flag to show savings in the mini cart. |
+| `enableItemRemoval` | `boolean` | Yes | Flag to enable removing items from the mini cart. When set to true, users can remove products from the cart directly in the mini cart interface. |
+| `enableQuantityUpdate` | `boolean \| { removeOnZero?: boolean }` | No | Enables quantity updates in the mini cart. Pass `{ removeOnZero: true }` to remove items when quantity reaches `0`. Defaults to `false`. |
+| `hideHeading` | `boolean` | No | Flag to hide the heading in the mini cart. When set to true, the mini cart header will not be displayed. |
+| `undo` | `boolean` | No | Enables the undo banner to restore recently removed items to the cart. |
+| `confirmBeforeDelete` | `boolean` | No | Enables the confirmation banner when an item is removed from the cart. When set to true, clicking the remove button shows an inline confirmation banner instead of immediately deleting the item. |
+
+The `CartModel` object has the following shape:
+
+```ts
+export interface CartModel {
+  id: string;
+  totalQuantity: number;
+  errors?: ItemError[];
+  items: Item[];
+  miniCartMaxItems: Item[];
+  total: {
+    includingTax: Price;
+    excludingTax: Price;
+  };
+  discount?: Price;
+  subtotal: {
+    excludingTax: Price;
+    includingTax: Price;
+    includingDiscountOnly: Price;
+  };
+  appliedTaxes: TotalPriceModifier[];
+  totalTax?: Price;
+  appliedDiscounts: TotalPriceModifier[];
+  shipping?: Price;
+  isVirtual?: boolean;
+  addresses: {
+    shipping?: {
+      countryCode: string;
+      zipCode?: string;
+      regionCode?: string;
+    }[];
+  };
+  isGuestCart?: boolean;
+  hasOutOfStockItems?: boolean;
+  hasFullyOutOfStockItems?: boolean;
+  appliedCoupons?: Coupon[];
+}
+
+interface TotalPriceModifier {
+  amount: Price;
+  label: string;
+  coupon?: Coupon;
+}
+
+interface FixedProductTax {
+  amount: Price;
+  label: string;
+}
+
+export interface Item {
+  taxedPrice: Price;
+  rowTotal: Price;
+  rowTotalIncludingTax: Price;
+  itemType: string;
+  uid: string;
+  url: ItemURL;
+  quantity: number;
+  sku: string;
+  name: string;
+  image: ItemImage;
+  links?: ItemLinks;
+  price: Price;
+  total: Price;
+  discountedTotal?: Price;
+  discount?: Price;
+  regularPrice: Price;
+  discounted: boolean;
+  bundleOptions?: { [key: string]: any };
+  selectedOptions?: { [key: string]: any };
+  customizableOptions?: { [key: string]: any };
+  message?: string;
+  recipient?: string;
+  recipientEmail?: string;
+  sender?: string;
+  senderEmail?: string;
+  lowInventory?: boolean;
+  insufficientQuantity?: boolean;
+  onlyXLeftInStock?: number | null;
+  outOfStock?: boolean;
+  notAvailableMessage?: string;
+  stockLevel?: String;
+  discountPercentage?: number;
+  savingsAmount?: Price;
+  productAttributes?: Attribute[];
+  fixedProductTaxes?: FixedProductTax[];
+}
+
+interface ItemError {
+  id: string;
+  text: string;
+}
+
+interface ItemImage {
+  src: string;
+  alt: string;
+}
+
+export interface Price {
+  value: number;
+  currency: string;
+}
+
+interface ItemURL {
+  urlKey: string;
+  categories: string[];
+}
+
+interface ItemLinks {
+  count: number;
+  result: string;
+}
+
+interface AttributeOption {
+  value: string;
+  label: string;
+}
+
+interface Attribute {
+  code: string;
+  value?: string;
+  selected_options?: AttributeOption[];
+}
+
+interface Coupon {
+  code: string;
+}
+```
+
+## Supported slots
+
+The `MiniCart` container supports the following slots:
+
+* ProductList
+* ProductListFooter
+* PreCheckoutSection
+* Thumbnail
+* Heading
+* EmptyCart
+* Footer
+* ProductAttributes
+* CartSummaryFooter
+* CartItem
+* UndoBanner
+* ConfirmDeleteBanner
+* ItemTitle
+* ItemPrice
+* ItemQuantity
+* ItemTotal
+* ItemSku
+* ItemRemoveAction
+
+## Example configuration
+
+The following example demonstrates how to render the `MiniCart` container:
+
+```javascript
+provider.render(MiniCart, {
+  routeProduct: (item) => {
+      return `${item.url.categories.join('/')}/${item.url.urlKey}`;
+  },
+  routeEmptyCartCTA: () => '#empty-cart',
+  routeCart: () => '#cart',
+  routeCheckout: () => '#checkout',
+  showDiscount: true,
+  // showSavings: true,
+  // enableItemRemoval: true,
+  // enableQuantityUpdate: true,
+  // hideHeading: true,
+  // confirmBeforeDelete: true,
+})($miniCart);
+```
+
+---
+
+# OrderSummary container
+
+The `OrderSummary` container displays a detailed summary of the shopper's order. It includes the subtotal, taxes, shipping costs, and total amount due. It optionally applies discounts or coupons.
+
+![OrderSummary container](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/cart/order-summary.png)
+
+*OrderSummary container*
+
+This container supports the Coupon and EstimatedShipping slots.
+
+## Configurations
+
+The `OrderSummary` container provides the following configuration options:
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `children` | `VNode[]` | No | The child elements to be rendered inside the order summary. |
+| `initialData` | `CartModel \| null` | No | The initial data for the order summary. Defaults to null. |
+| `routeCheckout` | `function` | No | Function to generate the URL for the checkout page. |
+| `slots` | `Slot` | No | Slot props for customizing the estimate shipping and coupons display. |
+| `errors` | `boolean` | Yes | Flag to indicate if there are errors in the order summary. |
+| `showTotalSaved` | `boolean` | No | Flag to show the total amount saved in the order summary. |
+| `enableCoupons` | `boolean` | No | Flag to enable or disable the coupons section. |
+| `enableGiftCards` | `boolean` | No | Flag to enable or disable the gift cards section. |
+| `updateLineItems` | `function` | No | Function to update the line items in the order summary. Defaults to returning the same items. |
+
+The `CartModel` object has the following shape:
+
+```ts
+export interface CartModel {
+  id: string;
+  totalQuantity: number;
+  errors?: ItemError[];
+  items: Item[];
+  miniCartMaxItems: Item[];
+  total: {
+    includingTax: Price;
+    excludingTax: Price;
+  };
+  discount?: Price;
+  subtotal: {
+    excludingTax: Price;
+    includingTax: Price;
+    includingDiscountOnly: Price;
+  };
+  appliedTaxes: TotalPriceModifier[];
+  totalTax?: Price;
+  appliedDiscounts: TotalPriceModifier[];
+  shipping?: Price;
+  isVirtual?: boolean;
+  addresses: {
+    shipping?: {
+      countryCode: string;
+      zipCode?: string;
+      regionCode?: string;
+    }[];
+  };
+  isGuestCart?: boolean;
+  hasOutOfStockItems?: boolean;
+  hasFullyOutOfStockItems?: boolean;
+  appliedCoupons?: Coupon[];
+}
+
+interface TotalPriceModifier {
+  amount: Price;
+  label: string;
+  coupon?: Coupon;
+}
+
+interface FixedProductTax {
+  amount: Price;
+  label: string;
+}
+
+export interface Item {
+  taxedPrice: Price;
+  rowTotal: Price;
+  rowTotalIncludingTax: Price;
+  itemType: string;
+  uid: string;
+  url: ItemURL;
+  quantity: number;
+  sku: string;
+  name: string;
+  image: ItemImage;
+  links?: ItemLinks;
+  price: Price;
+  total: Price;
+  discountedTotal?: Price;
+  discount?: Price;
+  regularPrice: Price;
+  discounted: boolean;
+  bundleOptions?: { [key: string]: any };
+  selectedOptions?: { [key: string]: any };
+  customizableOptions?: { [key: string]: any };
+  message?: string;
+  recipient?: string;
+  recipientEmail?: string;
+  sender?: string;
+  senderEmail?: string;
+  lowInventory?: boolean;
+  insufficientQuantity?: boolean;
+  onlyXLeftInStock?: number | null;
+  outOfStock?: boolean;
+  notAvailableMessage?: string;
+  stockLevel?: String;
+  discountPercentage?: number;
+  savingsAmount?: Price;
+  productAttributes?: Attribute[];
+  fixedProductTaxes?: FixedProductTax[];
+}
+
+interface ItemError {
+  id: string;
+  text: string;
+}
+
+interface ItemImage {
+  src: string;
+  alt: string;
+}
+
+export interface Price {
+  value: number;
+  currency: string;
+}
+
+interface ItemURL {
+  urlKey: string;
+  categories: string[];
+}
+
+interface ItemLinks {
+  count: number;
+  result: string;
+}
+
+interface AttributeOption {
+  value: string;
+  label: string;
+}
+
+interface Attribute {
+  code: string;
+  value?: string;
+  selected_options?: AttributeOption[];
+}
+
+interface Coupon {
+  code: string;
+}
+```
+
+## Supported slots
+
+The `OrderSummary` container supports the Coupons and EstimateShipping slots.
+
+## Example configuration
+
+The following example demonstrates how to render the `OrderSummary` container with the `EstimateShipping` and `Coupons` slots:
+
+```js
+provider.render(OrderSummary, {
+  routeCheckout: () => '#checkout',
+  errors: ctx.hasErrors,
+  slots: {
+    EstimateShipping: (ctx) => {
+      const estimateShippingForm = document.createElement('div');
+      provider.render(EstimateShipping, {
+        showDefaultEstimatedShippingCost: true
+      })(estimateShippingForm);
+      ctx.appendChild(estimateShippingForm);
+    },
+    Coupons: (ctx) => {
+      const coupons = document.createElement('div');
+      provider.render(Coupons)(coupons);
+      ctx.appendChild(coupons);
+    },
+  },
+  showTotalSaved: true
+})(orderSummary);
+```
+
+---
+
+# OrderSummaryLine container
+
+The `OrderSummaryLine` container displays a line item in the order summary. The `OrderSummaryLine` container behaves like a wrapper for the `OrderSummaryLine` component. The component ultimately decides how to render the line item, based on the `children` attribute.
+
+![OrderSummaryLine container](https://experienceleague.adobe.com/developer/commerce/storefront/images/dropins/cart/order-summary-line.png)
+
+*OrderSummaryLine container*
+
+## Configurations
+
+The `OrderSummaryLine` container provides the following configuration options:
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `label` | `VNode \| string` | Yes | The label for the order summary line. Accepts a plain string or a VNode for custom rendering. |
+| `price` | `VNode` | Yes | The price for the order summary line. |
+| `classSuffixes` | `string[]` | No | An array of class suffixes to apply to the order summary line. |
+| `labelClassSuffix` | `string` | No | The class suffix to apply to the label. |
+| `testId` | `string` | No | The test ID for the order summary line. |
+| `children` | `VNode[]` | No | The child elements to be rendered inside the order summary. |
+
+## Example configuration
+
+The following example adds the Fixed Product Tax (PDT) line to the order summary:
+
+```js
+updateLineItems: (lineItems) => {
+  const totalFpt = ctx.data.items.reduce((allItemsFpt, item) => {
+    const itemFpt = item.fixedProductTaxes.reduce(
+      (accumulator, fpt) => {
+        accumulator.labels.push(fpt.label);
+        accumulator.total += fpt.amount.value;
+        return accumulator;
+      },
+      {
+        labels: [],
+        total: 0
+      }
+    );
+    allItemsFpt.labels = [...allItemsFpt.labels, ...itemFpt.labels];
+    allItemsFpt.total += itemFpt.total;
+    return allItemsFpt;
+  }, {
+    labels: [],
+    total: 0
+  });
+
+  lineItems.push({
+    key: 'fpt',
+    sortOrder: 350,
+    title: 'Fixed Product Tax',
+    content: OrderSummaryLine({
+      label: "FPT(" + totalFpt.labels.join(',') + ')',
+      price: Price({ amount: totalFpt.total }),
+      classSuffix: 'fpt'
+    })
+  });
+
+  return lineItems;
+};
+```
+
+---
+
+# Cart Dictionary
+
+The **Cart dictionary** contains all user-facing text, labels, and messages displayed by this drop-in. Customize the dictionary to:
+
+- **Localize** the drop-in for different languages and regions
+- **Customize** labels and messages to match your brand voice
+- **Override** default text without modifying source code for the drop-in
+
+Dictionaries use the **i18n (internationalization)** pattern, where each text string is identified by a unique key path.
+
+<strong>Version: 3.2.0</strong>
+
+## How to customize
+
+Override dictionary values during drop-in initialization. The drop-in deep-merges your custom values with the defaults.
+
+```javascript
+
+await initialize({
+  langDefinitions: {
+    en_US: {
+      "Cart": {
+        "Cart": {
+          "heading": "My Custom Title",
+          "editCart": "Custom value"
+        }
+      }
+    }
+  }
+});
+```
+
+You only need to include the keys you want to change. For multi-language support and advanced patterns, see the [Dictionary customization guide](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/dictionaries/).
+
+## Default keys and values
+
+Below are the default English (`en_US`) strings provided by the **Cart** drop-in:
+
+```json title="en_US.json"
+{
+  "Cart": {
+    "Cart": {
+      "heading": "Shopping Cart ({count})",
+      "editCart": "Edit",
+      "viewAll": "View all in cart",
+      "viewMore": "View more"
+    },
+    "CartSummaryTable": {
+      "item": "Item",
+      "price": "Price",
+      "qty": "Qty",
+      "subtotal": "Subtotal",
+      "mobilePrice": "Price",
+      "mobileQty": "Qty",
+      "mobileSubtotal": "Subtotal"
+    },
+    "MiniCart": {
+      "heading": "Shopping Cart ({count})",
+      "subtotal": "Subtotal",
+      "subtotalExcludingTaxes": "Subtotal excluding taxes",
+      "cartLink": "View Cart",
+      "checkoutLink": "Checkout"
+    },
+    "EmptyCart": {
+      "heading": "Your cart is empty",
+      "cta": "Start shopping"
+    },
+    "PriceSummary": {
+      "taxToBeDetermined": "TBD",
+      "checkout": "Checkout",
+      "orderSummary": "Order Summary",
+      "giftCard": {
+        "label": "Gift Card",
+        "applyAction": "Apply",
+        "ariaLabel": "Enter gift card code",
+        "ariaLabelRemove": "Remove gift card",
+        "placeholder": "Enter code",
+        "title": "Gift Card",
+        "errors": {
+          "empty": "Please enter a gift card code."
+        },
+        "appliedGiftCards": {
+          "label": {
+            "singular": "Gift card",
+            "plural": "Gift cards"
+          },
+          "remainingBalance": "Remaining balance"
+        }
+      },
+      "giftOptionsTax": {
+        "printedCard": {
+          "title": "Printed card",
+          "inclTax": "Including taxes",
+          "exclTax": "excluding taxes"
+        },
+        "itemGiftWrapping": {
+          "title": "Item gift wrapping",
+          "inclTax": "Including taxes",
+          "exclTax": "excluding taxes"
+        },
+        "orderGiftWrapping": {
+          "title": "Order gift wrapping",
+          "inclTax": "Including taxes",
+          "exclTax": "excluding taxes"
+        }
+      },
+      "subTotal": {
+        "label": "Subtotal",
+        "withTaxes": "Including taxes",
+        "withoutTaxes": "excluding taxes"
+      },
+      "shipping": {
+        "label": "Shipping",
+        "editZipAction": "Apply",
+        "estimated": "Estimated Shipping",
+        "estimatedDestination": "Estimated Shipping to",
+        "destinationLinkAriaLabel": "Change destination",
+        "zipPlaceholder": "Zip Code",
+        "withTaxes": "Including taxes",
+        "withoutTaxes": "excluding taxes",
+        "alternateField": {
+          "zip": "Estimate using country/zip",
+          "state": "Estimate using country/state"
+        }
+      },
+      "taxes": {
+        "total": "Tax Total",
+        "totalOnly": "Tax",
+        "breakdown": "Taxes",
+        "showBreakdown": "Show Tax Breakdown",
+        "hideBreakdown": "Hide Tax Breakdown",
+        "estimated": "Estimated Tax"
+      },
+      "total": {
+        "estimated": "Estimated Total",
+        "free": "Free",
+        "label": "Total",
+        "withoutTax": "Total excluding taxes",
+        "saved": "Total saved"
+      },
+      "estimatedShippingForm": {
+        "country": {
+          "placeholder": "Country"
+        },
+        "state": {
+          "placeholder": "State"
+        },
+        "zip": {
+          "placeholder": "Zip Code"
+        },
+        "apply": {
+          "label": "Apply"
+        }
+      },
+      "freeShipping": "Free",
+      "coupon": {
+        "applyAction": "Apply",
+        "placeholder": "Enter code",
+        "title": "Discount code",
+        "ariaLabelRemove": "Remove coupon"
+      }
+    },
+    "CartItem": {
+      "discountedPrice": "Discounted Price",
+      "download": "file",
+      "message": "Note",
+      "recipient": "To",
+      "regularPrice": "Regular Price",
+      "sender": "From",
+      "file": "{count} file",
+      "files": "{count} files",
+      "lowInventory": "Only {count} left!",
+      "insufficientQuantity": "Only {inventory} of {count} in stock",
+      "insufficientQuantityGeneral": "Not enough items for sale",
+      "notAvailableMessage": "Requested qty. not available",
+      "discountPercentage": "{discount}% off",
+      "savingsAmount": "Savings",
+      "includingTax": "Incl. tax",
+      "excludingTax": "Excl. tax",
+      "itemBeingRemoved": "\"{product}\" is being removed",
+      "itemRemoved": "\"{product}\" was removed",
+      "itemRemovedDescription": "Changed your mind? You can undo this action.",
+      "undoAction": "Undo",
+      "dismissAction": "Dismiss",
+      "confirmDeleteHeading": "Remove \"{product}\" from your cart?",
+      "confirmAction": "Remove",
+      "cancelAction": "Cancel"
+    },
+    "EstimateShipping": {
+      "label": "Shipping",
+      "editZipAction": "Apply",
+      "estimated": "Estimated Shipping",
+      "estimatedDestination": "Estimated Shipping to",
+      "destinationLinkAriaLabel": "{destination}, Change destination",
+      "zipPlaceholder": "Zip Code",
+      "withTaxes": "Including taxes",
+      "withoutTaxes": "excluding taxes",
+      "alternateField": {
+        "zip": "Estimate using country/zip",
+        "state": "Estimate using country/state"
+      }
+    },
+    "OutOfStockMessage": {
+      "heading": "Your cart contains items with limited stock",
+      "message": "Please adjust quantities to continue",
+      "alert": "Out of stock",
+      "action": "Remove all out of stock items from cart"
+    },
+    "GiftOptions": {
+      "formText": {
+        "requiredFieldError": "This field is required"
+      },
+      "modal": {
+        "defaultTitle": "Gift wrapping for Cart",
+        "title": "Gift wrapping for",
+        "wrappingText": "Wrapping choice",
+        "wrappingSubText": "",
+        "modalConfirmButton": "Apply",
+        "modalCancelButton": "Cancel",
+        "ariaLabelModal": "Gift modal",
+        "ariaLabelModalOpen": "open",
+        "ariaLabelModalClose": "close",
+        "ariaLabelWrapping": "Wrapping options"
+      },
+      "order": {
+        "customize": "Customize",
+        "accordionHeading": "Gift options",
+        "giftReceiptIncluded": {
+          "title": "Use gift receipt",
+          "subtitle": "The receipt and order invoice will not show the price."
+        },
+        "printedCardIncluded": {
+          "title": "Include printed card",
+          "subtitle": ""
+        },
+        "giftOptionsWrap": {
+          "title": "Gift wrap this order",
+          "subtitle": "Wrapping option:"
+        },
+        "formContent": {
+          "formTitle": "Add a message to the order (optional)",
+          "formTo": "To",
+          "formFrom": "From",
+          "giftMessageTitle": "Gift message",
+          "formToPlaceholder": "Recipient's name",
+          "formFromPlaceholder": "Sender's name",
+          "formMessagePlaceholder": "Gift message"
+        },
+        "readOnlyFormView": {
+          "title": "Selected gift order options",
+          "giftWrap": "Gift wrap this order",
+          "giftWrapOptions": "Wrapping option:",
+          "giftReceipt": "Use gift receipt",
+          "giftReceiptText": "The receipt and order invoice will not show the price.",
+          "printCard": "Use printed card",
+          "printCardText": "",
+          "formTitle": "Your gift message",
+          "formTo": "To",
+          "formFrom": "From",
+          "formMessageTitle": "Gift message"
+        }
+      },
+      "product": {
+        "customize": "Customize",
+        "accordionHeading": "Gift options",
+        "giftReceiptIncluded": {
+          "title": "Use gift receipt",
+          "subtitle": "The receipt and order invoice will not show the price."
+        },
+        "printedCardIncluded": {
+          "title": "Include printed card",
+          "subtitle": ""
+        },
+        "giftOptionsWrap": {
+          "title": "Gift wrap this item",
+          "subtitle": "Wrapping option:"
+        },
+        "formContent": {
+          "formTitle": "Add a message to the item (optional)",
+          "formTo": "To",
+          "formFrom": "From",
+          "giftMessageTitle": "Gift message",
+          "formToPlaceholder": "Recipient's name",
+          "formFromPlaceholder": "Sender's name",
+          "formMessagePlaceholder": "Gift message"
+        },
+        "readOnlyFormView": {
+          "title": "This item is a gift",
+          "wrapping": "Wrapping:",
+          "recipient": "To:",
+          "sender": "From:",
+          "message": "Message:"
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
+# Cart Data & Events
+
+The **Cart** drop-in uses the [event bus](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/events/) to emit and listen to events for communication between drop-ins and external integrations.
+
+<strong>Version: 3.2.0</strong>
+
+## Events reference
+
+{/* EVENTS_TABLE_START */}
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [cart/initialized](#cartinitialized-emits) | Emits | Emitted when the component completes initialization. |
+| [cart/product/added](#cartproductadded-emits) | Emits | Emitted when an item is added. |
+| [cart/product/removed](#cartproductremoved-emits) | Emits | Emitted when an item is removed. |
+| [cart/product/updated](#cartproductupdated-emits) | Emits | Emitted when the component state is updated. |
+| [checkout/initialized](#checkoutinitialized-listens) | Listens | Fired by Checkout (`checkout`) when the component completes initialization. |
+| [checkout/updated](#checkoutupdated-listens) | Listens | Fired by Checkout (`checkout`) when the component state is updated. |
+| [requisitionList/alert](#requisitionlistalert-listens) | Listens | Fired by Requisition List (`requisitionList`) when an alert or notification is triggered. |
+| [cart/data](#cartdata-emits-and-listens) | Emits and listens | Triggered when data is available or changes. |
+| [cart/merged](#cartmerged-emits-and-listens) | Emits and listens | Triggered when data is merged. |
+| [cart/reset](#cartreset-emits-and-listens) | Emits and listens | Triggered when the component state is reset. |
+| [cart/updated](#cartupdated-emits-and-listens) | Emits and listens | Triggered when the component state is updated. |
+| [shipping/estimate](#shippingestimate-emits-and-listens) | Emits and listens | Triggered when an estimate is calculated. |
+
+{/* EVENTS_TABLE_END */}
+
+## Event details
+
+The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
+
+### `cart/data` (emits and listens)
+
+Emitted when cart data is available or changes. This event is triggered during cart initialization and updates to provide the current cart state.
+
+#### Event payload
+
+```typescript
+CartModel | null
+```
+
+See [`CartModel`](#cartmodel) for full type definition.
+
+#### Example
+
+```js
+
+events.on('cart/data', (payload) => {
+  console.log('cart/data event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `cart/initialized` (emits)
+
+Emitted when the component completes initialization.
+
+#### Event payload
+
+```typescript
+CartModel | null
+```
+
+See [`CartModel`](#cartmodel) for full type definition.
+
+#### Example
+
+```js
+
+events.on('cart/initialized', (payload) => {
+  console.log('cart/initialized event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `cart/merged` (emits and listens)
+
+Emitted when a guest cart is merged with a customer cart after login. This typically happens when an unauthenticated user adds items to their cart, then signs in, and their guest cart items are combined with any existing items in their customer cart.
+
+#### Event payload
+
+```typescript
+{
+  oldCartItems: Item[] | null;
+  newCart: CartModel | null;
+}
+```
+
+See [`Item`](#item), [`CartModel`](#cartmodel) for full type definitions.
+
+#### Example
+
+```js
+
+events.on('cart/merged', (payload) => {
+  console.log('cart/merged event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `cart/product/added` (emits)
+
+Emitted when new products are added to the cart. This event fires for genuinely new items, not quantity updates of existing items.
+
+#### Event payload
+
+```typescript
+Item[] | null
+```
+
+See [`Item`](#item) for full type definition.
+
+#### Example
+
+```js
+
+events.on('cart/product/added', (payload) => {
+  console.log('cart/product/added event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `cart/product/removed` (emits)
+
+Emitted when an item is removed.
+
+#### Event payload
+
+#### Example
+
+```js
+
+events.on('cart/product/removed', (payload) => {
+  console.log('cart/product/removed event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `cart/product/updated` (emits)
+
+Emitted when the quantity of existing cart items is increased. This event fires when adding more of a product that's already in the cart, as opposed to adding a brand new product.
+
+#### Event payload
+
+```typescript
+Item[] | null
+```
+
+See [`Item`](#item) for full type definition.
+
+#### Example
+
+```js
+
+events.on('cart/product/updated', (payload) => {
+  console.log('cart/product/updated event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `cart/reset` (emits and listens)
+
+Triggered when the component state is reset.
+
+#### Event payload
+
+#### Example
+
+```js
+
+events.on('cart/reset', (payload) => {
+  console.log('cart/reset event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `cart/updated` (emits and listens)
+
+Triggered when the component state is updated.
+
+#### Event payload
+
+```typescript
+CartModel | null
+```
+
+See [`CartModel`](#cartmodel) for full type definition.
+
+#### Example
+
+```js
+
+events.on('cart/updated', (payload) => {
+  console.log('cart/updated event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `checkout/initialized` (listens)
+
+Fired by Checkout (`checkout`) when the component completes initialization.
+
+#### Event payload
+
+```typescript
+Cart | NegotiableQuote | null
+```
+
+See [`Cart`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/events/#cart), [`NegotiableQuote`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/events/#negotiablequote) for full type definitions.
+
+#### Example
+
+```js
+
+events.on('checkout/initialized', (payload) => {
+  console.log('checkout/initialized event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `checkout/updated` (listens)
+
+Fired by Checkout (`checkout`) when the component state is updated.
+
+#### Event payload
+
+```typescript
+Cart | NegotiableQuote | null
+```
+
+See [`Cart`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/events/#cart), [`NegotiableQuote`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/checkout/events/#negotiablequote) for full type definitions.
+
+#### Example
+
+```js
+
+events.on('checkout/updated', (payload) => {
+  console.log('checkout/updated event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `requisitionList/alert` (listens)
+
+Fired by Requisition List (`requisitionList`) when an alert or notification is triggered.
+
+#### Event payload
+
+#### Example
+
+```js
+
+events.on('requisitionList/alert', (payload) => {
+  console.log('requisitionList/alert event received:', payload);
+  // Add your custom logic here
+});
+```
+
+### `shipping/estimate` (emits and listens)
+
+Emitted when shipping cost estimates are calculated for a given address. This event provides both the address used for estimation and the resulting shipping method with its cost.
+
+#### Event payload
+
+```typescript
+{
+  address: PartialAddress;
+  shippingMethod: ShippingMethod | null;
+}
+```
+
+See [`PartialAddress`](#partialaddress), [`ShippingMethod`](#shippingmethod) for full type definitions.
+
+#### Example
+
+```js
+
+events.on('shipping/estimate', (payload) => {
+  console.log('shipping/estimate event received:', payload);
+  // Add your custom logic here
+});
+```
+
+## Data Models
+
+The following data models are used in event payloads for this drop-in.
+
+### CartModel
+
+The `CartModel` represents the complete state of a shopping cart, including items, pricing, discounts, shipping estimates, and gift options.
+
+Used in: [`cart/data`](#cartdata-emits-and-listens), [`cart/initialized`](#cartinitialized-emits), [`cart/merged`](#cartmerged-emits-and-listens), [`cart/updated`](#cartupdated-emits-and-listens).
+
+```ts
+interface CartModel {
+  totalGiftOptions: {
+    giftWrappingForItems: Price;
+    giftWrappingForItemsInclTax: Price;
+    giftWrappingForOrder: Price;
+    giftWrappingForOrderInclTax: Price;
+    printedCard: Price;
+    printedCardInclTax: Price;
+  };
+  cartGiftWrapping: {
+    uid: string;
+    design: string;
+    selected: boolean;
+    image: WrappingImage;
+    price: Price;
+  }[];
+  giftReceiptIncluded: boolean;
+  printedCardIncluded: boolean;
+  giftMessage: {
+    recipientName: string;
+    senderName: string;
+    message: string;
+  };
+  appliedGiftCards: AppliedGiftCardProps[];
+  id: string;
+  totalQuantity: number;
+  totalUniqueItems: number;
+  errors?: ItemError[];
+  items: Item[];
+  miniCartMaxItems: Item[];
+  total: {
+    includingTax: Price;
+    excludingTax: Price;
+  };
+  discount?: Price;
+  subtotal: {
+    excludingTax: Price;
+    includingTax: Price;
+    includingDiscountOnly: Price;
+  };
+  appliedTaxes: TotalPriceModifier[];
+  totalTax?: Price;
+  appliedDiscounts: TotalPriceModifier[];
+  shipping?: Price;
+  isVirtual?: boolean;
+  addresses: {
+    shipping?: {
+      countryCode: string;
+      zipCode?: string;
+      regionCode?: string;
+    }[];
+  };
+  isGuestCart?: boolean;
+  hasOutOfStockItems?: boolean;
+  hasFullyOutOfStockItems?: boolean;
+  appliedCoupons?: Coupon[];
+}
+```
+
+### Item
+
+The `Item` interface represents a single product in the cart, including product details, pricing, quantity, customization options, and inventory status.
+
+Used in: [`cart/merged`](#cartmerged-emits-and-listens), [`cart/product/added`](#cartproductadded-emits), [`cart/product/updated`](#cartproductupdated-emits).
+
+```ts
+interface Item {
+  giftWrappingAvailable: boolean;
+  giftWrappingPrice: {
+    currency: string;
+    value: number;
+  };
+  productGiftWrapping: {
+    uid: string;
+    design: string;
+    selected: boolean;
+    image: WrappingImage;
+    price: Price;
+  }[];
+  giftMessage: {
+    recipientName: string;
+    senderName: string;
+    message: string;
+  };
+  priceTiers: PriceTier[];
+  giftMessageAvailable: boolean | null;
+  taxedPrice: Price;
+  rowTotal: Price;
+  rowTotalIncludingTax: Price;
+  itemType: string;
+  uid: string;
+  url: ItemURL;
+  canonicalUrl: string;
+  categories: string[];
+  quantity: number;
+  sku: string;
+  topLevelSku: string;
+  name: string;
+  image: ItemImage;
+  links?: ItemLinks;
+  price: Price;
+  total: Price;
+  discountedTotal?: Price;
+  discount?: Price;
+  regularPrice: Price;
+  discounted: boolean;
+  bundleOptions?: { [key: string]: any };
+  bundleOptionsUIDs?: string[];
+  selectedOptions?: { [key: string]: any };
+  selectedOptionsUIDs?: { [key: string]: any };
+  customizableOptions?: { [key: string]: any };
+  message?: string;
+  recipient?: string;
+  recipientEmail?: string;
+  sender?: string;
+  senderEmail?: string;
+  lowInventory?: boolean;
+  insufficientQuantity?: boolean;
+  onlyXLeftInStock?: number | null;
+  outOfStock?: boolean;
+  notAvailableMessage?: string;
+  stockLevel?: String;
+  discountPercentage?: number;
+  savingsAmount?: Price;
+  productAttributes?: Attribute[];
+  fixedProductTaxes?: FixedProductTax[];
+}
+```
+
+### PartialAddress
+
+The `PartialAddress` interface represents a minimal address used for shipping estimates, containing country, postal code, and region information.
+
+Used in: [`shipping/estimate`](#shippingestimate-emits-and-listens).
+
+```ts
+interface PartialAddress {
+  countryCode: string;
+  postCode?: string;
+  region?: string;
+  regionCode?: string;
+  regionId?: number;
+}
+```
+
+### ShippingMethod
+
+The `ShippingMethod` interface represents a shipping option with carrier and method codes, along with pricing information.
+
+Used in: [`shipping/estimate`](#shippingestimate-emits-and-listens).
+
+```ts
+interface ShippingMethod {
+  carrierCode: string;
+  methodCode: string;
+  amountExclTax?: Price;
+  amountInclTax?: Price;
+}
+```
+
+---
+
+# Cart Functions
+
+The Cart drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
+
+<strong>Version: 3.2.0</strong>
+
+| Function | Description |
+| --- | --- |
+| [`addProductsToCart`](#addproductstocart) | Adds products to a cart. |
+| [`applyCouponsToCart`](#applycouponstocart) | Applies or replaces one or more coupons to the cart. |
+| [`applyGiftCardToCart`](#applygiftcardtocart) | Apply a gift card to the current shopping cart. |
+| [`createGuestCart`](#createguestcart) | Creates a new empty cart for a guest user. |
+| [`getCartData`](#getcartdata) | Is mainly used internally by the `initializeCart`() and `refreshCart`() functions. |
+| [`getCartDataFromCache`](#getcartdatafromcache) | Returns the current cart data from local storage without making an API call. |
+| [`getCountries`](#getcountries) | API function for the drop-in. |
+| [`getCustomerCartPayload`](#getcustomercartpayload) | Fetches the authenticated customer's cart, merging with any existing guest cart if needed. |
+| [`getEstimatedTotals`](#getestimatedtotals) | Returns estimated totals for cart based on an address. |
+| [`getEstimateShipping`](#getestimateshipping) | Returns the first available shipping method and its estimated cost, based on the provided address. |
+| [`getGuestCartPayload`](#getguestcartpayload) | Fetches the current guest cart data using the cart ID stored in state. |
+| [`getRegions`](#getregions) | API function for the drop-in. |
+| [`getStoreConfig`](#getstoreconfig) | Returns information about a store's configuration. |
+| [`initializeCart`](#initializecart) | Initializes a guest or customer cart. |
+| [`publishShoppingCartViewEvent`](#publishshoppingcartviewevent) | Publishes a shopping cart view event to the ACDL. |
+| [`refreshCart`](#refreshcart) | Refreshes the cart data. |
+| [`removeGiftCardFromCart`](#removegiftcardfromcart) | This function removes a single gift card from the cart. |
+| [`resetCart`](#resetcart) | This function resets the cart drop-in. |
+| [`setGiftOptionsOnCart`](#setgiftoptionsoncart) | `setGiftOptionsOnCart` is a function that sets gift options on the cart. |
+| [`updateProductsFromCart`](#updateproductsfromcart) | Updates cart items by either changing the quantity or removing and adding an item in one step. |
+
+## addProductsToCart
+
+The `addProductsToCart` function adds products to a cart. You must supply a `sku` and `quantity` for each product. The other parameters are specified for complex product types. The function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/add-products/ mutation.
+
+```ts
+const addProductsToCart = async (
+  items: { sku: string; parentSku?: string; quantity: number; optionsUIDs?: string[]; enteredOptions?: { uid: string; value: string }[]; customFields?: Record<string, any>; }[]
+): Promise<CartModel | null>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `sku` | `string` | Yes | The product identifier (SKU) to add to the cart. For configurable products (like a shirt available in multiple colors and sizes), use the child product SKU that represents the specific variant selected by the customer (e.g., \`MS09-M-Blue\` for a medium blue shirt). |
+| `parentSku` | `string` | No | For configurable products, this is the SKU of the parent (base) product. For example, if adding a specific variant like \`MS09-M-Blue\` (child SKU), the \`parentSku\` would be \`MS09\` (the base configurable product). This helps Commerce track the relationship between the variant and its parent product. |
+| `quantity` | `number` | Yes | The number of items to add to the cart. For example, \`1\` to add a single item, or \`3\` to add three units of the product. This value must be a positive number. |
+| `optionsUIDs` | `string[]` | No | An array of option UIDs for configurable products. These are the UIDs of the selected product options (such as color or size) that define which product variant the customer wants. For example, if a customer selects \*\*Medium\*\* and \*\*Blue\*\* for a configurable shirt, you would include the UIDs for those specific options. Use the product query to retrieve available option UIDs for a product. |
+| `enteredOptions` | `{ uid: string; value: string }[]` | No | An array of custom options that allow text input for customizable products. Each object contains a \`uid\` (the unique identifier for the custom option field from the product data) and a \`value\` (the text the customer entered). For example, if a product offers monogram personalization, you would provide the field's UID and the customer's text like \`\{ uid: 'Y3VzdG9tLW9wdGlvbi8x', value: 'ABC' \}\`. |
+| `customFields` | `Record<string, any>` | No | An optional object for passing additional custom data or attributes to associate with the cart item. This can include any key-value pairs needed for your implementation, such as gift messages, special handling instructions, or custom metadata. The structure and usage of this field depends on your Commerce backend configuration and any custom extensions you have installed. |
+
+### Events
+
+Emits the [`cart/updated`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/events/#cartupdated-emits-and-listens) and [`cart/data`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/events/#cartdata-emits-and-listens) events with the [`CartModel`](#cartmodel) as the data payload. Additionally, emits `cart/product/added` for new items and `cart/product/updated` for items with increased quantities. Also publishes add-to-cart or remove-from-cart events to the Adobe Client Data Layer (ACDL).
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+## applyCouponsToCart
+
+A function that applies or replaces one or more coupons to the cart. The function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/apply-coupon/ mutation.
+
+```ts
+const applyCouponsToCart = async (
+  couponCodes: string[],
+  type: ApplyCouponsStrategy
+): Promise<CartModel | null>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `couponCodes` | `string[]` | Yes | An array of coupon codes to apply to the cart. |
+| `type` | `ApplyCouponsStrategy` | Yes | The strategy for applying coupons. See \[\`ApplyCouponsStrategy\`\](#applycouponsstrategy). |
+
+### Events
+
+Emits the [`cart/updated`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/events/#cartupdated-emits-and-listens) and [`cart/data`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/events/#cartdata-emits-and-listens) events with the updated cart information after applying the coupons.
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+## applyGiftCardToCart
+
+The `applyGiftCardToCart` function is used to apply a gift card to the current shopping cart. It takes the gift card code as an argument and updates the cart with the applied gift card. The function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/apply-giftcard/ mutation.
+
+```ts
+const applyGiftCardToCart = async (
+  giftCardCode: string
+): Promise<CartModel | null>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `giftCardCode` | `string` | Yes | The code assigned to a gift card. |
+
+### Events
+
+Emits the [`cart/updated`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/events/#cartupdated-emits-and-listens) and [`cart/data`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/events/#cartdata-emits-and-listens) events. Also publishes add-to-cart or remove-from-cart events to the Adobe Client Data Layer (ACDL).
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+## createGuestCart
+
+The `createGuestCart` function creates a new empty cart for a guest user. This is typically used internally by the cart initialization process.
+
+```ts
+const createGuestCart = async (): Promise<any>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns the cart ID for the newly created guest cart: `cartId: string | null`
+
+## getCartData
+
+The `getCartData` function is mainly used internally by the `initializeCart()` and `refreshCart()` functions. If you need detailed information about the current user's shopping cart, a more optimal approach is to listen for `c`art/dat`a` or `c`art/update`d` events so that you do not need to make another network call.
+
+```ts
+const getCartData = async (): Promise<CartModel | null>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+## getCountries
+
+```ts
+const getCountries = async (): Promise<[CountryData]>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `[CountryData]`.
+
+## getEstimatedTotals
+
+A function that returns estimated totals for cart based on an address. It takes an `address` parameter. The function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/estimate-totals/ mutation.
+
+```ts
+const getEstimatedTotals = async (
+  address: EstimateAddressShippingInput
+): Promise<CartModel | null>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `address` | `EstimateAddressShippingInput` | Yes | The shipping address used to calculate estimated cart totals, taxes, and shipping costs. See \[\`EstimateAddressShippingInput\`\](#estimateaddressshippinginput). |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+## getEstimateShipping
+
+The `getEstimateShipping` function returns the first available shipping method and its estimated cost, based on the provided address. The function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/estimate-shipping-methods/ mutation. Note: This function returns raw `GraphQL` data. For a transformed `ShippingMethod` object, listen to the [`shipping/estimate`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/events/#shippingestimate-emits-and-listens) event instead.
+
+```ts
+const getEstimateShipping = async (
+  address: EstimateAddressInput
+): Promise<any | null>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `address` | `EstimateAddressInput` | Yes | The address criteria used to determine available shipping methods. See \[\`EstimateAddressInput\`\](#estimateaddressinput). |
+
+### Events
+
+Emits the [`shipping/estimate`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/events/#shippingestimate-emits-and-listens) event, which contains the transformed `ShippingMethod` data along with address information.
+
+### Returns
+
+Returns a [`RawShippingMethodGraphQL`](#rawshippingmethodgraphql) object with snake_case properties from the GraphQL response, or null if no valid shipping method is available.
+
+## getRegions
+
+```ts
+const getRegions = async (
+  countryId: string
+): Promise<Array<{ code: string; name: string }>>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `countryId` | `string` | Yes | See function signature above |
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `Array<{ code: string; name: string }>`.
+
+## getStoreConfig
+
+The `getStoreConfig` function returns information about a store's configuration. The function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/store-config/ query.
+
+```ts
+const getStoreConfig = async (): Promise<StoreConfigModel | null>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`StoreConfigModel`](#storeconfigmodel) or `null`.
+
+## initializeCart
+
+The `initializeCart` function initializes a guest or customer cart. This function is automatically called during the initialize phase of a drop-in's lifecycle. You do not need to call this manually. The function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/merge/ mutation.
+
+```ts
+const initializeCart = async (): Promise<CartModel | null>
+```
+
+### Events
+
+Emits the [`cart/initialized`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/events/#cartinitialized-emits), [`cart/data`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/events/#cartdata-emits-and-listens), and [`cart/merged`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/events/#cartmerged-emits-and-listens) events. The event payload contains data about the address and shipping method.
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+## publishShoppingCartViewEvent
+
+Publishes a shopping cart view event to the ACDL. This function sets the shopping cart context and triggers a `SHOPPING_CART_VIEW` event on the Adobe Client Data Layer, typically used when a cart page loads.
+
+```ts
+const publishShoppingCartViewEvent = async (): any
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+Publishes the `SHOPPING_CART_VIEW` event to the Adobe Client Data Layer (ACDL) with the current cart context.
+
+### Returns
+
+Returns `void`.
+
+## refreshCart
+
+The `refreshCart` function refreshes the cart data.
+
+```ts
+const refreshCart = async (): Promise<CartModel | null>
+```
+
+### Events
+
+Emits the [`cart/data`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/events/#cartdata-emits-and-listens) event with the updated cart information.
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+## removeGiftCardFromCart
+
+This function removes a single gift card from the cart. It function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/remove-giftcard/ mutation.
+
+```ts
+const removeGiftCardFromCart = async (
+  giftCardCode: string
+): Promise<CartModel | null>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `giftCardCode` | `string` | Yes | Defines the gift card code to remove. |
+
+### Events
+
+Emits the [`cart/updated`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/events/#cartupdated-emits-and-listens) and [`cart/data`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/events/#cartdata-emits-and-listens) events.
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+## resetCart
+
+This function resets the cart drop-in. As a result, the cart ID is set to null and the authenticated status is set to false.
+
+```ts
+const resetCart = async (): Promise<CartModel | null>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+## setGiftOptionsOnCart
+
+https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-gift-options/ is a function that sets gift options on the cart. It takes a `giftOptions` parameter.
+
+```ts
+const setGiftOptionsOnCart = async (
+  giftForm: GiftFormDataType
+): Promise<CartModel | null>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `giftForm` | `GiftFormDataType` | Yes | Defines the gift options to set. |
+
+### Events
+
+Emits the [`cart/updated`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/events/#cartupdated-emits-and-listens) and [`cart/data`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/events/#cartdata-emits-and-listens) events.
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+## updateProductsFromCart
+
+The `updateProductsFromCart` function updates cart items by either changing the quantity or removing and adding an item in one step. When passing a specified quantity, the function replaces the current quantity. Setting the quantity to 0 removes an item from the cart. The function calls the https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/update-items/ mutation.
+
+When an `optionsUIDs` array is sent along with the cart item’s UID and quantity, the function adds the item with the specified options. It removes any pre-existing item with the same UID that lacks the newly provided `optionsUIDs`. In this process, the function invokes first the https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/add-products/, and later the https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/update-items/ mutations.
+
+```ts
+const updateProductsFromCart = async (
+  items: UpdateProductsFromCart
+): Promise<CartModel | null>
+```
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `items` | `UpdateProductsFromCart` | Yes | An input object that defines products to be updated. |
+
+### Events
+
+Emits the [`cart/updated`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/events/#cartupdated-emits-and-listens) and [`cart/data`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/events/#cartdata-emits-and-listens) events. Additionally, emits `cart/product/updated` event with the affected items when their quantities are changed. Also publishes add-to-cart or remove-from-cart events to the Adobe Client Data Layer (ACDL).
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+## getCartDataFromCache
+
+The `getCartDataFromCache` function returns the current cart data from local storage without making a network request. This is useful when you need a synchronous read of the last-known cart state.
+
+```ts
+const getCartDataFromCache = (): CartModel | null
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null` if no cart data is cached.
+
+## getCustomerCartPayload
+
+The `getCustomerCartPayload` function fetches the authenticated customer's cart from the backend. If a guest cart exists in state, it is merged into the customer cart before the result is returned. Used internally by `initializeCart`.
+
+```ts
+const getCustomerCartPayload = async (): Promise<CartModel | null>
+```
+
+### Events
+
+Emits the [`cart/merged`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/events/#cartmerged-emits-and-listens) event when a guest cart is merged into the customer cart.
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+## getGuestCartPayload
+
+The `getGuestCartPayload` function fetches the current guest cart data using the cart ID stored in the drop-in state. Returns `null` if guest carts are disabled or if no cart ID is present. Used internally by `initializeCart`.
+
+```ts
+const getGuestCartPayload = async (): Promise<CartModel | null>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+## Data Models
+
+The following data models are used by functions in this drop-in.
+
+### CartModel
+
+The `CartModel` object is returned by the following functions: [`addProductsToCart`](#addproductstocart), [`applyCouponsToCart`](#applycouponstocart), [`applyGiftCardToCart`](#applygiftcardtocart), [`getCartData`](#getcartdata), [`getEstimatedTotals`](#getestimatedtotals), [`initializeCart`](#initializecart), [`refreshCart`](#refreshcart), [`removeGiftCardFromCart`](#removegiftcardfromcart), [`resetCart`](#resetcart), [`setGiftOptionsOnCart`](#setgiftoptionsoncart), [`updateProductsFromCart`](#updateproductsfromcart).
+
+```ts
+interface CartModel {
+  totalGiftOptions: {
+    giftWrappingForItems: Price;
+    giftWrappingForItemsInclTax: Price;
+    giftWrappingForOrder: Price;
+    giftWrappingForOrderInclTax: Price;
+    printedCard: Price;
+    printedCardInclTax: Price;
+  };
+  cartGiftWrapping: {
+    uid: string;
+    design: string;
+    selected: boolean;
+    image: WrappingImage;
+    price: Price;
+  }[];
+  giftReceiptIncluded: boolean;
+  printedCardIncluded: boolean;
+  giftMessage: {
+    recipientName: string;
+    senderName: string;
+    message: string;
+  };
+  appliedGiftCards: AppliedGiftCardProps[];
+  id: string;
+  totalQuantity: number;
+  totalUniqueItems: number;
+  errors?: ItemError[];
+  items: Item[];
+  miniCartMaxItems: Item[];
+  total: {
+    includingTax: Price;
+    excludingTax: Price;
+  };
+  discount?: Price;
+  subtotal: {
+    excludingTax: Price;
+    includingTax: Price;
+    includingDiscountOnly: Price;
+  };
+  appliedTaxes: TotalPriceModifier[];
+  totalTax?: Price;
+  appliedDiscounts: TotalPriceModifier[];
+  shipping?: Price;
+  isVirtual?: boolean;
+  addresses: {
+    shipping?: {
+      countryCode: string;
+      zipCode?: string;
+      regionCode?: string;
+    }[];
+  };
+  isGuestCart?: boolean;
+  hasOutOfStockItems?: boolean;
+  hasFullyOutOfStockItems?: boolean;
+  appliedCoupons?: Coupon[];
+}
+```
+
+### StoreConfigModel
+
+The `StoreConfigModel` object is returned by the following functions: [`getStoreConfig`](#getstoreconfig).
+
+```ts
+interface StoreConfigModel {
+  displayMiniCart: boolean;
+  miniCartMaxItemsDisplay: number;
+  cartExpiresInDays: number;
+  cartSummaryDisplayTotal: number;
+  cartSummaryMaxItems: number;
+  defaultCountry: string;
+  categoryFixedProductTaxDisplaySetting: string;
+  productFixedProductTaxDisplaySetting: string;
+  salesFixedProductTaxDisplaySetting: string;
+  shoppingCartDisplaySetting: {
+    fullSummary: boolean;
+    grandTotal: boolean;
+    price: number | string;
+    shipping: number | string;
+    subtotal: number | string;
+    taxGiftWrapping: number | string;
+    zeroTax: boolean;
+  };
+  useConfigurableParentThumbnail: boolean;
+  allowGiftWrappingOnOrder: boolean | null;
+  allowGiftWrappingOnOrderItems: boolean | null;
+  allowGiftMessageOnOrder: boolean | null;
+  allowGiftMessageOnOrderItems: boolean | null;
+  allowGiftReceipt: boolean;
+  allowPrintedCard: boolean;
+  printedCardPrice: Price;
+  cartGiftWrapping: string;
+  cartPrintedCard: string;
+}
+```
+
+### RawShippingMethodGraphQL
+
+The raw GraphQL response structure with snake_case properties returned by the estimateShippingMethods mutation.
+
+Returned by: [`getEstimateShipping`](#getestimateshipping).
+
+```ts
+interface RawShippingMethodGraphQL {
+  amount: {
+    currency: string;
+    value: number;
+  };
+  carrier_code: string;
+  method_code: string;
+  error_message?: string;
+  price_excl_tax: {
+    currency: string;
+    value: number;
+  };
+  price_incl_tax: {
+    currency: string;
+    value: number;
+  };
+}
+```
+
+### ApplyCouponsStrategy
+
+Strategy for how coupons should be applied to the cart:
+
+- `APPEND`: Adds the specified coupons to any existing coupons already applied to the cart
+- `REPLACE`: Removes all existing coupons and applies only the specified coupons
+
+Used by: [`applyCouponsToCart`](#applycouponstocart).
+
+```ts
+enum ApplyCouponsStrategy {
+    APPEND = "APPEND",
+    REPLACE = "REPLACE"
+}
+```
+
+### EstimateAddressInput
+
+Defines the address criteria for estimating shipping methods.
+
+Used by: [`getEstimateShipping`](#getestimateshipping).
+
+```ts
+interface EstimateAddressInput {
+    countryCode: string;
+    postcode?: string;
+    region?: {
+        region?: string;
+        code?: string;
+        id?: number;
+    };
+}
+```
+
+### EstimateAddressShippingInput
+
+Defines the shipping address for calculating cart totals.
+
+Used by: [`getEstimatedTotals`](#getestimatedtotals).
+
+```ts
+interface EstimateAddressShippingInput {
+    countryCode: string;
+    postcode?: string;
+    region?: {
+        region?: string;
+        id?: number;
+    };
+    shipping_method?: {
+        carrier_code?: string;
+        method_code?: string;
+    };
+}
+```
+
+{/* This documentation is auto-generated from the drop-in source repository: REPO_URL */}
+
+---
+
+# Cart overview
+
+The cart drop-in component provides a variety of fully editable controls to help you view, update, and merge the products in your cart and mini-cart, including image thumbnails, pricing, descriptions, quantities, estimated shipping and taxes, order summary, merging guest and authenticated carts, and more.
+
+## Supported Commerce features
+
+The following table provides an overview of the Adobe Commerce features that the cart supports:
+
+| Feature                                                          | Status                                     |
+| ---------------------------------------------------------------- | ------------------------------------------ |
+| Adobe Experience Platform Audiences                              | Roadmap |
+| All product types                                                | Supported   |
+| Apply coupons                                                    | Supported   |
+| Apply gift cards                                                 | Supported   |
+| Apply gift options                                               | Supported   |
+| Cart API extensibility                                           | Supported   |
+| Cart layout templates                                            | Supported   |
+| Cart rules                                                       | Supported   |
+| Cart with 100+ products                                          | Supported   |
+| Commerce segments                                                | Supported   |
+| Customer cart                                                    | Supported   |
+| Edit product configuration in cart                               | Supported   |
+| Estimate tax/shipping                                            | Supported   |
+| Guest cart                                                       | Supported   |
+| Low product stock alert                                          | Supported   |
+| Mini-cart                                                        | Supported   |
+| No-code UI configurations                                        | Supported   |
+| Out of stock/insufficient quantity products                      | Supported   |
+| Product line discounts (catalog rule, special price, tier price) | Supported   |
+| Save to wishlist                                                 | Supported   |
+| Slots for extensibility                                          | Supported   |
+| Taxes: Fixed                                                     | Roadmap |
+| Taxes: Sales, VAT                                                | Supported   |
+| Undo remove product from cart                                    | Supported |
+
+## Section topics
+
+The topics in this section will help you understand how to customize and use the cart effectively within your storefront.
+
+### Quick Start
+
+Provides quick reference information and a getting started guide for the Cart drop-in. This topic covers package details, import paths, and basic usage examples to help you integrate shopping cart functionality into your site. Visit the [Cart quick start](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/quick-start/) page to get started.
+
+### Styles
+
+Describes how to customize the appearance of the cart using CSS. We provide guidelines and examples for applying styles to various components within the drop-in. This customization allows brands to align the drop-in component's look and feel with their overall design aesthetic, enhancing brand consistency across the platform. Visit the [cart styles](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/styles/) page to learn more.
+
+### Containers
+
+Describes the structural elements of the cart, specifically focusing on how containers manage and display content. It includes information on configuration options and how to leverage these settings to customize the user experience. Understanding containers is essential for developers looking to optimize the layout and styling of the cart. Visit the cart containers page to learn more.
+
+### Slots
+
+Slots allow developers to customize the appearance of the cart by adding or modifying content within specific sections of the drop-in component. Visit the [cart slots](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/slots/) page to learn more.
+
+### Functions
+
+Describes the API functions available in the Cart drop-in. These functions allow developers to retrieve and display detailed cart information dynamically. Visit the [Cart Functions](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/functions/) page to learn more.
+
+---
+
+# Cart initialization
+
+The **Cart initializer** configures how the cart manages shopping cart data, including items, pricing, discounts, and customer information. Use initialization to customize cart behavior, enable guest cart features, and transform cart data models to match your storefront requirements.
+
+<strong>Version: 3.2.0</strong>
+
+## Configuration options
+
+The following table describes the configuration options available for the **Cart** initializer:
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
+| `models` | [`Record<string, any>`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
+| `disableGuestCart` | `boolean` | No | When set to \`true\`, prevents guest users from creating or accessing shopping carts, requiring authentication before cart operations. |
+
+## Default configuration
+
+The initializer runs with these defaults when no configuration is provided:
+
+```javascript title="scripts/initializers/cart.js"
+
+// All configuration options are optional
+await initializers.mountImmediately(initialize, {
+  langDefinitions: {}, // Uses built-in English strings
+  models: {}, // Uses default data models
+  // Drop-in-specific defaults:
+  // disableGuestCart: undefined // See configuration options below
+});
+```
+
+## Language definitions
+
+Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override default text for the drop-in.
+
+```javascript title="scripts/initializers/cart.js"
+
+const customStrings = {
+  'AddToCart': 'Add to Bag',
+  'Checkout': 'Complete Purchase',
+  'Price': 'Cost',
+};
+
+const langDefinitions = {
+  default: customStrings,
+};
+
+await initializers.mountImmediately(initialize, { langDefinitions });
+```
+
+> For complete dictionary customization including all available keys and multi-language support, see the [Cart Dictionary](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/dictionary/) page.
+
+## Customizing data models
+
+Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
+
+### Available models
+
+The following models can be customized through the `models` configuration option:
+
+| Model | Description |
+|---|---|
+| [`CartModel`](#cartmodel) | Transforms cart data from `GraphQL` including items, totals, discounts, taxes, gift options, addresses, and payment methods. Use this to add custom fields or modify existing cart data structures. |
+
+The following example shows how to customize the `CartModel` model for the **Cart** drop-in:
+
+```javascript title="scripts/initializers/cart.js"
+
+const models = {
+  CartModel: {
+    transformer: (data) => ({
+      // Add custom fields from backend data
+      customField: data?.custom_field,
+      promotionBadge: data?.promotion?.label,
+      // Transform existing fields
+      displayPrice: data?.price?.value ? `${data.price.value}` : 'N/A',
+    }),
+  },
+};
+
+await initializers.mountImmediately(initialize, { models });
+```
+
+## Drop-in configuration
+
+The **Cart initializer** configures how the cart manages shopping cart data, including items, pricing, discounts, and customer information. Use initialization to customize cart behavior, enable guest cart features, and transform cart data models to match your storefront requirements.
+
+```javascript title="scripts/initializers/cart.js"
+
+await initializers.mountImmediately(initialize, {
+  disableGuestCart: true,
+  langDefinitions: {},
+  models: {},
+});
+```
+
+> Refer to the [Configuration options](#configuration-options) table for detailed descriptions of each option.
+
+## Configuration types
+
+The following TypeScript definitions show the structure of each configuration object:
+
+### langDefinitions
+
+Maps locale identifiers to dictionaries of key-value pairs. The `default` locale is used as the fallback when no specific locale matches. Each dictionary key corresponds to a text string used in the drop-in UI.
+
+```typescript
+langDefinitions?: {
+  [locale: string]: {
+    [key: string]: string;
+  };
+};
+```
+
+### models
+
+Maps model names to transformer functions. Each transformer receives data from GraphQL and returns a modified or extended version. Use the `Model<T>` type from `@dropins/tools` to create type-safe transformers.
+
+```typescript
+models?: {
+  [modelName: string]: Model<any>;
+};
+```
+
+## Model definitions
+
+The following TypeScript definitions show the structure of each customizable model:
+
+### CartModel
+
+```typescript
+export interface CartModel {
+  totalGiftOptions: {
+    giftWrappingForItems: Price;
+    giftWrappingForItemsInclTax: Price;
+    giftWrappingForOrder: Price;
+    giftWrappingForOrderInclTax: Price;
+    printedCard: Price;
+    printedCardInclTax: Price;
+  };
+  cartGiftWrapping: {
+    uid: string;
+    design: string;
+    selected: boolean;
+    image: WrappingImage;
+    price: Price;
+  }[];
+  giftReceiptIncluded: boolean;
+  printedCardIncluded: boolean;
+  giftMessage: {
+    recipientName: string;
+    senderName: string;
+    message: string;
+  };
+  appliedGiftCards: AppliedGiftCardProps[];
+  id: string;
+  totalQuantity: number;
+  totalUniqueItems: number;
+  errors?: ItemError[];
+  items: Item[];
+  miniCartMaxItems: Item[];
+  total: {
+    includingTax: Price;
+    excludingTax: Price;
+  };
+  discount?: Price;
+  subtotal: {
+    excludingTax: Price;
+    includingTax: Price;
+    includingDiscountOnly: Price;
+  };
+  appliedTaxes: TotalPriceModifier[];
+  totalTax?: Price;
+  appliedDiscounts: TotalPriceModifier[];
+  shipping?: Price;
+  isVirtual?: boolean;
+  addresses: {
+    shipping?: {
+      countryCode: string;
+      zipCode?: string;
+      regionCode?: string;
+    }[];
+  };
+  isGuestCart?: boolean;
+  hasOutOfStockItems?: boolean;
+  hasFullyOutOfStockItems?: boolean;
+  appliedCoupons?: Coupon[];
+}
+```
+
+---
+
+# Cart Quick Start
+
+The Cart drop-in is one of the most commonly used components in the Commerce boilerplate. It provides a complete shopping cart experience with features like product management, coupon codes, gift cards, and shipping estimates.
+
+<strong>Version: 3.2.0</strong>
+
+## Quick example
+
+The Cart drop-in is included in the https://github.com/hlxsites/aem-boilerplate-commerce. This example shows the basic pattern:
+
+```js
+// 1. Import initializer (handles all setup)
+
+// 2. Import the container you need
+
+// 3. Import the provider
+
+// 4. Render in your block
+export default async function decorate(block) {
+  await provider.render(CartSummaryGrid, {
+    // Configuration options - see Containers page
+  })(block);
+}
+```
+
+**New to drop-ins?** See the [Using drop-ins](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/quick-start/) guide for complete step-by-step instructions.
+
+## Quick reference
+
+**Import paths:**
+- Initializer: `import '../../scripts/initializers/cart.js'`
+- Containers: `import ContainerName from '@dropins/storefront-cart/containers/ContainerName.js'`
+- Provider: `import { render } from '@dropins/storefront-cart/render.js'`
+
+**Package:** `@dropins/storefront-cart`
+
+**Version:** 3.2.0 (verify compatibility with your Commerce instance)
+
+**Example container:** `CartSummaryGrid`
+
+## Learn more
+
+- [Containers](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/containers/) - Available UI components and configuration options
+- [Initialization](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/initialization/) - Customize initializer settings and data models
+- [Functions](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/functions/) - Control drop-in behavior programmatically
+- [Events](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/events/) - Listen to and respond to drop-in state changes
+- [Slots](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/cart/slots/) - Extend containers with custom content
+
+---
+
+# Cart Slots
+
+The Cart drop-in exposes slots for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/extending/).
+
+<strong>Version: 3.2.0</strong>
+
+> **Slot usage best practice** Do not use context methods inside other context methods (for example, `appendChild()` inside `onChange()`). See [Slots best practices](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/slots/#best-practice-for-dynamic-slot-content) for details and examples.
+
+| Container | Slots |
+|-----------|-------|
+| [`CartSummaryGrid`](#cartsummarygrid-slots) | `Thumbnail` |
+| [`CartSummaryList`](#cartsummarylist-slots) | `Heading`, `EmptyCart`, `Footer`, `RowTotalFooter`, `Thumbnail`, `ProductAttributes`, `CartSummaryFooter`, `CartItem`, `UndoBanner`, `ConfirmDeleteBanner`, `ItemTitle`, `ItemPrice`, `ItemQuantity`, `ItemTotal`, `ItemSku`, `ItemRemoveAction` |
+| [`CartSummaryTable`](#cartsummarytable-slots) | `Item`, `Price`, `Quantity`, `Subtotal`, `Thumbnail`, `ProductTitle`, `Sku`, `Configurations`, `ItemAlert`, `ItemWarning`, `Actions`, `UndoBanner`, `EmptyCart` |
+| [`GiftOptions`](#giftoptions-slots) | `SwatchImage` |
+| [`MiniCart`](#minicart-slots) | `ProductList`, `ProductListFooter`, `PreCheckoutSection`, `Thumbnail`, `Heading`, `EmptyCart`, `Footer`, `RowTotalFooter`, `ProductAttributes`, `CartSummaryFooter`, `CartItem`, `UndoBanner`, `ConfirmDeleteBanner`, `ItemTitle`, `ItemPrice`, `ItemQuantity`, `ItemTotal`, `ItemSku`, `ItemRemoveAction` |
+| [`OrderSummary`](#ordersummary-slots) | `EstimateShipping`, `Coupons`, `GiftCards` |
+
+## CartSummaryGrid slots
+
+The slots for the `CartSummaryGrid` container allow you to customize its appearance and behavior.
+
+```typescript
+interface CartSummaryGridProps {
+  slots?: {
+    Thumbnail?: SlotProps<{
+    item: CartModel['items'][number],
+    defaultImageProps: ImageProps
+    }>;
+  };
+}
+```
+
+### Thumbnail slot
+
+The Thumbnail slot allows you to customize the thumbnail section of the `CartSummaryGrid` container.
+
+#### Example
+
+```js
+
+await provider.render(CartSummaryGrid, {
+  slots: {
+    Thumbnail: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Thumbnail';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+## CartSummaryList slots
+
+The slots for the `CartSummaryList` container allow you to customize its appearance and behavior.
+
+```typescript
+interface CartSummaryListProps {
+  slots?: {
+    Heading?: SlotProps;
+    EmptyCart?: SlotProps;
+    Footer?: SlotProps;
+    Thumbnail?: SlotProps<{
+    item: CartModel['items'][number];
+    defaultImageProps: ImageProps;
+    }>;
+    ProductAttributes?: SlotProps;
+    RowTotalFooter?: SlotProps<{ item: CartModel['items'][number] }>;
+    CartSummaryFooter?: SlotProps;
+    CartItem?: SlotProps;
+    UndoBanner?: SlotProps<{
+    item: CartModel['items'][0];
+    loading: boolean;
+    error?: string;
+    onUndo: () => void;
+    onDismiss: () => void;
+    }>;
+    ConfirmDeleteBanner?: SlotProps<{
+    item: CartModel['items'][number];
+    onConfirm: () => void;
+    onCancel: () => void;
+    }>;
+    ItemTitle?: SlotProps<{ item: CartModel['items'][number] }>;
+    ItemPrice?: SlotProps<{ item: CartModel['items'][number] }>;
+    ItemQuantity?: SlotProps<{
+    item: CartModel['items'][number];
+    enableUpdateItemQuantity: boolean;
+    handleItemQuantityUpdate: (
+    item: CartModel['items'][number],
+    quantity: number
+    ) => void;
+    itemsLoading: Set<string>;
+    handleItemsError: (uid: string, message?: string) => void;
+    handleItemsLoading: (uid: string, state: boolean) => void;
+    onItemUpdate?: ({ item }: { item: CartModel['items'][number] }) => void;
+    }>;
+    ItemTotal?: SlotProps<{ item: CartModel['items'][number] }>;
+    ItemSku?: SlotProps<{ item: CartModel['items'][number] }>;
+    ItemRemoveAction?: SlotProps<{
+    item: CartModel['items'][number];
+    enableRemoveItem: boolean;
+    handleItemQuantityUpdate: (
+    item: CartModel['items'][number],
+    quantity: number
+    ) => void;
+    handleItemsError: (uid: string, message?: string) => void;
+    handleItemsLoading: (uid: string, state: boolean) => void;
+    onItemUpdate?: ({ item }: { item: CartModel['items'][number] }) => void;
+    itemsLoading: Set<string>;
+    }>;
+  };
+}
+```
+
+### Heading slot
+
+The Heading slot allows you to customize the heading section of the `CartSummaryList` container.
+
+#### Example
+
+```js
+
+await provider.render(CartSummaryList, {
+  slots: {
+    Heading: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Heading';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### EmptyCart slot
+
+The `EmptyCart` slot allows you to customize the empty cart section of the `CartSummaryList` container.
+
+#### Example
+
+```js
+
+await provider.render(CartSummaryList, {
+  slots: {
+    EmptyCart: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom EmptyCart';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Footer slot
+
+The Footer slot allows you to customize the footer section of the `CartSummaryList` container.
+
+#### Example
+
+```js
+
+await provider.render(CartSummaryList, {
+  slots: {
+    Footer: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Footer';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### RowTotalFooter slot
+
+The `RowTotalFooter` slot lets you show custom content beneath each cart item’s total price. Use it to display promotions, special offers, or other relevant information based on your business logic.
+
+#### Context
+
+The slot receives the following context:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `item` | `CartModel['items'][number]` | The cart item data for the current row |
+
+#### Example
+
+```js
+
+await provider.render(CartSummaryList, {
+  slots: {
+    RowTotalFooter: (ctx) => {
+      // Display a promotional message based on item data
+      const promoMessage = document.createElement('div');
+      promoMessage.style.color = 'var(--color-positive-500)';
+      promoMessage.style.fontSize = '0.875rem';
+      promoMessage.innerText = 'Special offer applied!';
+      ctx.appendChild(promoMessage);
+    }
+  }
+})(block);
+```
+
+#### Example with conditional content
+
+```js
+
+await provider.render(CartSummaryList, {
+  slots: {
+    RowTotalFooter: (ctx) => {
+      // Only show message for discounted items
+      if (ctx.item.discounted) {
+        const savings = document.createElement('span');
+        savings.style.color = 'var(--color-alert-800)';
+        savings.innerText = 'You saved on this item!';
+        ctx.appendChild(savings);
+      }
+    }
+  }
+})(block);
+```
+
+### Thumbnail slot
+
+The Thumbnail slot allows you to customize the thumbnail section of the `CartSummaryList` container.
+
+#### Example
+
+```js
+
+await provider.render(CartSummaryList, {
+  slots: {
+    Thumbnail: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Thumbnail';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ProductAttributes slot
+
+The `ProductAttributes` slot allows you to customize the product attributes section of the `CartSummaryList` container.
+
+#### Example
+
+```js
+
+await provider.render(CartSummaryList, {
+  slots: {
+    ProductAttributes: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ProductAttributes';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### CartSummaryFooter slot
+
+The `CartSummaryFooter` slot allows you to customize the cart summary footer section of the `CartSummaryList` container.
+
+#### Example
+
+```js
+
+await provider.render(CartSummaryList, {
+  slots: {
+    CartSummaryFooter: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom CartSummaryFooter';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### CartItem slot
+
+The `CartItem` slot allows you to customize the cart item section of the `CartSummaryList` container.
+
+#### Example
+
+```js
+
+await provider.render(CartSummaryList, {
+  slots: {
+    CartItem: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom CartItem';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ConfirmDeleteBanner slot
+
+The `ConfirmDeleteBanner` slot lets you replace the default confirmation banner that appears when `confirmBeforeDelete={true}` and a shopper reduces an item's quantity to 0 or clicks the remove button. Use it to customize the banner's appearance, message text, and action buttons.
+
+#### Context
+
+The slot receives the following context:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `item` | `CartModel['items'][number]` | The cart item pending deletion. |
+| `onConfirm` | `() => void` | Call to confirm deletion and trigger the remove API. |
+| `onCancel` | `() => void` | Call to dismiss the banner and restore the item row with its original quantity. |
+
+#### Example
+
+```js
+
+await provider.render(CartSummaryList, {
+  confirmBeforeDelete: true,
+  slots: {
+    ConfirmDeleteBanner: (ctx) => {
+      const banner = document.createElement('div');
+      banner.innerHTML = `
+        
+
+Remove "${ctx.item.name}" from your cart?
+
+        <button id="confirm">Remove</button>
+        <button id="cancel">Keep it</button>
+      `;
+      banner.querySelector('#confirm').addEventListener('click', ctx.onConfirm);
+      banner.querySelector('#cancel').addEventListener('click', ctx.onCancel);
+      ctx.appendChild(banner);
+    }
+  }
+})(block);
+```
+
+### ItemTitle slot
+
+The `ItemTitle` slot allows you to customize the item title section of the `CartSummaryList` container.
+
+#### Example
+
+```js
+
+await provider.render(CartSummaryList, {
+  slots: {
+    ItemTitle: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ItemTitle';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ItemPrice slot
+
+The `ItemPrice` slot allows you to customize the item price section of the `CartSummaryList` container.
+
+#### Example
+
+```js
+
+await provider.render(CartSummaryList, {
+  slots: {
+    ItemPrice: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ItemPrice';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ItemTotal slot
+
+The `ItemTotal` slot allows you to customize the item total section of the `CartSummaryList` container.
+
+#### Example
+
+```js
+
+await provider.render(CartSummaryList, {
+  slots: {
+    ItemTotal: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ItemTotal';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ItemSku slot
+
+The `ItemSku` slot allows you to customize the item sku section of the `CartSummaryList` container.
+
+#### Example
+
+```js
+
+await provider.render(CartSummaryList, {
+  slots: {
+    ItemSku: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ItemSku';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+## CartSummaryTable slots
+
+The slots for the `CartSummaryTable` container allow you to customize its appearance and behavior.
+
+```typescript
+interface CartSummaryTableProps {
+  slots?: {
+    Item?: SlotProps<{ item: CartModel['items'][number] }>;
+    Price?: SlotProps<{ item: CartModel['items'][number] }>;
+    Quantity?: SlotProps<{
+      item: CartModel['items'][number];
+      isUpdating: boolean;
+      quantityInputValue: number;
+      handleInputChange: (e: Event) => void;
+      itemUpdateErrors: Map<string, string>;
+    }>;
+    Subtotal?: SlotProps<{ item: CartModel['items'][number] }>;
+    Thumbnail?: SlotProps<{
+      item: CartModel['items'][number];
+      defaultImageProps: ImageProps;
+      index: number;
+    }>;
+    ProductTitle?: SlotProps<{ item: CartModel['items'][number] }>;
+    Sku?: SlotProps<{ item: CartModel['items'][number] }>;
+    Configurations?: SlotProps<{ item: CartModel['items'][number] }>;
+    ItemAlert?: SlotProps<{ item: CartModel['items'][number] }>;
+    ItemWarning?: SlotProps<{ item: CartModel['items'][number] }>;
+    Actions?: SlotProps<{
+      item: CartModel['items'][number];
+      itemsUpdating: Map<string, { isUpdating: boolean; updatedValue: number }>;
+      setItemUpdating: (uid: string, state: boolean) => void;
+      setItemUpdateError: (uid: string, error: string) => void;
+    }>;
+    UndoBanner?: SlotProps<{
+      item: CartModel['items'][number];
+      loading: boolean;
+      error?: string;
+      onUndo: () => void;
+      onDismiss: () => void;
+    }>;
+    EmptyCart?: SlotProps;
+  };
+}
+```
+
+## GiftOptions slots
+
+The slots for the `GiftOptions` container allow you to customize its appearance and behavior.
+
+```typescript
+interface GiftOptionsProps {
+  slots?: {
+    SwatchImage?: SlotProps<{
+    item: Item | ProductGiftOptionsConfig
+    imageSwatchContext: ImageNodeRenderProps['imageSwatchContext']
+    defaultImageProps: ImageProps
+    }>;
+  };
+}
+```
+
+### SwatchImage slot
+
+The `SwatchImage` slot allows you to customize the swatch image section of the `GiftOptions` container.
+
+#### Example
+
+```js
+
+await provider.render(GiftOptions, {
+  slots: {
+    SwatchImage: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom SwatchImage';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+## MiniCart slots
+
+The slots for the `MiniCart` container allow you to customize its appearance and behavior.
+
+```typescript
+interface MiniCartProps {
+  slots?: {
+    ProductList?: SlotProps;
+    ProductListFooter?: SlotProps;
+    PreCheckoutSection?: SlotProps;
+    Thumbnail?: SlotProps<{
+    item: CartModel['items'][number];
+    defaultImageProps: ImageProps;
+    }>;
+    Heading?: SlotProps;
+    EmptyCart?: SlotProps;
+    Footer?: SlotProps;
+    ProductAttributes?: SlotProps;
+    RowTotalFooter?: SlotProps<{ item: CartModel['items'][number] }>;
+    CartSummaryFooter?: SlotProps;
+    CartItem?: SlotProps;
+    UndoBanner?: SlotProps<{
+    item: CartModel['items'][0];
+    loading: boolean;
+    error?: string;
+    onUndo: () => void;
+    onDismiss: () => void;
+    }>;
+    ConfirmDeleteBanner?: SlotProps<{
+    item: CartModel['items'][number];
+    onConfirm: () => void;
+    onCancel: () => void;
+    }>;
+    ItemTitle?: SlotProps<{ item: CartModel['items'][number] }>;
+    ItemPrice?: SlotProps<{ item: CartModel['items'][number] }>;
+    ItemQuantity?: SlotProps<{
+    item: CartModel['items'][number];
+    enableUpdateItemQuantity: boolean;
+    handleItemQuantityUpdate: (
+    item: CartModel['items'][number],
+    quantity: number
+    ) => void;
+    itemsLoading: Set<string>;
+    handleItemsError: (uid: string, message?: string) => void;
+    handleItemsLoading: (uid: string, state: boolean) => void;
+    onItemUpdate?: ({ item }: { item: CartModel['items'][number] }) => void;
+    }>;
+    ItemTotal?: SlotProps<{ item: CartModel['items'][number] }>;
+    ItemSku?: SlotProps<{ item: CartModel['items'][number] }>;
+    ItemRemoveAction?: SlotProps<{
+    item: CartModel['items'][number];
+    enableRemoveItem: boolean;
+    handleItemQuantityUpdate: (
+    item: CartModel['items'][number],
+    quantity: number
+    ) => void;
+    handleItemsError: (uid: string, message?: string) => void;
+    handleItemsLoading: (uid: string, state: boolean) => void;
+    onItemUpdate?: ({ item }: { item: CartModel['items'][number] }) => void;
+    itemsLoading: Set<string>;
+    }>;
+  };
+}
+```
+
+### ProductList slot
+
+The `ProductList` slot allows you to customize the product list section of the `MiniCart` container.
+
+#### Example
+
+```js
+
+await provider.render(MiniCart, {
+  slots: {
+    ProductList: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ProductList';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ProductListFooter slot
+
+The `ProductListFooter` slot allows you to customize the product list footer section of the `MiniCart` container.
+
+#### Example
+
+```js
+
+await provider.render(MiniCart, {
+  slots: {
+    ProductListFooter: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ProductListFooter';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### PreCheckoutSection slot
+
+The `PreCheckoutSection` slot allows you to customize the pre-checkout section of the `MiniCart` container.
+
+#### Example
+
+```js
+
+await provider.render(MiniCart, {
+  slots: {
+    PreCheckoutSection: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom PreCheckoutSection';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Thumbnail slot
+
+The Thumbnail slot allows you to customize the thumbnail section of the `MiniCart` container.
+
+#### Example
+
+```js
+
+await provider.render(MiniCart, {
+  slots: {
+    Thumbnail: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Thumbnail';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Heading slot
+
+The Heading slot allows you to customize the heading section of the `MiniCart` container.
+
+#### Example
+
+```js
+
+await provider.render(MiniCart, {
+  slots: {
+    Heading: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Heading';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### EmptyCart slot
+
+The `EmptyCart` slot allows you to customize the empty cart section of the `MiniCart` container.
+
+#### Example
+
+```js
+
+await provider.render(MiniCart, {
+  slots: {
+    EmptyCart: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom EmptyCart';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Footer slot
+
+The Footer slot allows you to customize the footer section of the `MiniCart` container.
+
+#### Example
+
+```js
+
+await provider.render(MiniCart, {
+  slots: {
+    Footer: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Footer';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### RowTotalFooter slot
+
+The RowTotalFooter slot lets you show custom content beneath each cart item’s total price. Use it to display promotions, special offers, or other relevant information based on your business logic.
+
+#### Context
+
+The slot receives the following context:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `item` | `CartModel['items'][number]` | The cart item data for the current row |
+
+#### Example
+
+```js
+
+await provider.render(MiniCart, {
+  slots: {
+    RowTotalFooter: (ctx) => {
+      // Display a promotional message based on item data
+      const promoMessage = document.createElement('div');
+      promoMessage.style.color = 'var(--color-positive-500)';
+      promoMessage.style.fontSize = '0.875rem';
+      promoMessage.innerText = 'Special offer applied!';
+      ctx.appendChild(promoMessage);
+    }
+  }
+})(block);
+```
+
+### ProductAttributes slot
+
+The `ProductAttributes` slot allows you to customize the product attributes section of the `MiniCart` container.
+
+#### Example
+
+```js
+
+await provider.render(MiniCart, {
+  slots: {
+    ProductAttributes: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ProductAttributes';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### CartSummaryFooter slot
+
+The `CartSummaryFooter` slot allows you to customize the cart summary footer section of the `MiniCart` container.
+
+#### Example
+
+```js
+
+await provider.render(MiniCart, {
+  slots: {
+    CartSummaryFooter: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom CartSummaryFooter';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### CartItem slot
+
+The `CartItem` slot allows you to customize the cart item section of the `MiniCart` container.
+
+#### Example
+
+```js
+
+await provider.render(MiniCart, {
+  slots: {
+    CartItem: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom CartItem';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ConfirmDeleteBanner slot
+
+The `ConfirmDeleteBanner` slot lets you replace the default confirmation banner that appears when `confirmBeforeDelete={true}` and a shopper clicks the remove button. Use it to customize the banner's appearance, message text, and action buttons.
+
+#### Context
+
+The slot receives the following context:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `item` | `CartModel['items'][number]` | The cart item pending deletion. |
+| `onConfirm` | `() => void` | Call to confirm deletion and trigger the remove API. |
+| `onCancel` | `() => void` | Call to dismiss the banner and restore the item row with its original quantity. |
+
+#### Example
+
+```js
+
+await provider.render(MiniCart, {
+  confirmBeforeDelete: true,
+  slots: {
+    ConfirmDeleteBanner: (ctx) => {
+      const banner = document.createElement('div');
+      banner.innerHTML = `
+        
+
+Remove "${ctx.item.name}" from your cart?
+
+        <button id="confirm">Remove</button>
+        <button id="cancel">Keep it</button>
+      `;
+      banner.querySelector('#confirm').addEventListener('click', ctx.onConfirm);
+      banner.querySelector('#cancel').addEventListener('click', ctx.onCancel);
+      ctx.appendChild(banner);
+    }
+  }
+})(block);
+```
+
+### ItemTitle slot
+
+The `ItemTitle` slot allows you to customize the item title section of the `MiniCart` container.
+
+#### Example
+
+```js
+
+await provider.render(MiniCart, {
+  slots: {
+    ItemTitle: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ItemTitle';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ItemPrice slot
+
+The `ItemPrice` slot allows you to customize the item price section of the `MiniCart` container.
+
+#### Example
+
+```js
+
+await provider.render(MiniCart, {
+  slots: {
+    ItemPrice: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ItemPrice';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ItemTotal slot
+
+The `ItemTotal` slot allows you to customize the item total section of the `MiniCart` container.
+
+#### Example
+
+```js
+
+await provider.render(MiniCart, {
+  slots: {
+    ItemTotal: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ItemTotal';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ItemSku slot
+
+The `ItemSku` slot allows you to customize the item sku section of the `MiniCart` container.
+
+#### Example
+
+```js
+
+await provider.render(MiniCart, {
+  slots: {
+    ItemSku: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ItemSku';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+## OrderSummary slots
+
+The slots for the `OrderSummary` container allow you to customize its appearance and behavior.
+
+```typescript
+interface OrderSummaryProps {
+  slots?: {
+    EstimateShipping?: SlotProps;
+    Coupons?: SlotProps;
+    GiftCards?: SlotProps;
+  };
+}
+```
+
+### EstimateShipping slot
+
+The `EstimateShipping` slot allows you to customize the estimate shipping section of the `OrderSummary` container.
+
+#### Example
+
+```js
+
+await provider.render(OrderSummary, {
+  slots: {
+    EstimateShipping: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom EstimateShipping';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Coupons slot
+
+The Coupons slot allows you to customize the coupons section of the `OrderSummary` container.
+
+#### Example
+
+```js
+
+await provider.render(OrderSummary, {
+  slots: {
+    Coupons: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Coupons';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### GiftCards slot
+
+The `GiftCards` slot allows you to customize the gift cards section of the `OrderSummary` container.
+
+#### Example
+
+```js
+
+await provider.render(OrderSummary, {
+  slots: {
+    GiftCards: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom GiftCards';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+---
+
+# Cart styles
+
+Customize the Cart drop-in using CSS classes and design tokens. This page covers the Cart-specific container classes and customization examples. For comprehensive information about design tokens, responsive breakpoints, and styling best practices, see [Styling Drop-In Components](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/styling/).
+
+<strong>Version: 3.2.0</strong>
+
+## Customization example
+
+Add this to https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-cart/commerce-cart.css to customize the Cart drop-in.
+
+For a complete list of available design tokens (colors, spacing, typography, and more), see the [Design tokens reference](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/all/styling/#design-tokens-reference).
+
+```css title="styles/styles.css" del={2-3} ins={4-5}
+.cart-estimate-shipping {
+  gap: var(--spacing-xsmall);
+  color: var(--color-neutral-800);
+  gap: var(--spacing-small);
+  color: var(--color-brand-800);
+}
+```
+
+## Container classes
+
+The Cart drop-in uses BEM-style class naming. Use the browser DevTools to inspect elements and find specific class names.
+
+```css
+/* CartSummaryGrid */
+.cart-cart-summary-grid {}
+.cart-cart-summary-grid__content {}
+.cart-cart-summary-grid__content--empty {}
+.cart-cart-summary-grid__empty-cart {}
+.cart-cart-summary-grid__item-container {}
+
+/* CartSummaryList */
+.cart-cart-summary-list {}
+.cart-cart-summary-list--include-out-of-stock {}
+.cart-cart-summary-list-accordion {}
+.cart-cart-summary-list-accordion__section {}
+.cart-cart-summary-list-footer__action {}
+.cart-cart-summary-list__background--secondary {}
+.cart-cart-summary-list__content {}
+.cart-cart-summary-list__content--empty {}
+.cart-cart-summary-list__empty-cart {}
+.cart-cart-summary-list__heading {}
+.cart-cart-summary-list__heading--full-width {}
+.cart-cart-summary-list__heading-divider {}
+.cart-cart-summary-list__out-of-stock-message {}
+.dropin-cart-item__quantity {}
+
+/* CartSummaryTable */
+.cart-cart-summary-table {}
+.cart-cart-summary-table__body {}
+.cart-cart-summary-table__cell-item {}
+.cart-cart-summary-table__cell-price {}
+.cart-cart-summary-table__cell-qty {}
+.cart-cart-summary-table__cell-qty-input {}
+.cart-cart-summary-table__cell-qty-updater {}
+.cart-cart-summary-table__cell-qty-updater--disabled {}
+.cart-cart-summary-table__cell-qty-updater--error {}
+.cart-cart-summary-table__cell-subtotal {}
+.cart-cart-summary-table__header {}
+.cart-cart-summary-table__header-price {}
+.cart-cart-summary-table__header-qty {}
+.cart-cart-summary-table__header-subtotal {}
+.cart-cart-summary-table__item-actions {}
+.cart-cart-summary-table__item-footer {}
+.cart-cart-summary-table__item-price {}
+.cart-cart-summary-table__item-price-tax-label {}
+.cart-cart-summary-table__item-subtotal {}
+.cart-cart-summary-table__item-subtotal-tax-label {}
+.cart-cart-summary-table__mobile-label {}
+.cart-cart-summary-table__row {}
+.cart-cart-summary-table__row--error {}
+.cart-cart-summary-table__row--updating {}
+.cart-cart-summary-table__skeleton {}
+.elsie-skeleton-row {}
+
+/* Item */
+.cart-cart-summary-table__item {}
+.cart-cart-summary-table__item-configuration {}
+.cart-cart-summary-table__item-configuration-label {}
+.cart-cart-summary-table__item-configuration-value {}
+.cart-cart-summary-table__item-configurations {}
+.cart-cart-summary-table__item-details {}
+.cart-cart-summary-table__item-image-wrapper {}
+.cart-cart-summary-table__item-name {}
+.cart-cart-summary-table__item-qty {}
+.cart-cart-summary-table__item-quantity-alert-icon {}
+.cart-cart-summary-table__item-quantity-alert-text {}
+.cart-cart-summary-table__item-quantity-alert-wrapper {}
+.cart-cart-summary-table__item-quantity-warning-icon {}
+.cart-cart-summary-table__item-quantity-warning-text {}
+.cart-cart-summary-table__item-quantity-warning-wrapper {}
+.cart-cart-summary-table__item-remove-button {}
+.cart-cart-summary-table__sku {}
+
+/* Coupons */
+.cart-coupons__accordion-section {}
+.cart-gift-cards {}
+.coupon-code-form__action {}
+.coupon-code-form__applied {}
+.coupon-code-form__applied-item {}
+.coupon-code-form__codes {}
+.coupon-code-form__error {}
+.dropin-accordion-section__content-container {}
+.dropin-accordion-section__title-container {}
+.dropin-input-container {}
+.dropin-tag-container {}
+
+/* EmptyCart */
+.cart-empty-cart {}
+.cart-empty-cart__wrapper {}
+.dropin-card {}
+.dropin-card--secondary {}
+
+/* EstimateShipping */
+.cart-estimate-shipping {}
+.cart-estimate-shipping--edit {}
+.cart-estimate-shipping--hide {}
+.cart-estimate-shipping--loading {}
+.cart-estimate-shipping--state {}
+.cart-estimate-shipping--zip {}
+.cart-estimate-shippingLink {}
+.cart-estimate-shipping__caption {}
+.cart-estimate-shipping__label {}
+.cart-estimate-shipping__label--bold {}
+.cart-estimate-shipping__label--muted {}
+.cart-estimate-shipping__link {}
+.cart-estimate-shipping__price {}
+.cart-estimate-shipping__price--bold {}
+.cart-estimate-shipping__price--muted {}
+
+/* GiftOptions */
+.cart-gift-options-readonly__checkboxes {}
+.cart-gift-options-readonly__form {}
+.cart-gift-options-readonly__header {}
+.cart-gift-options-view {}
+.cart-gift-options-view--loading {}
+.cart-gift-options-view--order {}
+.cart-gift-options-view--product {}
+.cart-gift-options-view--readonly {}
+.cart-gift-options-view__field-gift-wrap {}
+.cart-gift-options-view__footer {}
+.cart-gift-options-view__icon--success {}
+.cart-gift-options-view__modal {}
+.cart-gift-options-view__modal-content {}
+.cart-gift-options-view__modal-grid {}
+.cart-gift-options-view__modal-wrapper {}
+.cart-gift-options-view__spinner {}
+.cart-gift-options-view__top {}
+.cart-gift-options-view__top--hidden {}
+.dropin-accordion-section__content-container {}
+.dropin-accordion-section__flex {}
+.dropin-accordion-section__heading {}
+.dropin-accordion-section__title {}
+.dropin-accordion-section__title-container {}
+.dropin-button {}
+.dropin-card {}
+.dropin-card--primary {}
+.dropin-card__content {}
+.dropin-checkbox__label {}
+.dropin-checkbox__label--medium {}
+.dropin-content-grid {}
+.dropin-content-grid__content {}
+.dropin-divider {}
+.dropin-field {}
+.dropin-iconButton {}
+.dropin-modal {}
+.dropin-modal--dim {}
+.dropin-modal__body--centered {}
+.dropin-modal__content {}
+.dropin-modal__header {}
+.dropin-modal__header-title {}
+.dropin-modal__header-title-content {}
+.dropin-price {}
+.dropin-textarea {}
+.dropin-textarea--error {}
+.dropin-textarea__label--floating {}
+.dropin-textarea__label--floating--error {}
+.dropin-textarea__label--floating--text {}
+
+/* MiniCart */
+.cart-cart-summary-list__heading {}
+.cart-mini-cart {}
+.cart-mini-cart__empty-cart {}
+.cart-mini-cart__footer {}
+.cart-mini-cart__footer__ctas {}
+.cart-mini-cart__footer__estimated-total {}
+.cart-mini-cart__footer__estimated-total-excluding-taxes {}
+.cart-mini-cart__heading {}
+.cart-mini-cart__heading-divider {}
+.cart-mini-cart__preCheckoutSection {}
+.cart-mini-cart__productListFooter {}
+.cart-mini-cart__products {}
+.dropin-cart-item__configurations {}
+
+/* OrderSummary */
+.cart-order-summary {}
+.cart-order-summary--loading {}
+.cart-order-summary__applied-gift-cards {}
+.cart-order-summary__caption {}
+.cart-order-summary__content {}
+.cart-order-summary__coupon__code {}
+.cart-order-summary__coupons {}
+.cart-order-summary__discount {}
+.cart-order-summary__divider-primary {}
+.cart-order-summary__divider-secondary {}
+.cart-order-summary__entry {}
+.cart-order-summary__gift-cards {}
+.cart-order-summary__heading {}
+.cart-order-summary__label {}
+.cart-order-summary__price {}
+.cart-order-summary__primary {}
+.cart-order-summary__primaryAction {}
+.cart-order-summary__secondary {}
+.cart-order-summary__shipping--edit {}
+.cart-order-summary__shipping--hide {}
+.cart-order-summary__shipping--state {}
+.cart-order-summary__shipping--zip {}
+.cart-order-summary__shippingLink {}
+.cart-order-summary__spinner {}
+.cart-order-summary__taxEntry {}
+.cart-order-summary__taxes {}
+.cart-order-summary__total {}
+.dropin-accordion {}
+.dropin-accordion-section__content-container {}
+.dropin-divider {}
+
+/* OrderSummaryLine */
+.cart-order-summary__label {}
+.cart-order-summary__label--bold {}
+.cart-order-summary__label--muted {}
+.cart-order-summary__price {}
+.cart-order-summary__price--bold {}
+.cart-order-summary__price--muted {}
+```

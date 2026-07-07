@@ -8,7 +8,7 @@ Each gap-analysis document maps a Figma design to the closest existing drop-in /
 
 ## Documents
 
-Completed gap-analysis documents live in [`backlog/`](backlog/):
+Completed gap-analysis documents live in [`backlog/`](backlog/). For example:
 
 | File | Page / Feature |
 |---|---|
@@ -18,50 +18,46 @@ Completed gap-analysis documents live in [`backlog/`](backlog/):
 
 ## Workflow (adding a new page)
 
-1. Add the Figma export PNG to `figmas/`.
-2. Run the `/storefront-gapanalysis` slash command in Claude Code — provide the design and any notes.
-3. The command writes the completed document directly to `backlog/<page-slug>.md`.
+1. Add the Figma export PNG to `figmas/` and crop/resample it into readable slices.
+2. Invoke the **`storefront-gapanalysis`** skill as a slash command, providing the Figma slices and a description of the feature to be built.
+3. The skill writes the completed document directly to `backlog/<page-slug>.md`.
 
 ## Claude Code artifact setup
 
-All Claude Code configuration is project-local under `.claude/`. Three layers cooperate to produce a gap-analysis document:
+All Claude Code configuration is project-local under `.claude/`. Three skills cooperate to produce a gap-analysis document:
 
 ```
 .claude/
-├── commands/
-│   └── storefront-gapanalysis.md       # /storefront-gapanalysis slash command — owns the process
-├── templates/
-│   └── page-gap-analysis.template.md   # canonical section layout, columns, legend, complexity buckets
-├── skills/
-│   ├── accs-storefront-architect/      # Commerce-layer knowledge base (drop-ins, services, GraphQL)
-│   │   ├── SKILL.md
-│   │   └── references/                 # curated topic docs + llms-full.txt (grep, never read whole)
-│   └── eds-knowledge/                  # EDS delivery-layer knowledge (blocks, sections, Lighthouse)
-└── agents/
-    └── storefront-architect.md         # Opus-backed architect subagent
+└── skills/
+    ├── storefront-gapanalysis/         # entry point — owns the gap-doc process and template
+    │   ├── SKILL.md
+    │   └── references/
+    │       └── page-gap-analysis.template.md   # canonical layout, columns, legend, complexity buckets
+    ├── storefront-knowledge/           # Commerce-layer knowledge base (drop-ins, services, GraphQL, blocks, SDK)
+    │   ├── SKILL.md
+    │   └── references/                 # Adobe's official llms.txt topic bundles, verbatim (grep, never read whole)
+    └── eds-knowledge/                  # EDS delivery-layer knowledge (blocks, sections, Lighthouse)
 ```
 
 | Artifact | Type | Purpose |
 |---|---|---|
-| `/storefront-gapanalysis` | Slash command | Entry point. Runs the per-page workflow: read template → gather Commerce context → fill §1 features, §2 gaps, §3 assumptions, §4 out-of-scope → write to `backlog/<page-slug>.md`. |
-| `page-gap-analysis.template.md` | Template | Section structure, column definitions, coverage legend, complexity buckets, Experience League URL reference table. Load-bearing — do not restructure. |
-| `accs-storefront-architect` | Skill | Authoritative source for drop-in / container / slot / event / service identifiers. Consulted via the `storefront-architect` subagent. |
+| `storefront-gapanalysis` | Skill | Entry point (slash command). Inputs: Figma slices + feature description. Runs the per-page workflow: read template → gather Commerce context → fill §1 feature gap analysis (single combined table), §2 assumptions/open questions, §3 out-of-scope → write to `backlog/<page-slug>.md`. |
+| `page-gap-analysis.template.md` | Template | Section structure, the combined §1 table columns (`Feature · OOTB basis · Coverage · Gap to close · Dependencies & touch points · Complexity · Risk`), coverage legend, complexity buckets, Experience League URL reference table. Load-bearing — do not restructure. |
+| `storefront-knowledge` | Skill | Authoritative source for drop-in / container / slot / event / service identifiers. Built from Adobe's official per-topic LLM bundles (`…/commerce/storefront/llms.txt`); grepped directly by the gap-analysis skill. |
 | `eds-knowledge` | Skill | Authoritative source for EDS facts (blocks, sections, authoring, metadata, Lighthouse, Core Web Vitals). |
-| `storefront-architect` | Subagent | Opus-backed architect that pulls from both knowledge skills. Spawned by the slash command for Commerce context; also invokable directly for "should we…" / architecture-review questions. |
 
 ### How the pieces fit at runtime
 
-1. User runs `/storefront-gapanalysis <feature-description>` and attaches the design.
-2. The command reads `.claude/templates/page-gap-analysis.template.md` to lock in the structure.
-3. The command spawns the `storefront-architect` subagent to gather drop-in / container / slot / service facts for the page type. The subagent reads the curated reference files in `accs-storefront-architect` (and greps `llms-full.txt` only as fallback).
-4. The command fills the template, hyperlinks every drop-in / container / service to Experience League, and writes the completed document to `backlog/<page-slug>.md`.
+1. User invokes `/storefront-gapanalysis` with the Figma slices and a feature description.
+2. The skill reads `references/page-gap-analysis.template.md` to lock in the structure.
+3. The skill greps/reads the matching topic bundle(s) in `storefront-knowledge` for drop-in / container / slot / service facts, and the matching `eds-knowledge` document for delivery-layer facts.
+4. The skill fills the template — one combined §1 table with per-feature coverage, gap to close, complexity, and risk — hyperlinks every drop-in / container / service to Experience League, and writes the completed document to `backlog/<page-slug>.md`.
 
 ### Editing the configuration
 
-- **Change the process or rules of thumb** → edit `.claude/commands/storefront-gapanalysis.md`.
-- **Change the document structure or columns** → edit `.claude/templates/page-gap-analysis.template.md` (this also changes every future gap doc).
-- **Add or correct Commerce facts** → edit files under `.claude/skills/accs-storefront-architect/references/`.
-- **Change architect behavior** → edit `.claude/agents/storefront-architect.md`.
+- **Change the process or rules of thumb** → edit `.claude/skills/storefront-gapanalysis/SKILL.md`.
+- **Change the document structure or columns** → edit `.claude/skills/storefront-gapanalysis/references/page-gap-analysis.template.md` (this also changes every future gap doc).
+- **Refresh Commerce facts** → re-download the bundles under `.claude/skills/storefront-knowledge/references/` (command in that skill's SKILL.md).
 
 ## Figma exports
 
