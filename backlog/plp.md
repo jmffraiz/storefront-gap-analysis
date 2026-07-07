@@ -12,6 +12,12 @@ The red-outlined block:
 - Interleaves "in-page promotion" tiles in the grid, which must support arbitrary authored fragments/blocks, not just the static banner shown as the example — not a merchandising rule engine.
 - On Add to Basket, adds the product to the cart and should conditionally reveal the mini-basket — the mini-basket UI itself is out of scope of this PLP feature.
 
+## Boilerplate feature
+
+![PLP page provided out of the box by the AEM Boilerplate Commerce reference storefront](../boilerplate/boilerplate-plp.png)
+
+Reference: [main--manistore--mariorodriguez-creator.aem.page/apparel](https://main--manistore--mariorodriguez-creator.aem.page/apparel?page=1&sort=&filter=)
+
 ---
 
 ## 1. Feature gap analysis
